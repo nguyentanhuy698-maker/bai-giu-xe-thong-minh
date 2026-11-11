@@ -11,6 +11,8 @@ Hệ thống bãi giữ xe máy xác thực kép **thẻ RFID + biển số**, m
 - **Mô phỏng hoạt động** (`index.html`): bấm cho xe vào/ra, xem barie mở, màn hình chốt bảo vệ, tình huống thẻ bị đánh tráo, bãi đầy.
 - **Phối cảnh 3D** (`phoi-canh-3d.html`): xoay mô hình, các góc nhìn và hình chiếu kỹ thuật.
 
-Cả hai là trang HTML độc lập, mở trực tiếp bằng trình duyệt, không cần cài đặt.
+- **Mô phỏng Wokwi** (`wokwi/`): firmware ESP32 cho trụ điều khiển 2 làn và server giả lập Python, chạy thử trên wokwi.com.
+
+Hai trang web là HTML độc lập, mở trực tiếp bằng trình duyệt, không cần cài đặt.
 
 > Đây là mô phỏng giao diện và luồng xử lý để minh họa, chưa kết nối phần cứng thật.
