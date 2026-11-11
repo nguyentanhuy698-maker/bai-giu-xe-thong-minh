@@ -143,3 +143,15 @@ Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và t
   - Báo cáo sau khi xếp gồm: số ca đã lấp/21, ca trống, người dưới mức tối thiểu, tỷ lệ ca "Muốn làm" được đáp ứng và số ca khó của từng người.
   - Sau khi công bố, nhân viên thấy những ca mình muốn mà không được xếp, kèm lý do.
 - **Khóa localStorage mới:** `bgx_sched` (theo tuần: đăng ký, ghim, bản nháp, lịch công bố, lý do), `bgx_sched_seeded`, `bgx_open_bonus`. Cài đặt thêm các khóa `regDeadline*`, `schedMax*`, `tg*`, `min*`, `w*`, `schedIters`.
+
+## Tổng quan theo vai trò
+
+- **Quản lý:**
+  - Hộp **"Cần tôi quyết"** gom mọi việc cần duyệt về một chỗ, duyệt hoặc từ chối ngay tại đó, không phải chuyển tab. Gồm: đơn nghỉ, đổi ca, tăng ca, khoản chi từ két, sửa biển số, quên mật khẩu, lệch tiền hoặc ca chưa kết, bản nháp lịch tuần.
+  - "Việc cần xử lý" gộp việc vận hành và việc nhân sự thành một danh sách, không lặp với hộp trên.
+  - **Thanh đỏ ca trực** hiện khi ca hiện tại không có ai nhận, hoặc người ca trước quá 15 phút chưa kết ca. Thanh có nút gọi số điện thoại của người theo lịch.
+- **Nhân viên (màn hình chốt trực):**
+  - Ô tra biển số lớn ở đầu trang: gõ vài số là thấy xe, bấm "Khách mất thẻ" ngay tại chỗ.
+  - 4 nút lớn: Mở barie vào, Mở barie ra, Cảnh báo chờ (đỏ khi có cảnh báo), Chi từ két.
+  - Nút "Kết ca, bàn giao" chỉ hiện ở đầu trang khi còn 30 phút là hết ca. Cần kết ca sớm thì có liên kết nhỏ phía dưới.
+- **Điện thoại:** trang Xe trong bãi hiển thị mỗi xe một thẻ, nút "Khách báo mất thẻ" luôn nhìn thấy.

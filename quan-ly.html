@@ -302,6 +302,34 @@
   select.pref-busy, .preftag.pref-busy { background:#f1f2f3; color:#69737d; }
   .preftag { display:inline-block; padding:3px 8px; border-radius:6px; font-weight:600; }
   .linkish { background:none; border:0; padding:0; color:var(--ink); text-decoration:underline; cursor:pointer; font-size:11.5px; }
+
+  /* TỔNG QUAN THEO VAI TRÒ */
+  .todo.dec li { align-items:flex-start; gap:10px; }
+  .dec-kind { flex:none; min-width:84px; text-align:center; margin-top:2px; }
+  .dec-acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  #dutyBanner { align-items:center; }
+  .booth { border:2px solid var(--paint); }
+  .booth-search { display:grid; gap:6px; font-weight:600; font-size:13px; }
+  .booth-search input { font-size:20px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; width:100%; }
+  .booth-res { list-style:none; margin:8px 0 0; padding:0; }
+  .booth-res li { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #edf0f2; font-size:13px; }
+  .booth-btns { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-top:12px; }
+  .bigbtn { display:grid; gap:2px; text-align:left; padding:14px; border-radius:12px; border:1px solid var(--line); background:#f6f7f8; color:var(--ink); text-decoration:none; cursor:pointer; min-height:72px; font:inherit; }
+  .bigbtn b { font:700 19px/1.15 var(--cond); } .bigbtn span { font-size:12px; color:var(--muted); }
+  .bigbtn:hover { background:#eef1f3; } .bigbtn.hot { background:#fbe7e7; border-color:#efb3b3; } .bigbtn.hot span { color:#a12828; font-weight:600; }
+  @media (max-width: 760px) {
+    .booth-btns { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .todo.dec li { flex-wrap:wrap; } .dec-acts { width:100%; justify-content:flex-start; }
+    /* Xe trong bãi: mỗi xe một thẻ, nút luôn thấy */
+    section[data-view="trong-bai"] .tablewrap { overflow:visible; max-height:none !important; border:0; background:none; }
+    section[data-view="trong-bai"] table, section[data-view="trong-bai"] tbody { display:block; }
+    section[data-view="trong-bai"] thead { display:none; }
+    section[data-view="trong-bai"] tr { display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; }
+    section[data-view="trong-bai"] td { display:block; padding:2px 0 !important; border:0 !important; text-align:left !important; white-space:normal; }
+    section[data-view="trong-bai"] td[data-label]::before { content:attr(data-label); display:block; font-size:11px; color:var(--muted); }
+    section[data-view="trong-bai"] td.act { grid-column:1/-1; } section[data-view="trong-bai"] td.act .btn { width:100%; padding:10px; font-size:14px; }
+    section[data-view="trong-bai"] td.empty { grid-column:1/-1; }
+  }
 </style>
 </head>
 <body class="locked">
@@ -347,7 +375,20 @@
 
     <!-- TỔNG QUAN -->
     <section data-view="tong-quan">
-      <div class="head"><div><h1>Tổng quan hôm nay</h1><p id="today"></p></div><span class="grow"></span><div class="muted" id="shiftNow" style="font-size:13px"></div><button class="btn accent staff-only" data-act="close-shift">Kết ca, bàn giao</button></div>
+      <div class="head"><div><h1>Tổng quan hôm nay</h1><p id="today"></p></div><span class="grow"></span><div class="muted" id="shiftNow" style="font-size:13px"></div><button class="btn accent staff-only hidden" id="closeSoon" data-act="close-shift">Kết ca, bàn giao</button></div>
+      <div class="banner bad admin-only hidden" id="dutyBanner"><span class="ico">!</span><span id="dutyText" class="grow"></span><span id="dutyActs" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>
+      <div class="card staff-only booth" id="booth" style="margin-bottom:14px">
+        <label class="booth-search"><span>Tra biển số hoặc mã thẻ</span><input type="search" id="boothQ" placeholder="Gõ vài số của biển, ví dụ 367" autocomplete="off" inputmode="search"></label>
+        <ul class="booth-res" id="boothRes"></ul>
+        <div class="booth-btns">
+          <button class="bigbtn" data-act="manual" data-lane="in"><b>Mở barie vào</b><span>Đầu đọc thẻ hoặc camera lỗi</span></button>
+          <button class="bigbtn" data-act="manual" data-lane="out"><b>Mở barie ra</b><span>Chọn xe, thu phí</span></button>
+          <a class="bigbtn" href="#canh-bao" id="boothAlert"><b>Cảnh báo chờ</b><span id="boothAlertN">0 cảnh báo</span></a>
+          <button class="bigbtn" data-act="fin-staff-exp"><b>Chi từ két</b><span>Ghi khoản chi, chờ duyệt</span></button>
+        </div>
+        <p class="sub" id="boothInfo" style="margin:10px 0 0"></p>
+        <p class="sub" id="boothEnd" style="margin:4px 0 0"></p>
+      </div>
       <div class="grid g4">
         <div class="card stat"><div class="k">Xe đang trong bãi</div><div class="v" id="k-in"></div><div class="occbar"><i id="k-occ"></i></div><div class="d" id="k-free"></div></div>
         <div class="card stat"><div class="k">Lượt vào / ra hôm nay</div><div class="v" id="k-io"></div><div class="d" id="k-io-d"></div></div>
@@ -355,9 +396,10 @@
         <div class="card stat staff-only"><div class="k">Doanh thu ca của bạn</div><div class="v" id="k-my"></div><div class="d" id="k-my-d"></div></div>
         <div class="card stat"><div class="k">Cảnh báo đang chờ</div><div class="v" id="k-alert"></div><div class="d" id="k-alert-d"></div></div>
       </div>
+      <div class="card admin-only" id="decCard" style="margin-top:14px"><div class="gates" style="margin-bottom:2px"><h2 style="flex:1">Cần tôi quyết <span class="pill warn" id="decN"></span></h2></div><p class="sub">Duyệt hoặc từ chối ngay tại đây. Đơn nghỉ trùng ca sẽ hỏi người thay.</p><ul class="todo dec" id="decList"></ul></div>
       <div class="grid g2" style="margin-top:14px">
         <div class="card"><h2>Việc cần xử lý</h2><p class="sub">Bấm vào từng việc để đi tới chỗ xử lý</p><ul class="todo" id="opsTodo"></ul></div>
-        <div class="card"><div class="gates" style="margin-bottom:10px"><div style="flex:1;min-width:200px"><h2>Mở barie bằng tay</h2><p class="sub" style="margin:0" id="manualLast"></p></div></div>
+        <div class="card admin-only" id="manualCard"><div class="gates" style="margin-bottom:10px"><div style="flex:1;min-width:200px"><h2>Mở barie bằng tay</h2><p class="sub" style="margin:0" id="manualLast"></p></div></div>
           <div class="gates"><button class="btn" data-act="manual" data-lane="in">Mở barie làn vào</button><button class="btn" data-act="manual" data-lane="out">Mở barie làn ra</button></div>
           <p class="sub" style="margin:12px 0 0" id="irLine"></p></div>
       </div>
@@ -1252,7 +1294,7 @@
     me = null;
     clearRendered();
     document.body.classList.add('locked'); document.body.classList.remove('staff', 'drawer');
-    $('#loginForm').reset(); $$('dialog[open]').forEach((d) => d.close());
+    $('#loginForm').reset(); $$('dialog[open]').forEach((d) => d.close()); $('#boothQ').value = '';
     if (msg) toast(msg);
   }
   function restoreSession() {
@@ -1578,12 +1620,13 @@
     barChart($('#ch-hour'), { labels: Array.from({ length: last + 1 }, (_, i) => `${(6 + i) % 24}h`), series: [{ name: 'Lượt vào', color: '#2a78d6', values: hin.slice(0, last + 1) }, { name: 'Lượt ra', color: '#eb6834', values: hout.slice(0, last + 1) }], every: 2 });
     const al = alertsList().slice(0, 5);
     $('#recentAlerts').innerHTML = al.length ? al.map((s) => `<li><span class="t">${fmtDT(s.tOut || s.tIn)}</span><br>Thẻ <b>${esc(s.uid)}</b> của ${esc(s.plate)}, xe ra là <b>${esc(s.alert.plateRead)}</b> ${alertPill(s.alert.status)}</li>`).join('') : '<li class="muted">Chưa có cảnh báo nào.</li>';
-    const todo = opsTodo();
+    const todo = overviewTodo();
     $('#opsTodo').innerHTML = todo.length ? todo.map(([n2, txt, href, tone]) => `<li><span class="n" style="color:var(--${tone === 'bad' ? 'stop' : 'caution'})">${n2}</span><span class="grow">${esc(txt)}</span><a class="btn small" href="${href}">Xử lý</a></li>`).join('') : '<li class="muted">Không có việc nào cần xử lý.</li>';
     const ml = store.get('bgx_manual', [])[0];
     $('#manualLast').textContent = ml ? `Lần gần nhất: ${ml.lane === 'in' ? 'làn vào' : 'làn ra'}, ${fmtDT(ml.ts)}, ${ml.by}, ${(MANUAL_REASON[ml.reason] || '').toLowerCase()}.` : 'Chưa mở bằng tay lần nào.';
     const ir = irCountNow();
     $('#irLine').innerHTML = ir.src === 'down' ? 'Cảm biến IR đang mất kết nối, không so được số xe.' : `Cảm biến IR đếm <b>${ir.ir}</b> xe, RFID có <b>${ir.rfid}</b> lượt đang mở${ir.ir === ir.rfid ? ', khớp.' : `, <b style="color:var(--stop)">lệch ${Math.abs(ir.ir - ir.rfid)} xe</b>.`}`;
+    renderOverviewExtras();
   }
   const alertPill = (st) => ({ pending: '<span class="pill bad">Chờ xử lý</span>', pass: '<span class="pill warn">Đã cho qua</span>', hold: '<span class="pill bad">Đã giữ xe</span>' }[st] || '');
 
@@ -1601,7 +1644,7 @@
     $('#c-park').textContent = `${rows.length} xe${n > settings.cap ? `, vượt sức chứa ${n - settings.cap} xe` : ''}`;
     $('#t-park').innerHTML = rows.length ? rows.map((s) => {
       const card = cards.find((c) => c.uid === s.uid), lostCard = card && card.lost, long = t - s.tIn > DAY, w = watchOf(s.plate);
-      return `<tr><td>${plateHTML(s.plate)}</td><td>${esc(s.uid)}</td><td>${s.monthly ? '<span class="pill m">Thẻ tháng</span>' : s.nocard ? '<span class="pill warn">Không thẻ</span>' : '<span class="pill g">Vãng lai</span>'}${lostCard ? ' <span class="pill bad">Thẻ báo mất</span>' : ''}${long ? ' <span class="pill warn">Quá 24 giờ</span>' : ''}${w ? ` <span class="pill bad">${esc(WATCH_REASON[w.reason])}</span>` : ''}</td><td>${fmtDT(s.tIn)}</td><td class="num">${dur(t - s.tIn)}</td><td class="num">${money(feeFor(s.tIn, t, s.monthly))}</td><td><button class="btn small" data-act="lost" data-key="${esc(keyOf(s))}">Khách báo mất thẻ</button></td></tr>`;
+      return `<tr><td data-label="Biển số">${plateHTML(s.plate)}</td><td data-label="Mã thẻ">${esc(s.uid)}</td><td data-label="Loại thẻ">${s.monthly ? '<span class="pill m">Thẻ tháng</span>' : s.nocard ? '<span class="pill warn">Không thẻ</span>' : '<span class="pill g">Vãng lai</span>'}${lostCard ? ' <span class="pill bad">Thẻ báo mất</span>' : ''}${long ? ' <span class="pill warn">Quá 24 giờ</span>' : ''}${w ? ` <span class="pill bad">${esc(WATCH_REASON[w.reason])}</span>` : ''}</td><td data-label="Giờ vào">${fmtDT(s.tIn)}</td><td class="num" data-label="Đã gửi">${dur(t - s.tIn)}</td><td class="num" data-label="Phí tạm tính">${money(feeFor(s.tIn, t, s.monthly))}</td><td class="act"><button class="btn small" data-act="lost" data-key="${esc(keyOf(s))}">Khách báo mất thẻ</button></td></tr>`;
     }).join('') : `<tr><td colspan="7" class="empty">${q ? 'Không tìm thấy xe khớp với "' + esc(q) + '". Kiểm tra lại biển số.' : 'Bãi đang trống.'}</td></tr>`;
   }
   $('#q-park').oninput = renderParked;
@@ -4148,6 +4191,94 @@
   };
 
   // =====================================================================
+  //  TỔNG QUAN THEO VAI TRÒ
+  //  Quản lý: hộp "Cần tôi quyết" (duyệt ngay tại chỗ), thanh báo ca trực, một danh sách việc gộp.
+  //  Nhân viên: màn hình chốt trực (tra biển số, 4 nút lớn), nút Kết ca chỉ nổi khi gần hết ca.
+  // =====================================================================
+  // việc cần duyệt được đưa vào hộp quyết định, nên bỏ khỏi danh sách việc để không lặp
+  const DECISION_WORDS = ['chờ duyệt', 'Chờ duyệt', 'chờ quản lý', 'Ca chưa kết', 'lệch tiền', 'quên mật khẩu', 'Khoản chi từ két', 'Bản nháp lịch', 'Yêu cầu sửa biển', 'Yêu cầu đặt lại', 'Đơn nghỉ', 'Đơn đổi ca', 'Tăng ca chờ'];
+  function overviewTodo() {
+    const ops = opsTodo();
+    if (!isAdmin()) return ops;
+    const hr = typeof hrTodo === 'function' ? hrTodo() : [], seen = new Set(), out = [];
+    [...ops, ...hr].forEach((x) => {
+      const [n, txt, href, tone] = x; if (DECISION_WORDS.some((w) => txt.includes(w))) return;
+      const k = txt.replace(/[\d.]+/g, ''); if (seen.has(k)) return; seen.add(k);
+      out.push([n, txt, href, tone || 'warn']);
+    });
+    return out;
+  }
+
+  // ---------- hộp "Cần tôi quyết" ----------
+  function decisionItems() {
+    const out = [], t = nowT(), B = (act, label, attrs, cls = '') => ({ act, label, attrs, cls });
+    leaves.filter((l) => l.status === 'pending').forEach((l) => out.push({ ts: l.created || 0, kind: 'Nghỉ phép', title: `${nameOf(l.user)} xin ${leaveTypeOf(l.type).name.toLowerCase()}`, sub: `${fmtLeaveRange(l)}. ${l.reason || ''}`, acts: [B('leave-ok', 'Duyệt', `data-id="${esc(l.id)}"`, 'primary'), B('leave-no', 'Từ chối', `data-id="${esc(l.id)}"`)] }));
+    swaps().filter((x) => x.status === 'admin').forEach((x) => out.push({ ts: x.created || 0, kind: 'Đổi ca', title: `${nameOf(x.from)} nhờ ${nameOf(x.to)} làm thay`, sub: `${shiftLabel(x.d0, x.k)}, đồng nghiệp đã đồng ý`, acts: [B('swap-ok', 'Duyệt', `data-id="${esc(x.id)}"`, 'primary'), B('swap-no', 'Từ chối', `data-id="${esc(x.id)}"`)] }));
+    ots().filter((o) => o.status === 'pending').forEach((o) => out.push({ ts: o.created || 0, kind: 'Tăng ca', title: `${nameOf(o.user)} tăng ca ${o.minutes} phút`, sub: `${o.k != null ? shiftLabel(o.d0, o.k) : fmtDate(o.d0)}. ${o.reason || ''}`, acts: [B('ot-ok', 'Duyệt', `data-id="${esc(o.id)}"`, 'primary'), B('ot-no', 'Từ chối', `data-id="${esc(o.id)}"`)] }));
+    store.get('bgx_fin_entries', []).filter((e) => e.status === 'pending').forEach((e) => out.push({ ts: e.ts, kind: 'Chi từ két', title: `${e.by} chi ${money(e.amount)} từ két`, sub: `${fmtDT(e.ts)}. ${e.note || ''}`, acts: [B('fin-approve', 'Duyệt', `data-id="${esc(e.id)}"`, 'primary'), B('fin-reject', 'Từ chối', `data-id="${esc(e.id)}"`)] }));
+    store.get('bgx_platefix_req', []).filter((r) => r.status === 'pending').forEach((r) => out.push({ ts: r.ts, kind: 'Sửa biển số', title: `${r.by}: ${r.from} → ${r.to}`, sub: `Lượt có cảnh báo. ${r.reason || ''}`, acts: [B('fixreq-ok', 'Duyệt', `data-id="${esc(r.id)}"`, 'primary'), B('fixreq-no', 'Từ chối', `data-id="${esc(r.id)}"`)] }));
+    pwReqPending().forEach((r) => { const p = profBy(r.user); out.push({ ts: r.ts, kind: 'Mật khẩu', title: `${r.name} quên mật khẩu`, sub: `Gửi lúc ${fmtDT(r.ts)}`, acts: [...(p ? [B('prof-pw', 'Đặt mật khẩu tạm', `data-code="${esc(p.code)}"`, 'primary')] : []), B('pwreq-dismiss', 'Bỏ qua', `data-id="${esc(r.id)}"`)] }); });
+    const rw = rewards();
+    allHandovers().filter((h) => !h.nobody && !h.resolved && !handResolved[h.id] && h.end > t - 30 * DAY && (h.unclosed || (h.diff && !rw.some((r) => r.ref === h.id)))).forEach((h) => out.push({ ts: h.end, kind: h.unclosed ? 'Chưa kết ca' : 'Lệch tiền',
+      title: h.unclosed ? `${h.name} không kết ca` : `${h.name} ${h.diff < 0 ? 'thiếu' : 'dư'} ${money(Math.abs(h.diff))}`, sub: `${shiftLabel(h.day0, h.k)}${h.note ? `. ${h.note}` : ''}`,
+      acts: [...(h.diff < 0 && !h.unclosed ? [B('ded-new', 'Trừ lương', `data-id="${esc(h.id)}"`)] : []), B('hand-resolve', 'Đã xử lý', `data-id="${esc(h.id)}"`, h.unclosed || h.diff > 0 ? 'primary' : '')] }));
+    const s = schedOf(nextWeek()); if (s && s.status === 'draft') out.push({ ts: s.runAt || 0, kind: 'Lịch tuần', title: `Bản nháp lịch tuần ${fmtWeek(s.wk)} chờ công bố`, sub: s.report ? `Đã lấp ${s.report.filled}/21 ca` : '', link: '#nhan-vien/dang-ky', acts: [] });
+    return out.sort((a, b) => b.ts - a.ts);
+  }
+  let decAll = false;
+  function renderDecisions() {
+    const list = decisionItems(), show = decAll ? list : list.slice(0, 6);
+    $('#decN').textContent = list.length; $('#decN').classList.toggle('hidden', !list.length);
+    $('#decList').innerHTML = show.map((d) => `<li><span class="pill g dec-kind">${esc(d.kind)}</span><span class="grow"><b>${esc(d.title)}</b><small class="muted" style="display:block">${esc(d.sub)}</small></span><span class="dec-acts">${d.acts.map((a) => `<button class="btn small ${a.cls}" data-act="${a.act}" ${a.attrs}>${esc(a.label)}</button>`).join('')}${d.link ? `<a class="btn small primary" href="${d.link}">Xem, công bố</a>` : ''}</span></li>`).join('')
+      + (list.length > 6 ? `<li><button class="btn small" data-act="dec-more">${decAll ? 'Thu gọn' : `Xem thêm ${list.length - 6} việc`}</button></li>` : '')
+      || '<li class="muted">Không có việc nào chờ bạn quyết.</li>';
+  }
+
+  // ---------- thanh báo ca trực (quản lý) ----------
+  function renderDuty() {
+    const el = $('#dutyBanner'); if (!isAdmin()) { el.classList.add('hidden'); return; }
+    const t = nowT(), cur = shiftAt(t), open = getOpen(), planned = rosterGet(cur.day0)[cur.k], sp = shiftSpan(cur.day0, cur.k);
+    const call = (u) => { const p = profBy(u); return p && p.phone ? `<a class="btn small" href="tel:${esc(p.phone)}">Gọi ${esc(p.name)} ${esc(p.phone)}</a>` : ''; };
+    let txt = '', acts = '';
+    if (open && (open.day0 !== cur.day0 || open.k !== cur.k) && t - sp.start > 15 * MIN) {
+      txt = `<b>${esc(open.name)} chưa kết ${esc(shiftLabel(open.day0, open.k))}</b>, đã sang ${esc(shiftLabel(cur.day0, cur.k))} được ${dur(t - sp.start)}. Người theo lịch: ${esc(nameOf(planned) || 'chưa phân')}.`;
+      acts = call(open.user) + (planned ? call(planned) : '');
+    } else if (!open) {
+      txt = `<b>Không có ai đang trực ${esc(shiftLabel(cur.day0, cur.k))}</b> (${shiftHours(cur.k)}), đã ${dur(t - sp.start)} từ đầu ca. ${planned ? `Theo lịch là ${esc(nameOf(planned))}.` : 'Ca này chưa phân ai.'}`;
+      acts = (planned ? call(planned) : '') + `<a class="btn small" href="#nhan-vien/lich-ca">${planned ? 'Đổi người' : 'Phân ca'}</a>`;
+    }
+    el.classList.toggle('hidden', !txt); $('#dutyText').innerHTML = txt; $('#dutyActs').innerHTML = acts;
+  }
+
+  // ---------- màn hình chốt trực (nhân viên) ----------
+  function boothRender() {
+    if (!isStaff()) return;
+    const q = $('#boothQ').value.trim().toLowerCase().replace(/[\s.-]/g, ''), t = nowT();
+    if (!q) { $('#boothRes').innerHTML = ''; }
+    else {
+      const rows = parkedNow().filter((s) => s.plate.toLowerCase().replace(/[\s.-]/g, '').includes(q) || s.uid.toLowerCase().replace(/:/g, '').includes(q.replace(/:/g, ''))).slice(0, 6);
+      $('#boothRes').innerHTML = rows.map((s) => { const w = watchOf(s.plate); return `<li>${plateHTML(s.plate)}<span class="grow"><b>${esc(s.uid)}</b> ${s.monthly ? '<span class="pill m">Thẻ tháng</span>' : '<span class="pill g">Vãng lai</span>'}${w ? ` <span class="pill bad">${esc(WATCH_REASON[w.reason])}</span>` : ''}<small class="muted" style="display:block">Vào ${fmtDT(s.tIn)}, đã gửi ${dur(t - s.tIn)}, phí tạm tính ${money(feeFor(s.tIn, t, s.monthly))}</small></span><button class="btn small" data-act="lost" data-key="${esc(keyOf(s))}">Khách mất thẻ</button></li>`; }).join('')
+        || `<li class="muted">Không có xe nào trong bãi khớp "${esc($('#boothQ').value.trim())}". Kiểm tra lại biển số, hoặc xem Lịch sử nếu xe đã ra.</li>`;
+    }
+    const pend = alertsList().filter((s) => s.alert.status === 'pending').length;
+    $('#boothAlertN').textContent = pend ? `${pend} cảnh báo cần xử lý` : 'Không có cảnh báo chờ'; $('#boothAlert').classList.toggle('hot', pend > 0);
+    $('#boothInfo').innerHTML = `${esc($('#manualLast').textContent)} ${$('#irLine').innerHTML}`;
+    // nút Kết ca chỉ nổi lên khi còn 30 phút là hết ca (hoặc đã quá giờ)
+    const open = getOpen(), mine = open && open.user === me.user, end = mine ? shiftSpan(open.day0, open.k).end : 0, near = mine && end - t <= 30 * MIN;
+    $('#closeSoon').classList.toggle('hidden', !near);
+    $('#boothEnd').innerHTML = mine ? (near ? `<b>${end > t ? `Còn ${dur(end - t)} là hết ca` : `Đã quá giờ hết ca ${dur(t - end)}`}</b>, bấm "Kết ca, bàn giao" ở đầu trang khi người ca sau đến.` : `Hết ca lúc ${fmtTime(end)}. Cần kết ca sớm? <button class="linkish" data-act="close-shift">Kết ca, bàn giao</button>`) : '';
+  }
+  $('#boothQ').addEventListener('input', boothRender);
+  $('#boothQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const b = $('#boothRes [data-act=lost]'); if (b && $$('#boothRes [data-act=lost]').length === 1) b.focus(); } });
+
+  function renderOverviewExtras() {
+    if (isAdmin()) { renderDecisions(); renderDuty(); } else { $('#dutyBanner').classList.add('hidden'); boothRender(); }
+  }
+  // các thao tác duyệt có thể mở hộp thoại; đóng xong thì vẽ lại Tổng quan
+  ['#gDlg', '#cDlg'].forEach((id) => $(id).addEventListener('close', () => setTimeout(() => { if (me && curView === 'tong-quan' && !$$('dialog[open]').length) renderView('tong-quan'); }, 60)));
+  const UX_ACTS = { 'dec-more': () => { decAll = !decAll; renderDecisions(); } };
+
+  // =====================================================================
   //  ĐIỀU HƯỚNG, PHÂN QUYỀN THEO TRANG, LÀM MỚI, KHỞI ĐỘNG
   // =====================================================================
   const ADMIN_VIEWS = ['thong-ke', 'nhan-dang', 'nhan-vien', 'tai-chinh', 'nhat-ky', 'cai-dat'], STAFF_VIEWS = ['cua-toi'];
@@ -4187,6 +4318,7 @@
     'close-shift': () => openCloseShift(),
     ...FIN_ACTS,
     ...SCHED_ACTS,
+    ...UX_ACTS,
     drawer: () => document.body.classList.toggle('drawer'),
     'clear-sim': async () => { if (!needAdmin()) return; const r = await askConfirm({ title: 'Xóa dữ liệu mô phỏng', text: 'Xóa các sự kiện trang mô phỏng đã ghi hôm nay? Dữ liệu mẫu và dữ liệu nhập tay vẫn giữ.', okText: 'Xóa', danger: true }); if (!r.ok) return; try { localStorage.removeItem('bgx_events'); localStorage.removeItem('bgx_parked'); } catch (e) { /* bỏ qua */ } audit('Mô phỏng', 'Xóa dữ liệu mô phỏng', `${simEventCount} sự kiện`, 'Đã xóa'); rebuildSessions(); renderAll(); },
     manual: (el) => openManual(el.dataset.lane),
