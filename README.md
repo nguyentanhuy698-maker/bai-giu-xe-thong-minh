@@ -83,3 +83,34 @@ Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và t
 - Mọi lần gửi yêu cầu, đặt mật khẩu tạm, đổi mật khẩu và mọi lần xác minh sai đều ghi vào Nhật ký thao tác. Sau khi đổi mật khẩu, phiên đăng nhập cũ của tài khoản đó hết hiệu lực.
 - Khóa localStorage mới: `bgx_pw_req` (yêu cầu của nhân viên), `bgx_pw_fail` (đếm lần sai), `bgx_pw_notice` (thông báo cho quản lý). Tài khoản có thêm trường `mustChange`.
 - Hướng phát triển khi có máy chủ: gửi mã OTP về số điện thoại hoặc email trong hồ sơ, thay cho việc gõ lại số CCCD và SĐT.
+
+## Tài chính: chi phí và lợi nhuận tháng (`#tai-chinh`, chỉ Quản lý)
+
+- **Báo cáo lãi lỗ theo tháng:**
+  - Doanh thu gồm phí gửi, thẻ tháng, phí mất thẻ và thu khác nhập tay.
+  - Trừ lần lượt:
+    - chi phí nhân sự (lấy từ Bảng lương, cộng bảo hiểm phần chủ trả theo % lương cơ bản của người có hợp đồng chính thức);
+    - chi phí cố định (khoản lặp lại được tự tạo ngày 1);
+    - chi phí biến đổi (điện theo chỉ số công tơ × đơn giá hoặc số trên hóa đơn, nước, vật tư, sửa chữa, phí QR theo % doanh thu QR);
+    - khấu hao;
+    - tiền két thiếu chưa thu hồi.
+  - Ra lợi nhuận trước thuế, rồi trừ thuế (% doanh thu, mặc định 0) ra lợi nhuận ròng.
+  - Mỗi dòng có số tháng này, số tháng trước và % tăng giảm. Lỗ tô đỏ, ghi "Lỗ". Tháng đang chạy có thêm phần "Dự kiến cuối tháng".
+- **Chỉ số:**
+  - Điểm hòa vốn (số lượt vãng lai/ngày cần có, đặt cạnh số thực tế), doanh thu mỗi chỗ đỗ, tỷ lệ lấp đầy, chi phí nhân sự trên doanh thu.
+  - Biểu đồ 12 tháng: cột doanh thu và chi phí, đường lợi nhuận. Biểu đồ cơ cấu chi phí dạng thanh ngang.
+  - Ô "Tính thử" không lưu gì và không đổi cài đặt.
+- **Nhập liệu:**
+  - Danh mục, khoản thu chi (kèm ảnh hóa đơn nén dưới 150 KB) và tài sản. Tài sản mẫu lấy từ mục Thiết bị, khấu hao mặc định 36 tháng.
+  - Chi bằng tiền mặt két tạo giao dịch âm `expense`, làm giảm "tiền mặt phải có trong két" của ca đang mở.
+  - Nhân viên có nút "Ghi khoản chi từ két" trong ca của mình; khoản này chờ quản lý duyệt. Nếu bị từ chối, khoản đó chuyển sang dòng tiền két thiếu.
+- **Chốt tháng tài chính:**
+  - Chỉ chốt được sau khi đã chốt lương tháng đó. Đã chốt thì khóa khoản thu chi của tháng và báo cáo giữ bản lưu lúc chốt.
+  - Mở chốt phải có lý do. Đã chốt tài chính thì không mở chốt lương được.
+  - Xuất Excel 2 sheet (Báo cáo, Chi tiết thu chi) và in A4.
+- **Dữ liệu mẫu:**
+  - Lịch ca và chấm công được kéo về tháng trọn vẹn đầu tiên trong 120 ngày dữ liệu. Bảng lương các tháng cũ được chốt.
+  - Thẻ tháng mẫu có giao dịch gia hạn mỗi 30 ngày.
+  - Có sẵn hóa đơn điện, nước, vật tư, một khoản sửa chữa và một khoản chi từ két chờ duyệt.
+  - Doanh thu mẫu (khoảng 8–9 triệu/tháng) không đủ trả lương 8 người (khoảng 40 triệu), nên báo cáo hiện **lỗ**. Số liệu không bị chỉnh cho đẹp.
+- **Khóa localStorage mới:** `bgx_fin_cats`, `bgx_fin_entries`, `bgx_fin_assets`, `bgx_fin_close`, `bgx_fin_auto`, `bgx_fin_seeded`, `bgx_hr_from`. Giao dịch có thêm loại `expense`.

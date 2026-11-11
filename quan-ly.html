@@ -271,6 +271,26 @@
     .slip:last-child { page-break-after:auto; }
     .slip h3 { font:700 16px/1.2 Arial; margin:0 0 6px; }
   }
+
+  /* TÀI CHÍNH */
+  .fin-table td { white-space:normal; }
+  .fin-table td:first-child { min-width:170px; }
+  .fin-table tr.fin-head td { background:#f6f7f8; font-weight:700; font-size:12.5px; color:var(--muted); padding-top:10px; }
+  .fin-table tr.sum td { font-weight:700; border-top:1px solid var(--line); }
+  .fin-table tr.big td { font-size:15px; }
+  .fin-table tr.top td { border-top:1px solid var(--line); }
+  .fin-table tr.proj td { background:#fffbea; }
+  .fin-table tr.fin-head.proj td { background:#fff3d6; color:#6b4b00; }
+  .loss, b.neg { color:var(--stop); }
+  b.pos { color:var(--go); }
+  .hbar { display:grid; grid-template-columns:minmax(110px,180px) 1fr auto; gap:10px; align-items:center; font-size:13px; padding:4px 0; }
+  .hbar .lb { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hbar .track { height:12px; background:#eef1f3; border-radius:6px; overflow:hidden; }
+  .hbar .track i { display:block; height:100%; background:var(--s2); border-radius:0 6px 6px 0; }
+  .hbar .val { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .simgrid .formgrid input { width:100%; min-width:0; }
+  .simgrid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:14px; align-items:start; }
+  @media (max-width: 760px) { .simgrid { grid-template-columns:1fr; } .simgrid .formgrid { grid-template-columns:repeat(2, minmax(0,1fr)) !important; } .hbar { grid-template-columns:96px 1fr; } .hbar .val { grid-column:1/-1; } }
 </style>
 </head>
 <body class="locked">
@@ -301,6 +321,7 @@
     <a class="tab admin-only" href="#thong-ke" data-tab="thong-ke"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16V9M10 16V4M16 16v-5"/></svg>Thống kê</a>
     <a class="tab admin-only" href="#nhan-dang" data-tab="nhan-dang"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7V4h3M14 4h3v3M17 13v3h-3M6 16H3v-3"/><rect x="6" y="8" width="8" height="4" rx="1"/></svg>Nhận dạng</a>
     <a class="tab admin-only" href="#nhan-vien" data-tab="nhan-vien"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7.5" cy="7" r="3"/><path d="M2 17c.6-3 2.8-4.5 5.5-4.5S12.4 14 13 17"/><circle cx="14.5" cy="7.5" r="2.3"/><path d="M14 12.5c2 .2 3.5 1.6 4 4"/></svg>Nhân viên</a>
+    <a class="tab admin-only" href="#tai-chinh" data-tab="tai-chinh"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="15" height="10.5" rx="2"/><circle cx="10" cy="10.2" r="2.2"/><path d="M5.5 8v4.4M14.5 8v4.4"/></svg>Tài chính</a>
     <a class="tab admin-only" href="#nhat-ky" data-tab="nhat-ky"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h8l3 3v11H5z"/><path d="M8 9h6M8 12h6M8 15h4"/></svg>Nhật ký thao tác</a>
     <a class="tab admin-only" href="#cai-dat" data-tab="cai-dat"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="2.5"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"/></svg>Cài đặt</a>
     <div class="sp"></div>
@@ -331,7 +352,7 @@
       </div>
       <div class="card admin-only" style="margin-top:14px"><h2>Doanh thu theo ca hôm nay</h2><p class="sub">Ngày làm việc từ 6:00 sáng nay đến 6:00 sáng mai. Mỗi dòng là một người thực làm hoặc khoảng không có người trực.</p>
         <div class="tablewrap"><table><thead><tr><th>Ca</th><th>Người thực làm</th><th>Từ – đến</th><th class="num">Lượt ra</th><th class="num">Gửi xe</th><th class="num">Mất thẻ</th><th class="num">Thẻ tháng</th><th class="num">Tiền mặt</th><th class="num">QR</th><th class="num">Tổng</th><th>Trạng thái</th></tr></thead><tbody id="t-shiftToday"></tbody></table></div></div>
-      <div class="card staff-only" style="margin-top:14px"><h2>Chi tiết ca của bạn</h2><p class="sub" id="my-sub"></p><div class="sumgrid" id="mySum"></div></div>
+      <div class="card staff-only" style="margin-top:14px"><div class="gates" style="margin-bottom:4px"><h2 style="flex:1">Chi tiết ca của bạn</h2><button class="btn" data-act="fin-staff-exp">Ghi khoản chi từ két</button></div><p class="sub" id="my-sub"></p><div class="sumgrid" id="mySum"></div></div>
       <div class="grid g2" style="margin-top:14px">
         <div class="card"><h2>Lưu lượng theo giờ</h2><p class="sub">Số lượt vào và ra trong từng giờ của ngày làm việc hôm nay</p><div class="chart" id="ch-hour"></div></div>
         <div class="card alerts"><h2>Cảnh báo gần đây</h2><p class="sub">Thẻ và biển số không khớp</p><ul id="recentAlerts"></ul></div>
@@ -427,6 +448,13 @@
     </section>
 
     <!-- NHÂN VIÊN (nhân sự) -->
+    <!-- TÀI CHÍNH (chỉ quản lý) -->
+    <section data-view="tai-chinh" class="hidden">
+      <div class="head"><div><h1>Tài chính</h1><p>Lãi lỗ theo tháng, khoản thu chi, tài sản và khấu hao</p></div></div>
+      <div class="tabs-scroll" id="finTabs" role="navigation" aria-label="Mục tài chính"></div>
+      <div id="finBody"></div>
+    </section>
+
     <section data-view="nhan-vien" class="hidden">
       <div class="head"><div><h1>Nhân viên</h1><p>Hồ sơ, lịch phân ca, chấm công, nghỉ phép, tăng ca, thưởng phạt và bảng lương</p></div></div>
       <div class="tabs-scroll" id="hrTabs" role="navigation" aria-label="Mục nhân sự"></div>
@@ -684,7 +712,7 @@
       genDay(day0, day0 + DAY - 1, t).forEach((s) => {
         const add = (b, f) => { const a = dailyOld.get(b) || { in: 0, out: 0, parking: 0, cash: 0, qr: 0, alerts: 0 }; f(a); dailyOld.set(b, a); };
         add(bizDay(s.tIn), (a) => a.in++);
-        if (s.tOut) add(bizDay(s.tOut), (a) => { a.out++; if (s.pay === 'cash' || s.pay === 'qr') { a.parking += s.fee; a[s.pay] += s.fee; } if (s.alert) a.alerts++; });
+        if (s.tOut) add(bizDay(s.tOut), (a) => { a.out++; if (s.pay === 'cash' || s.pay === 'qr') { a.parking += s.fee; a[s.pay] += s.fee; a.paid = (a.paid || 0) + 1; } if (s.alert) a.alerts++; });
       });
     }
     const ss = [];
@@ -753,15 +781,16 @@
   }
   // tổng tiền trong khoảng [a, b)
   function moneyBetween(a, b) {
-    const r = { parking: 0, lost: 0, monthly: 0, deposit: 0, cash: 0, qr: 0, total: 0 };
+    const r = { parking: 0, lost: 0, monthly: 0, deposit: 0, expense: 0, cash: 0, qr: 0, total: 0 };
     for (const t of txAll()) {
       if (t.ts < a || t.ts >= b) continue;
       if (t.kind === 'deposit') { r.deposit += -t.amount; continue; }
+      if (t.kind === 'expense') { r.expense += -t.amount; continue; }   // chi tiền mặt từ két: không phải doanh thu
       r[t.kind] += t.amount; r[t.pay] += t.amount; r.total += t.amount;
     }
     return r;
   }
-  const KIND_TXT = { parking: 'Gửi xe', lost: 'Mất thẻ', monthly: 'Thẻ tháng', deposit: 'Nộp quản lý' };
+  const KIND_TXT = { parking: 'Gửi xe', lost: 'Mất thẻ', monthly: 'Thẻ tháng', deposit: 'Nộp quản lý', expense: 'Chi từ két' };
   const PAY_TXT = { cash: 'Tiền mặt', qr: 'QR', monthly: 'Thẻ tháng' };
 
   // =====================================================================
@@ -955,10 +984,12 @@
     });
     t.manual = manualLogRef().filter((m) => m.ts >= start && m.ts < end).length;
     const m = moneyBetween(start, end);
-    Object.assign(t, { parking: m.parking, lost: m.lost, monthly: m.monthly, cash: m.cash, qr: m.qr, total: m.total, deposit: m.deposit });
+    Object.assign(t, { parking: m.parking, lost: m.lost, monthly: m.monthly, cash: m.cash, qr: m.qr, total: m.total, deposit: m.deposit, expense: m.expense });
     t.parked = realSessions().filter((s) => s.tIn < end && (!s.tOut || s.tOut >= end)).length;
     return t;
   }
+  // tiền mặt phải có trong két = nhận đầu ca + thu tiền mặt − chi từ két
+  const drawerMust = (openCash, t) => (openCash || 0) + (t.cash || 0) - (t.expense || 0);
   // giao ca: bản ghi thật + dữ liệu mẫu cho các ca đã qua chưa có bản ghi
   const hrand = (n) => { const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
   let handCache = null;
@@ -966,7 +997,7 @@
     if (handCache) return handCache;
     const out = handovers.slice(), have = new Set(handovers.map((h) => `${h.day0}|${h.k}`)), t = nowT(), b0 = bizToday();
     const migratedAt = store.get('bgx_hr_migrated_at', null) || (store.set('bgx_hr_migrated_at', t), t);
-    for (let d = Math.max(31, Math.ceil((b0 - prevMonthStart()) / DAY)); d >= 0; d--) {
+    for (let d = Math.max(31, Math.ceil((b0 - Math.min(prevMonthStart(), store.get('bgx_hr_from', Infinity))) / DAY)); d >= 0; d--) {
       const day0 = b0 - d * DAY;
       for (let k = 0; k < 3; k++) {
         const sp = shiftSpan(day0, k);
@@ -981,7 +1012,7 @@
         const tt = shiftTotals(start, end);
         const diff = r < 0.82 ? 0 : [-5000, -2000, 2000, 3000, -10000][Math.floor(r2 * 5)];
         const next = k < 2 ? rosterGet(day0)[k + 1] : rosterGet(day0 + DAY)[0];
-        const counted = tt.cash + diff;
+        const counted = drawerMust(0, tt) + diff;
         out.push({ id: `s:${day0}|${k}`, day0, k, user, name: nameOf(user), planned, start, end, late: lateMin, ...tt, openCash: 0, counted, diff, deposit: counted, remain: 0, irCount: tt.parked, to: next, toName: nameOf(next),
           note: diff < 0 ? 'Thiếu tiền, đã báo quản lý' : diff > 0 ? 'Dư tiền, chưa rõ khách nào trả thừa' : '', seed: true });
       }
@@ -1200,7 +1231,7 @@
     renderAll(); route();
   }
   function clearRendered() {
-    $$('main tbody, #recentAlerts, #mySum, #opsTodo, #hrBody, #myBody, #hrTabs, .chart').forEach((el) => { el.innerHTML = ''; });
+    $$('main tbody, #recentAlerts, #mySum, #opsTodo, #hrBody, #myBody, #hrTabs, #finBody, #finTabs, .chart').forEach((el) => { el.innerHTML = ''; });
     $$('main .stat .v, main .stat .d').forEach((el) => { el.textContent = ''; });
   }
   function logout(msg) {
@@ -1260,19 +1291,20 @@
   //  KẾT CA: đếm tiền, nộp quản lý, đếm xe thực tế, bàn giao
   // =====================================================================
   function sumHTML(open, t) {
-    const must = (open.openCash || 0) + t.cash;
+    const must = drawerMust(open.openCash, t);
     return `<div><span>Lượt vào</span><b>${t.in}</b></div><div><span>Lượt ra</span><b>${t.out}</b></div>
       <div><span>Xe trong bãi theo RFID</span><b>${t.parked}</b></div><div><span>Cảnh báo không khớp</span><b>${t.alerts}</b></div>
       <div><span>Mở barie bằng tay</span><b>${t.manual}</b></div><div><span>Sửa biển số</span><b>${t.fixes}</b></div>
       <div><span>Tiền mặt nhận đầu ca</span><b>${money(open.openCash || 0)}</b></div><div><span>Gửi xe</span><b>${money(t.parking)}</b></div>
       <div><span>Phí mất thẻ</span><b>${money(t.lost)}</b></div><div><span>Thẻ tháng</span><b>${money(t.monthly)}</b></div>
       <div><span>Thu tiền mặt</span><b>${money(t.cash)}</b></div><div><span>Thu QR (vào tài khoản bãi)</span><b>${money(t.qr)}</b></div>
+      ${t.expense ? `<div class="full"><span>Chi từ két</span><b>−${money(t.expense)}</b></div>` : ''}
       <div class="full"><span>Tiền mặt phải có trong két</span><b>${money(must)}</b></div>`;
   }
   function openCloseShift() {
     if (!needLogin()) return;
     const open = getOpen(); if (!open || open.user !== me.user) { toast('Bạn không có ca nào đang mở'); return; }
-    const t = nowT(), tt = shiftTotals(open.openedAt, t + 1), must = (open.openCash || 0) + tt.cash;
+    const t = nowT(), tt = shiftTotals(open.openedAt, t + 1), must = drawerMust(open.openCash, tt);
     const nx = open.k < 2 ? rosterGet(open.day0)[open.k + 1] : rosterGet(open.day0 + DAY)[0];
     const opts = staffList.filter((a) => a.active && a.user !== me.user && (!profBy(a.user) || profBy(a.user).status === 'active')).map((a) => [a.user, `${nameOf(a.user)}${a.role === 'admin' ? ' (quản lý)' : ''}${a.user === nx ? ', ca sau theo lịch' : ''}`]);
     const ir = irCountNow();
@@ -1303,7 +1335,7 @@
         const op = getOpen(); if (!op || op.user !== me.user) return 'Ca này đã được đóng ở nơi khác';
         const counted = +v.counted, deposit = +v.deposit;
         if (deposit > counted) return 'Số nộp không được lớn hơn số tiền đếm được';
-        const t2 = nowT(), t3 = shiftTotals(op.openedAt, t2 + 1), must2 = (op.openCash || 0) + t3.cash, sp = shiftSpan(op.day0, op.k);
+        const t2 = nowT(), t3 = shiftTotals(op.openedAt, t2 + 1), must2 = drawerMust(op.openCash, t3), sp = shiftSpan(op.day0, op.k);
         const late = op.planned === op.user ? Math.max(0, Math.round((op.openedAt - sp.start) / MIN)) : 0;
         const h = { id: 'h' + uid8(), day0: op.day0, k: op.k, user: op.user, name: op.name, planned: op.planned, start: op.openedAt, end: t2, late: late > settings.lateMin ? late : 0, ...t3,
           openCash: op.openCash || 0, counted, diff: counted - must2, deposit, remain: counted - deposit, irCount: +v.irCount, to: v.to, toName: nameOf(v.to), note: v.note };
@@ -1490,6 +1522,8 @@
       if (req.length) list.push([req.length, 'Yêu cầu sửa biển số trên lượt có cảnh báo chờ quản lý duyệt', '#lich-su', 'warn']);
       const unc = allHandovers().filter((h) => h.unclosed && !h.resolved);
       if (unc.length) list.push([unc.length, 'Ca chưa kết, cần kiểm tra tiền', '#nhan-vien/giao-ca', 'bad']);
+      const fe = finPendingCount();
+      if (fe) list.push([fe, 'Khoản chi từ két chờ duyệt', '#tai-chinh/thu-chi', 'warn']);
       const pr = pwReqPending();
       if (pr.length) list.push([pr.length, 'Nhân viên quên mật khẩu, chờ đặt mật khẩu tạm', '#nhan-vien/ho-so', 'warn']);
     }
@@ -1924,7 +1958,10 @@
   let period = 'day';
   function statOfDay(b0) {
     const firstDetail = bizToday() - 29 * DAY;
-    if (b0 < firstDetail) { const a = dailyOld.get(b0) || { in: 0, out: 0, parking: 0, cash: 0, qr: 0, alerts: 0 }; return { in: a.in, out: a.out, parking: a.parking, lost: 0, monthly: 0, cash: a.cash, qr: a.qr, total: a.parking, alerts: a.alerts }; }
+    if (b0 < firstDetail) {   // ngày cũ: lượt gửi lấy từ số tổng hợp, các khoản khác (thẻ tháng, mất thẻ) từ bảng giao dịch
+      const a = dailyOld.get(b0) || { in: 0, out: 0, parking: 0, cash: 0, qr: 0, alerts: 0 }, m = moneyBetween(b0, b0 + DAY);
+      return { in: a.in, out: a.out, parking: a.parking + m.parking, lost: m.lost, monthly: m.monthly, cash: a.cash + m.cash, qr: a.qr + m.qr, total: a.parking + m.total, alerts: a.alerts };
+    }
     const f = flowOfDay(b0), m = moneyBetween(b0, b0 + DAY);
     return { in: f.in, out: f.out, alerts: f.alerts, parking: m.parking, lost: m.lost, monthly: m.monthly, cash: m.cash, qr: m.qr, total: m.total };
   }
@@ -2494,7 +2531,7 @@
       <select id="f-hstaff" aria-label="Nhân viên"><option value="">Mọi người</option>${profiles.map((p) => `<option value="${esc(p.user)}"${p.user === handUser ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
       <span class="grow"></span><button class="btn accent" data-act="x-hand">Xuất Excel</button></div>
       <div class="tablewrap" style="max-height:64vh"><table><thead><tr><th>Ca</th><th>Người</th><th>Nhận ca</th><th>Kết ca</th><th class="num">Vào / ra</th><th class="num">Tiền mặt hệ thống</th><th class="num">Thực đếm</th><th class="num">Chênh lệch</th><th class="num">Nộp quản lý</th><th class="num">Xe đếm / RFID</th><th>Bàn giao cho</th><th>Ghi chú</th><th></th></tr></thead><tbody>
-      ${rows.map((h) => { const must = (h.openCash || 0) + (h.cash || 0), hasDed = rw.some((r) => r.ref === h.id && r.kind === 'deduct'), res = h.resolved || handResolved[h.id];
+      ${rows.map((h) => { const must = drawerMust(h.openCash, h), hasDed = rw.some((r) => r.ref === h.id && r.kind === 'deduct'), res = h.resolved || handResolved[h.id];
         return `<tr><td>${esc(shiftLabel(h.day0, h.k))}</td><td>${h.nobody ? `<span class="muted">${esc(h.name)}</span>` : esc(h.name)}${h.planned && !h.nobody && h.planned !== h.user ? ' <span class="pill c-sub">Ngoài lịch</span>' : ''}</td><td>${fmtTime(h.start)}${h.late > settings.lateMin ? ` <span class="pill warn">Trễ ${h.late} phút</span>` : ''}</td><td>${fmtTime(h.end)}</td>
         <td class="num">${h.in || 0} / ${h.out || 0}</td><td class="num">${h.nobody ? '' : money(must)}</td><td class="num">${h.counted == null ? '' : money(h.counted)}</td><td class="num">${diffPill(h)}</td><td class="num">${h.deposit ? money(h.deposit) : ''}</td>
         <td class="num">${h.irCount != null ? `${h.irCount} / ${h.parked}` : ''}${h.irCount != null && h.irCount !== h.parked ? ' <span class="pill bad">Lệch</span>' : ''}</td><td>${esc(h.toName || '')}</td><td class="muted" style="white-space:normal;min-width:160px">${esc(h.note || '')}${res ? `<br><span class="pill ok">Đã xử lý</span> ${esc(res.note || '')}` : ''}</td>
@@ -2517,7 +2554,7 @@
     if (!needAdmin()) return;
     const d0 = parseISO(handDay) + 6 * H;
     exportSheet(`giao-ca-${handDay}`, ['Ca', 'Ngày', 'Người', 'Nhận ca', 'Kết ca', 'Đi trễ (phút)', 'Lượt vào', 'Lượt ra', 'Tiền mặt hệ thống (đ)', 'Thực đếm (đ)', 'Chênh lệch (đ)', 'Nộp quản lý (đ)', 'QR (đ)', 'Xe đếm', 'Xe theo RFID', 'Bàn giao cho', 'Ghi chú'],
-      allHandovers().filter((h) => h.day0 === d0 && (!handUser || h.user === handUser)).sort((a, b) => a.start - b.start).map((h) => [SHIFTS[h.k].name, fmtDateY(h.day0), h.name, fmtDTY(h.start), fmtDTY(h.end), h.late || 0, h.in || 0, h.out || 0, h.nobody ? '' : (h.openCash || 0) + (h.cash || 0), h.counted == null ? '' : h.counted, h.diff == null ? '' : h.diff, h.deposit || '', h.qr || 0, h.irCount == null ? '' : h.irCount, h.parked == null ? '' : h.parked, h.toName || '', h.note || '']));
+      allHandovers().filter((h) => h.day0 === d0 && (!handUser || h.user === handUser)).sort((a, b) => a.start - b.start).map((h) => [SHIFTS[h.k].name, fmtDateY(h.day0), h.name, fmtDTY(h.start), fmtDTY(h.end), h.late || 0, h.in || 0, h.out || 0, h.nobody ? '' : drawerMust(h.openCash, h), h.counted == null ? '' : h.counted, h.diff == null ? '' : h.diff, h.deposit || '', h.qr || 0, h.irCount == null ? '' : h.irCount, h.parked == null ? '' : h.parked, h.toName || '', h.note || '']));
   }
 
   // =====================================================================
@@ -2914,6 +2951,7 @@
   async function payReopen() {
     if (!needAdmin()) return;
     const mk = payMonth, all = payroll(); if (!all[mk] || all[mk].status !== 'closed') return;
+    if (finClosed(mk)) { toast(`${monthLabel(mk)} đã chốt tài chính. Mở chốt tài chính trước rồi mới mở chốt lương.`); return; }
     const r = await askConfirm({ title: `Mở chốt ${monthLabel(mk)}`, text: 'Mở chốt để sửa lại công, tăng ca, thưởng phạt. Số liệu sẽ được tính lại theo đơn giá hiện tại.', okText: 'Mở chốt', reason: 'required', danger: true });
     if (!r.ok) return;
     const tot = all[mk].rows.reduce((a, x) => a + x.net, 0);
@@ -2986,16 +3024,686 @@
   }
 
   // =====================================================================
+  //  TÀI CHÍNH: lãi lỗ theo tháng, khoản thu chi, tài sản và khấu hao, chốt tháng
+  //  Chỉ quản lý xem được. Nhân viên chỉ ghi được khoản chi từ két trong ca của mình,
+  //  khoản đó chờ quản lý duyệt.
+  // =====================================================================
+  const FIN_SET_DEFAULT = { finIns: 21.5, finQr: 1, finTax: 0, finDep: 36, finKwh: 2900 };
+  Object.keys(FIN_SET_DEFAULT).forEach((k) => { if (settings[k] == null) settings[k] = FIN_SET_DEFAULT[k]; });
+  const FIN_GROUP = { fixed: 'Chi phí cố định', variable: 'Chi phí biến đổi', income: 'Thu khác' };
+  const FIN_SRC = { cash: 'Tiền mặt két', bank: 'Chuyển khoản' };
+  const FIN_ST = { approved: 'Đã duyệt', pending: 'Chờ duyệt', rejected: 'Từ chối' };
+  const FIN_CATS_DEFAULT = [
+    { id: 'rent', name: 'Thuê mặt bằng', group: 'fixed', recurring: true, amount: 5000000 },
+    { id: 'internet', name: 'Internet cáp quang', group: 'fixed', recurring: true, amount: 220000 },
+    { id: 'cloud', name: 'Máy chủ đám mây, tên miền', group: 'fixed', recurring: true, amount: 120000 },
+    { id: 'power', name: 'Điện', group: 'variable', recurring: false, amount: 0, meter: true, bill: true },
+    { id: 'water', name: 'Nước', group: 'variable', recurring: false, amount: 80000, bill: true },
+    { id: 'supply', name: 'Vật tư (thẻ RFID, giấy, pin)', group: 'variable', recurring: false, amount: 0 },
+    { id: 'repair', name: 'Sửa chữa thiết bị', group: 'variable', recurring: false, amount: 0 },
+    { id: 'misc', name: 'Chi khác', group: 'variable', recurring: false, amount: 0 },
+    { id: 'vending', name: 'Cho thuê chỗ đặt máy bán nước', group: 'income', recurring: true, amount: 300000 },
+    { id: 'otherinc', name: 'Thu khác', group: 'income', recurring: false, amount: 0 },
+  ];
+  let finCats = store.get('bgx_fin_cats', null) || FIN_CATS_DEFAULT.map((c) => ({ ...c, active: true }));
+  let finEntries = store.get('bgx_fin_entries', []);
+  let finAssets = store.get('bgx_fin_assets', null) || [];
+  const saveFinCats = () => store.set('bgx_fin_cats', finCats);
+  const saveFinEntries = () => store.set('bgx_fin_entries', finEntries);
+  const saveFinAssets = () => store.set('bgx_fin_assets', finAssets);
+  const finCat = (id) => finCats.find((c) => c.id === id) || { id, name: id, group: 'variable' };
+  const finCloses = () => store.get('bgx_fin_close', {});
+  const finClosed = (mk) => (finCloses()[mk] || {}).status === 'closed';
+  const finPendingCount = () => store.get('bgx_fin_entries', []).filter((e) => e.status === 'pending').length;
+  const mkAdd = (mk, n) => { const [y, m] = mk.split('-').map(Number), d = new Date(y, m - 1 + n, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; };
+  const mkDiff = (a, b) => { const [y1, m1] = a.split('-').map(Number), [y2, m2] = b.split('-').map(Number); return (y2 - y1) * 12 + (m2 - m1); };
+  const dateTs = (iso) => parseISO(iso) + 12 * H;   // ngày nhập tay: lấy 12:00 để không lệch ngày làm việc
+  const pctTxt = (x) => (x == null || !isFinite(x) ? '–' : (x * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + '%');
+  const signMoney = (v) => (v < 0 ? '−' + money(-v) : money(v));
+  // tháng đầu tiên có đủ dữ liệu: dữ liệu mẫu lượt gửi có 120 ngày, lấy tháng trọn vẹn đầu tiên
+  function finFirstMonth() {
+    const firstDay = startOfDay(nowT()) - 119 * DAY + 6 * H;
+    let mk = monthKey(firstDay); if (monthStart(mk) < firstDay) mk = mkAdd(mk, 1);
+    return mk;
+  }
+  function finMonths() { const out = [], last = curMonth(); for (let mk = finFirstMonth(); mkDiff(mk, last) >= 0; mk = mkAdd(mk, 1)) out.push(mk); return out; }
+
+  // ---------- khấu hao: giá mua chia đều số tháng, tháng cuối nhận phần dư ----------
+  function depOf(a, mk) {
+    const start = monthKey(dateTs(a.date)), i = mkDiff(start, mk), n = Math.max(1, +a.months || 1);
+    if (i < 0 || i >= n) return 0;
+    const per = Math.round(a.price / n);
+    return i === n - 1 ? a.price - per * (n - 1) : per;
+  }
+  function depDone(a, mk) { let s = 0; const start = monthKey(dateTs(a.date)); for (let m = start; mkDiff(m, mk) >= 0; m = mkAdd(m, 1)) s += depOf(a, m); return s; }
+
+  // ---------- khoản lặp lại: tự tạo đầu tháng ----------
+  function finAutoRecurring() {
+    const done = store.get('bgx_fin_auto', {}); let n = 0;
+    finMonths().forEach((mk) => {
+      if (finClosed(mk)) return;
+      finCats.filter((c) => c.recurring && c.active !== false && c.amount > 0 && (!c.since || mkDiff(c.since, mk) >= 0)).forEach((c) => {
+        const k = `${mk}|${c.id}`; if (done[k]) return; done[k] = true;
+        finEntries.push({ id: 'fe' + uid8(), ts: monthStart(mk) + 3 * H, cat: c.id, kind: c.group === 'income' ? 'income' : 'expense', amount: c.amount, src: 'bank', note: 'Tự tạo đầu tháng (khoản lặp lại)', status: 'approved', by: 'Hệ thống', created: nowT(), auto: true });
+        n++;
+      });
+    });
+    if (n) { saveFinEntries(); store.set('bgx_fin_auto', done); }
+  }
+
+  // ---------- dữ liệu mẫu tài chính (một lần) ----------
+  function finSeed() {
+    if (store.get('bgx_fin_seeded', false)) { finAutoRecurring(); return; }
+    const t = nowT(), cutoff = Math.min(t - DAY, store.get('bgx_hr_migrated_at', t)), first = finFirstMonth(), from = monthStart(first);
+    // 1) lịch ca mẫu cho các tháng cũ, để chấm công và bảng lương các tháng đó có số
+    if (from < prevMonthStart()) { autoAssign(from, prevMonthStart() - DAY, false); saveRoster(); store.set('bgx_hr_from', from); handCache = null; }
+    // 2) gia hạn thẻ tháng trong quá khứ: mỗi thẻ mẫu được trả 30 ngày một lần trước ngày hết hạn
+    const oldest = startOfDay(t) - 119 * DAY;
+    cardsSeed.forEach((c, i) => {
+      if (c.lost) return;
+      for (let x = c.expires - 30 * DAY, j = 0; x >= oldest; x -= 30 * DAY, j++) {
+        const at = startOfDay(x) + (8 + Math.floor(hrand(i * 7.1 + j) * 11)) * H + Math.floor(hrand(i * 3.3 + j * 1.7) * 59) * MIN;
+        if (at > cutoff || at < oldest) continue;
+        txStored.push({ id: 'tx' + uid8(), ts: at, shiftKey: shiftKeyOf(at), kind: 'monthly', amount: priceAt(at).monthly, pay: hrand(i * 5.9 + j * 2.3) < 0.5 ? 'cash' : 'qr', ref: c.uid, by: 'Dữ liệu mẫu', seed: true });
+      }
+    });
+    store.set('bgx_transactions', txStored); txCache = null; handCache = null;
+    // 3) khoản chi mẫu: điện (chỉ số công tơ), nước, vật tư, sửa chữa, một khoản chi tiền mặt từ két mỗi tháng
+    let meter = 15230;
+    finMonths().forEach((mk, i) => {
+      const ms = monthStart(mk), done = monthEnd(mk) <= t;
+      if (done) {
+        const kwh = 176 + Math.round(hrand(i * 4.7) * 22);
+        finEntries.push({ id: 'fe' + uid8(), ts: monthEnd(mk) - DAY + 4 * H, cat: 'power', kind: 'expense', amount: kwh * settings.finKwh, meter: { from: meter, to: meter + kwh, price: settings.finKwh }, src: 'bank', note: `Hóa đơn điện ${monthLabel(mk).toLowerCase()}, ${kwh} kWh`, status: 'approved', by: 'Nguyễn Tấn Huy', created: t, seed: true });
+        meter += kwh;
+        finEntries.push({ id: 'fe' + uid8(), ts: monthEnd(mk) - DAY + 5 * H, cat: 'water', kind: 'expense', amount: 70000 + Math.round(hrand(i * 2.9) * 4) * 5000, src: 'bank', note: `Hóa đơn nước ${monthLabel(mk).toLowerCase()}`, status: 'approved', by: 'Nguyễn Tấn Huy', created: t, seed: true });
+      }
+      const sup = ms + 9 * DAY + 4 * H;
+      if (sup <= cutoff) finEntries.push({ id: 'fe' + uid8(), ts: sup, cat: 'supply', kind: 'expense', amount: 120000, src: 'bank', note: 'Mua 20 thẻ RFID dự phòng', status: 'approved', by: 'Võ Trương Thùy Dương', created: t, seed: true });
+      const cashAt = ms + 17 * DAY + 9 * H;   // 15:00 ngày 18
+      if (cashAt <= cutoff) {
+        const e = { id: 'fe' + uid8(), ts: cashAt, cat: 'supply', kind: 'expense', amount: 45000, src: 'cash', note: 'Giấy in phiếu, pin điều khiển barie', status: 'approved', by: 'Võ Trương Thùy Dương', created: t, seed: true };
+        finEntries.push(e); txStored.push({ id: 'tx' + uid8(), ts: cashAt, shiftKey: shiftKeyOf(cashAt), kind: 'expense', amount: -e.amount, pay: 'cash', ref: e.id, by: e.by, seed: true });
+      }
+      if (i === 1) { const r = ms + 21 * DAY + 4 * H; if (r <= cutoff) finEntries.push({ id: 'fe' + uid8(), ts: r, cat: 'repair', kind: 'expense', amount: 85000, src: 'bank', note: 'Thay dây nguồn ESP32-CAM làn ra', status: 'approved', by: 'Nguyễn Tấn Huy', created: t, seed: true }); }
+    });
+    // một khoản nhân viên chi từ két đang chờ duyệt (ca mẫu gần nhất của nhân viên trực)
+    txCache = null; handCache = null;
+    const hs = allHandovers().filter((h) => h.seed && !h.nobody && (profBy(h.user) || {}).position === 'staff' && h.end <= cutoff).sort((a, b) => b.end - a.end)[0];
+    if (hs) {
+      const at = hs.start + 3 * H, e = { id: 'fe' + uid8(), ts: at, cat: 'supply', kind: 'expense', amount: 35000, src: 'cash', note: 'Mua khăn lau, nước rửa tay cho chốt', status: 'pending', by: hs.name, byUser: hs.user, created: at, seed: true };
+      finEntries.push(e); txStored.push({ id: 'tx' + uid8(), ts: at, shiftKey: shiftKeyOf(at), kind: 'expense', amount: -e.amount, pay: 'cash', ref: e.id, by: e.by, seed: true });
+    }
+    store.set('bgx_transactions', txStored); txCache = null; handCache = null;
+    // 4) tài sản lấy từ danh sách thiết bị
+    const PRICE = { server: 7200000, esp32: 150000, 'rfid-in': 45000, 'rfid-out': 45000, 'cam-in': 190000, 'cam-out': 190000, 'face-in': 190000, 'face-out': 190000, 'gate-in': 250000, 'gate-out': 250000, 'ir-in': 50000, 'ir-out': 50000, audio: 120000 };
+    const buy = isoDate(from - 20 * DAY);
+    if (!store.get('bgx_fin_assets', null)) finAssets = DEVICES.filter((d) => PRICE[d.id]).map((d) => ({ id: 'as' + uid8(), name: d.id === 'server' ? 'Máy tính mini chạy nhận dạng (Intel N100, 16 GB)' : d.name, place: d.group, date: buy, price: PRICE[d.id], months: settings.finDep, device: d.id }));
+    saveFinCats(); saveFinEntries(); saveFinAssets(); saveSettings();
+    // 5) chốt lương các tháng cũ của dữ liệu mẫu, để các tháng đó chốt được tài chính
+    if (typeof closeMonth === 'function') finMonths().forEach((mk) => { if (mkDiff(mk, monthKey(prevMonthStart())) > 0 && !payroll()[mk]) closeMonth(mk, true); });
+    store.set('bgx_fin_seeded', true);
+    finAutoRecurring();
+  }
+
+  // ---------- số lượt vãng lai có trả tiền trong một ngày làm việc ----------
+  function finPaidCount(b0) {
+    if (b0 < bizToday() - 29 * DAY) return (dailyOld.get(b0) || {}).paid || 0;
+    let n = 0; realSessions().forEach((s) => { if (s.tOut && s.tOut >= b0 && s.tOut < b0 + DAY && s.fee > 0 && (s.pay === 'cash' || s.pay === 'qr')) n++; });
+    return n;
+  }
+  // tỷ lệ lấp đầy: giờ-xe thực tế chia cho (sức chứa × số giờ), chỉ tính phần có dữ liệu chi tiết
+  function finOccupancy(from, to) {
+    const t = nowT(), a = Math.max(from, bizToday() - 29 * DAY), b = Math.min(to, t);
+    if (b <= a) return null;
+    let used = 0; realSessions().forEach((s) => { const x = Math.max(s.tIn, a), y = Math.min(s.tOut || t, b); if (y > x) used += y - x; });
+    return used / (settings.cap * (b - a));
+  }
+
+  // ---------- báo cáo một tháng ----------
+  function finCompute(mk) {
+    const from = monthStart(mk), to = monthEnd(mk), t = nowT(), end = Math.min(to, bizToday() + DAY), dim = daysInMonth(mk);
+    const rev = { parking: 0, monthly: 0, lost: 0, cash: 0, qr: 0 }; let paid = 0;
+    for (let d = from; d < end; d += DAY) { const a = statOfDay(d); rev.parking += a.parking; rev.monthly += a.monthly; rev.lost += a.lost; rev.cash += a.cash; rev.qr += a.qr; paid += finPaidCount(d); }
+    const ents = finEntries.filter((e) => e.ts >= from && e.ts < to);
+    const other = ents.filter((e) => e.kind === 'income' && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0);
+    const byCat = {}; ents.filter((e) => e.kind === 'expense' && e.status !== 'rejected').forEach((e) => { byCat[e.cat] = (byCat[e.cat] || 0) + e.amount; });
+    const pending = ents.filter((e) => e.status === 'pending');
+    const rows = payData(mk), offi = (u) => (profBy(u) || {}).contract === 'official';
+    const payrollSum = rows.reduce((s, r) => s + r.net, 0), insBase = rows.filter((r) => offi(r.user)).reduce((s, r) => s + r.base, 0), ins = Math.round(insBase * settings.finIns / 100);
+    const adminLabor = rows.filter((r) => (profBy(r.user) || {}).position === 'admin').reduce((s, r) => s + r.net + (offi(r.user) ? r.base * settings.finIns / 100 : 0), 0);
+    const staffRows = rows.filter((r) => (profBy(r.user) || {}).position !== 'admin');
+    const qrFee = Math.round(rev.qr * settings.finQr / 100);
+    const dep = finAssets.reduce((s, a) => s + depOf(a, mk), 0);
+    const rw = rewards();
+    const shortHand = allHandovers().filter((h) => !h.nobody && h.diff < 0 && h.day0 >= from && h.day0 < to && !rw.some((r) => r.ref === h.id && r.kind === 'deduct')).reduce((s, h) => s - h.diff, 0);
+    const shortRej = ents.filter((e) => e.kind === 'expense' && e.status === 'rejected' && e.src === 'cash').reduce((s, e) => s + e.amount, 0);
+    const fixedCats = Object.keys(byCat).filter((c) => finCat(c).group === 'fixed'), varCats = Object.keys(byCat).filter((c) => finCat(c).group !== 'fixed');
+    const fixed = fixedCats.reduce((s, c) => s + byCat[c], 0), variable = varCats.reduce((s, c) => s + byCat[c], 0) + qrFee;
+    const revenue = rev.parking + rev.monthly + rev.lost + other, labor = payrollSum + ins, shortage = shortHand + shortRej;
+    const cost = labor + fixed + variable + dep + shortage, pbt = revenue - cost, tax = Math.round(revenue * settings.finTax / 100), net = pbt - tax;
+    const running = end < to || to > t, elapsed = running ? Math.max(0.5, (Math.min(t, to) - from) / DAY) : dim;
+    const r = { mk, rev, other, byCat, fixedCats, varCats, payroll: payrollSum, ins, insBase, qrFee, dep, shortHand, shortRej, revenue, labor, fixed, variable, shortage, cost, pbt, tax, net,
+      paid, elapsed, dim, running, pending: pending.length, pendingSum: pending.reduce((s, e) => s + e.amount, 0), adminLabor, staffLabor: labor - adminLabor, staffN: staffRows.length,
+      occ: finOccupancy(from, to), cap: settings.cap, payClosed: monthClosed(mk), rates: { ins: settings.finIns, qr: settings.finQr, tax: settings.finTax } };
+    if (running) {
+      const k = dim / elapsed;
+      const rowP = (x) => (x.payType === 'hour' ? x.net * k : x.base + (x.net - x.base) * k) + (offi(x.user) ? (x.payType === 'hour' ? x.base * k : x.base) * settings.finIns / 100 : 0);
+      const isAdm = (x) => (profBy(x.user) || {}).position === 'admin';
+      const adminP = rows.filter(isAdm).reduce((s, x) => s + rowP(x), 0), staffP = rows.filter((x) => !isAdm(x)).reduce((s, x) => s + rowP(x), 0);
+      const laborP = adminP + staffP, insP = 0;
+      const prev = finEntries.filter((e) => e.ts >= monthStart(mkAdd(mk, -1)) && e.ts < from && e.kind === 'expense' && e.status !== 'rejected');
+      const billFill = finCats.filter((c) => c.bill && !byCat[c.id]).reduce((s, c) => s + prev.filter((e) => e.cat === c.id).reduce((a, e) => a + e.amount, 0), 0);
+      const revP = (rev.parking + rev.monthly + rev.lost) * k + other, costP = laborP + insP + fixed + (variable - qrFee) + billFill + qrFee * k + dep + shortage * k, taxP = revP * settings.finTax / 100;
+      r.proj = { revenue: Math.round(revP), cost: Math.round(costP), net: Math.round(revP - costP - taxP), billFill: Math.round(billFill), labor: Math.round(laborP), adminLabor: Math.round(adminP), staffLabor: Math.round(staffP) };
+    }
+    return r;
+  }
+  let finMemo = new Map();   // xóa mỗi lần vẽ lại trang
+  const finReport = (mk) => { const c = finCloses()[mk]; if (c && c.status === 'closed' && c.report) return c.report; if (!finMemo.has(mk)) finMemo.set(mk, finCompute(mk)); return finMemo.get(mk); };
+  // các dòng của bảng lãi lỗ (dùng cho bảng, Excel, bản in)
+  function finLines(r, p) {
+    const L = [], g = (o, k) => (o ? (typeof k === 'function' ? k(o) : o[k]) : null);
+    const add = (label, k, cls = '', note = '') => L.push({ label, cur: g(r, k), prev: g(p, k), cls, note });
+    L.push({ head: 'Doanh thu' });
+    add('Phí gửi xe', (o) => o.rev.parking); add('Thẻ tháng', (o) => o.rev.monthly); add('Phí mất thẻ', (o) => o.rev.lost); add('Thu khác (nhập tay)', 'other');
+    add('Tổng doanh thu', 'revenue', 'sum');
+    L.push({ head: 'Chi phí nhân sự' });
+    add('Lương theo Bảng lương', 'payroll', '', r.payClosed ? 'Bảng lương đã chốt' : 'Bảng lương nháp');
+    add(`Bảo hiểm phần chủ trả (${num(r.rates.ins)}% lương cơ bản HĐ chính thức)`, 'ins'); add('Cộng chi phí nhân sự', 'labor', 'sum');
+    L.push({ head: 'Chi phí cố định' });
+    [...new Set([...r.fixedCats, ...(p ? p.fixedCats : [])])].forEach((c) => add(finCat(c).name, (o) => o.byCat[c] || 0));
+    add('Cộng chi phí cố định', 'fixed', 'sum');
+    L.push({ head: 'Chi phí biến đổi' });
+    [...new Set([...r.varCats, ...(p ? p.varCats : [])])].forEach((c) => add(finCat(c).name, (o) => o.byCat[c] || 0));
+    add(`Phí thanh toán QR (${num(r.rates.qr)}% doanh thu QR)`, 'qrFee'); add('Cộng chi phí biến đổi', 'variable', 'sum');
+    add('Khấu hao tài sản', 'dep', 'top'); add('Tiền két thiếu chưa thu hồi', 'shortage', 'top');
+    add('Tổng chi phí', 'cost', 'sum big');
+    add('Lợi nhuận trước thuế', 'pbt', 'sum profit');
+    add(`Thuế (${num(r.rates.tax)}% doanh thu)`, 'tax');
+    add('Lợi nhuận ròng', 'net', 'sum big profit');
+    return L;
+  }
+
+  // =====================================================================
+  //  GIAO DIỆN
+  // =====================================================================
+  const FIN_TABS = [['bao-cao', 'Báo cáo lãi lỗ'], ['thu-chi', 'Khoản thu chi'], ['tai-san', 'Tài sản, khấu hao'], ['danh-muc', 'Danh mục'], ['cai-dat', 'Cài đặt tài chính']];
+  let finMonth = '', finTab = 'bao-cao', finFilter = { group: '', status: '' };
+  const finBody = (html) => { $('#finBody').innerHTML = html; };
+  const finMonthInput = (id) => `<label class="muted" style="display:flex;gap:6px;align-items:center;font-size:12.5px">Tháng<input type="month" id="${id}" value="${esc(finMonth)}" min="${finFirstMonth()}" max="${curMonth()}"></label>`;
+  function renderFinance() {
+    if (!isAdmin()) { $('#finBody').innerHTML = ''; $('#finTabs').innerHTML = ''; return; }
+    finEntries = store.get('bgx_fin_entries', finEntries); finAutoRecurring(); finMemo = new Map();
+    const h = parseHash(); finTab = FIN_TABS.some(([id]) => id === h.sub) ? h.sub : 'bao-cao';
+    if (!finMonth || mkDiff(finFirstMonth(), finMonth) < 0 || mkDiff(finMonth, curMonth()) < 0) finMonth = curMonth();
+    $('#finTabs').innerHTML = FIN_TABS.map(([id, lb]) => `<a href="#tai-chinh/${id}" class="${id === finTab ? 'on' : ''}"${id === finTab ? ' aria-current="page"' : ''}>${esc(lb)}${id === 'thu-chi' && finPendingCount() ? ` <span class="pill warn">${finPendingCount()}</span>` : ''}</a>`).join('');
+    ({ 'bao-cao': finViewReport, 'thu-chi': finViewEntries, 'tai-san': finViewAssets, 'danh-muc': finViewCats, 'cai-dat': finViewSettings })[finTab]();
+    const mi = $('#f-finm'); if (mi) mi.onchange = (e) => { finMonth = e.target.value || curMonth(); renderFinance(); };
+  }
+
+  // ---------- 1. BÁO CÁO LÃI LỖ ----------
+  function finViewReport() {
+    const mk = finMonth, r = finReport(mk), pm = mkAdd(mk, -1), p = mkDiff(finFirstMonth(), pm) >= 0 ? finReport(pm) : null;
+    const cl = finCloses()[mk], closed = finClosed(mk), loss = r.net < 0;
+    const lines = finLines(r, p);
+    const chg = (a, b) => (b == null || !b ? '–' : `${a - b >= 0 ? '+' : '−'}${pctTxt(Math.abs((a - b) / b))}`);
+    const cell = (v, l) => (l.cls.includes('profit') && v < 0 ? `<span class="loss">Lỗ ${money(-v)}</span>` : signMoney(v));
+    const table = lines.map((l) => l.head ? `<tr class="fin-head"><td colspan="4">${esc(l.head)}</td></tr>`
+      : `<tr class="${esc(l.cls)}"><td>${esc(l.label)}${l.note ? ` <small class="muted">${esc(l.note)}</small>` : ''}</td><td class="num">${cell(l.cur, l)}</td><td class="num">${l.prev == null ? '–' : cell(l.prev, l)}</td><td class="num muted">${l.prev == null ? '–' : chg(l.cur, l.prev)}</td></tr>`).join('')
+      + (r.proj ? `<tr class="fin-head proj"><td colspan="4">Dự kiến cuối tháng <small class="muted">theo nhịp ${r.elapsed.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} ngày đầu${r.proj.billFill ? `, điện nước tạm lấy bằng tháng trước (${money(r.proj.billFill)})` : ''}</small></td></tr>
+        <tr class="proj"><td>Doanh thu dự kiến</td><td class="num">${money(r.proj.revenue)}</td><td class="num">${p ? money(p.revenue) : '–'}</td><td class="num muted">${p ? chg(r.proj.revenue, p.revenue) : '–'}</td></tr>
+        <tr class="proj"><td>Chi phí dự kiến</td><td class="num">${money(r.proj.cost)}</td><td class="num">${p ? money(p.cost) : '–'}</td><td class="num muted">${p ? chg(r.proj.cost, p.cost) : '–'}</td></tr>
+        <tr class="proj sum profit"><td>Lợi nhuận ròng dự kiến</td><td class="num">${r.proj.net < 0 ? `<span class="loss">Lỗ ${money(-r.proj.net)}</span>` : money(r.proj.net)}</td><td class="num">${p ? (p.net < 0 ? `<span class="loss">Lỗ ${money(-p.net)}</span>` : money(p.net)) : '–'}</td><td class="num muted">${p ? chg(r.proj.net, p.net) : '–'}</td></tr>` : '');
+    const avgTurn = r.paid ? r.rev.parking / r.paid : priceNow().day;
+    const costBasis = r.proj ? r.proj.cost : r.cost, nonPark = r.proj ? r.proj.revenue - (r.rev.parking * r.dim / r.elapsed) : r.revenue - r.rev.parking;
+    const needDay = Math.max(0, (costBasis - nonPark) / avgTurn / r.dim), actDay = r.paid / r.elapsed;
+    const notes = [];
+    if (r.running) notes.push(`${monthLabel(mk)} chưa hết: số liệu tính đến hôm nay (${r.elapsed.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} ngày). Lương là bảng lương nháp đến hôm nay. Cột tăng giảm so phần đã qua của tháng này với cả tháng trước; so cả tháng thì xem dòng Dự kiến cuối tháng.`);
+    if (r.pending) notes.push(`Có ${r.pending} khoản chi chờ duyệt (${money(r.pendingSum)}), đã tính vào chi phí. <a href="#tai-chinh/thu-chi">Xem và duyệt</a>.`);
+    if (closed) notes.push(`Đã chốt lúc ${fmtDT(cl.closedAt)} bởi ${esc(cl.by)}. Số liệu ở đây là bản lưu lúc chốt.`);
+    finBody(`<div class="toolbar">${finMonthInput('f-finm')}${closed ? '<span class="pill ok">Đã chốt tài chính</span>' : '<span class="pill warn">Chưa chốt</span>'}<span class="pill ${r.payClosed ? 'ok' : 'g'}">Lương ${r.payClosed ? 'đã chốt' : 'nháp'}</span><span class="grow"></span>
+      <button class="btn" data-act="fin-export">Xuất Excel</button><button class="btn" data-act="fin-print">In A4</button>${closed ? '<button class="btn danger" data-act="fin-reopen">Mở chốt</button>' : '<button class="btn primary" data-act="fin-close">Chốt tháng</button>'}</div>
+      ${notes.length ? `<div class="note${r.pending ? ' warn' : ''}" style="margin-bottom:12px">${notes.join('<br>')}</div>` : ''}
+      <div class="grid g4">
+        <div class="card stat"><div class="k">Doanh thu</div><div class="v small">${money(r.revenue)}</div><div class="d">Gửi xe ${money(r.rev.parking)}, thẻ tháng ${money(r.rev.monthly)}</div></div>
+        <div class="card stat"><div class="k">Tổng chi phí</div><div class="v small">${money(r.cost + r.tax)}</div><div class="d">Nhân sự ${money(r.labor)}, ${pctTxt(r.revenue ? r.labor / r.revenue : null)} doanh thu</div></div>
+        <div class="card stat"><div class="k">Lợi nhuận ròng</div><div class="v small${loss ? ' bad' : ''}">${loss ? `Lỗ ${money(-r.net)}` : money(r.net)}</div><div class="d">${r.proj ? `Dự kiến cả tháng: ${r.proj.net < 0 ? `lỗ ${money(-r.proj.net)}` : money(r.proj.net)}` : p ? `Tháng trước: ${p.net < 0 ? `lỗ ${money(-p.net)}` : money(p.net)}` : ''}</div></div>
+        <div class="card stat"><div class="k">Biên lợi nhuận</div><div class="v small${loss ? ' bad' : ''}">${pctTxt(r.revenue ? r.net / r.revenue : null)}</div><div class="d">Lợi nhuận ròng chia doanh thu</div></div>
+      </div>
+      <div class="grid g2" style="margin-top:14px;align-items:start">
+        <div class="tablewrap"><table class="fin-table"><thead><tr><th>Khoản mục</th><th class="num">${esc(monthLabel(mk))}</th><th class="num">${p ? esc(monthLabel(pm)) : 'Tháng trước'}</th><th class="num">Tăng giảm</th></tr></thead><tbody>${table}</tbody></table></div>
+        <div style="display:grid;gap:14px">
+          <div class="card"><h2>Chỉ số</h2><p class="sub">${r.proj ? 'Chi phí dùng số dự kiến cả tháng' : 'Theo số liệu cả tháng'}</p>
+            <div class="sumgrid">
+              <div class="full"><span>Điểm hòa vốn</span><b>${num(Math.ceil(needDay))} lượt vãng lai/ngày</b></div>
+              <div class="full"><span>Thực tế</span><b class="${actDay < needDay ? 'neg' : 'pos'}">${actDay.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} lượt/ngày${actDay < needDay ? `, thiếu ${num(Math.ceil(needDay - actDay))}` : ', đã vượt'}</b></div>
+              <div><span>Giá bình quân mỗi lượt</span><b>${money(avgTurn)}</b></div><div><span>Doanh thu mỗi chỗ đỗ</span><b>${money(r.revenue / r.cap)}</b></div>
+              <div><span>Tỷ lệ lấp đầy</span><b>${r.occ == null ? '–' : pctTxt(r.occ)}</b></div><div><span>Nhân sự trên doanh thu</span><b>${pctTxt(r.revenue ? r.labor / r.revenue : null)}</b></div>
+            </div>
+            <p class="muted" style="font-size:12px;margin:8px 0 0">Hòa vốn = (tổng chi phí − doanh thu không phải phí gửi) ÷ giá bình quân mỗi lượt ÷ ${r.dim} ngày. Tỷ lệ lấp đầy = giờ-xe thực tế ÷ (${r.cap} chỗ × số giờ)${r.occ == null ? '; tháng này không còn dữ liệu chi tiết từng lượt' : ', chỉ tính 30 ngày gần nhất có dữ liệu chi tiết'}.</p></div>
+          <div class="card"><h2>Cơ cấu chi phí</h2><p class="sub">${esc(monthLabel(mk))}, sắp theo số tiền</p><div id="finStruct"></div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px"><h2>12 tháng gần nhất</h2><p class="sub" id="finTrendSub"></p><div class="chart fin" id="ch-fin12"></div></div>
+      <div class="card" style="margin-top:14px"><h2>Tính thử</h2><p class="sub">Đổi các con số để xem lợi nhuận một tháng. Không lưu, không đổi cài đặt giá.</p><div id="finSim"></div></div>`);
+    finStructure(r); finTrend(mk); finSimulator(r);
+  }
+  function finStructure(r) {
+    const items = [['Lương', r.payroll], ['Bảo hiểm', r.ins], ...Object.keys(r.byCat).map((c) => [finCat(c).name, r.byCat[c]]), ['Phí thanh toán QR', r.qrFee], ['Khấu hao', r.dep], ['Tiền két thiếu', r.shortage], ['Thuế', r.tax]].filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]);
+    const tot = items.reduce((s, x) => s + x[1], 0), max = Math.max(1, ...items.map((x) => x[1]));
+    $('#finStruct').innerHTML = items.map(([n, v]) => `<div class="hbar"><span class="lb">${esc(n)}</span><span class="track"><i style="width:${(v / max * 100).toFixed(1)}%"></i></span><span class="val">${money(v)} <small class="muted">${pctTxt(v / tot)}</small></span></div>`).join('') || '<p class="muted">Chưa có chi phí.</p>';
+  }
+  function finTrend(mk) {
+    const first = finFirstMonth(), months = []; for (let m = mkAdd(mk, -11); mkDiff(m, mk) >= 0; m = mkAdd(m, 1)) if (mkDiff(first, m) >= 0) months.push(m);
+    const reps = months.map((m) => finReport(m));
+    $('#finTrendSub').textContent = `${months.length < 12 ? `Dữ liệu mẫu bắt đầu từ ${monthLabel(first).toLowerCase()}, nên chỉ có ${months.length} tháng. ` : ''}Cột: doanh thu và tổng chi phí; đường: lợi nhuận ròng. Tháng đang chạy tính đến hôm nay. Trục tính bằng nghìn đồng.`;
+    finChart($('#ch-fin12'), { labels: months.map((m) => { const [y, mm] = m.split('-'); return `T${+mm}/${y.slice(2)}${m === curMonth() ? '*' : ''}`; }), rev: reps.map((x) => x.revenue), cost: reps.map((x) => x.cost + x.tax), net: reps.map((x) => x.net) });
+  }
+  // cột đôi (doanh thu, chi phí) + đường lợi nhuận; lợi nhuận có thể âm nên trục có phần dưới 0
+  function finChart(el, d) {
+    el._fin = d;
+    const W = Math.max(320, el.clientWidth || 760), Hh = 260, L = 54, R = 10, T = 12, B = 28, n = d.labels.length;
+    const hi = Math.max(1, ...d.rev, ...d.cost, ...d.net), lo = Math.min(0, ...d.net);
+    const step = niceStep((hi - lo) / 5), top = Math.ceil(hi / step) * step, bot = Math.floor(lo / step) * step;
+    const y = (v) => T + (Hh - T - B) * (top - v) / (top - bot), bw = (W - L - R) / Math.max(1, n), inner = Math.min(22, bw * 0.3);
+    let svg = `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Doanh thu, chi phí và lợi nhuận theo tháng">`;
+    for (let v = bot; v <= top + 1e-9; v += step) svg += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${v === 0 ? '#9aa3ab' : '#e6eaed'}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="#69737d">${esc(kFmt(v))}</text>`;
+    const pts = [];
+    d.labels.forEach((lb, i) => {
+      const cx = L + bw * (i + 0.5);
+      svg += barPath(cx - inner - 1, y(d.rev[i]), inner, y(0) - y(d.rev[i]), 3, '#2a78d6') + barPath(cx + 1, y(d.cost[i]), inner, y(0) - y(d.cost[i]), 3, '#eb6834');
+      svg += `<text x="${cx}" y="${Hh - 8}" text-anchor="middle" font-size="11" fill="#69737d">${esc(lb)}</text>`;
+      pts.push([cx, y(d.net[i])]);
+    });
+    svg += `<polyline points="${pts.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#1b1f24" stroke-width="2"/>`;
+    pts.forEach(([x, yy], i) => { svg += `<circle cx="${x}" cy="${yy}" r="4.5" fill="${d.net[i] < 0 ? '#c93434' : '#1a8f56'}" stroke="#fff" stroke-width="2"/>`; });
+    d.labels.forEach((lb, i) => { svg += `<rect class="hit" tabindex="0" focusable="true" aria-label="${esc(lb)}" data-i="${i}" x="${L + bw * i}" y="${T}" width="${bw}" height="${Hh - T - B}" fill="transparent"/>`; });
+    svg += '</svg>';
+    el.innerHTML = `<div class="legend"><span><i style="background:#2a78d6"></i>Doanh thu</span><span><i style="background:#eb6834"></i>Tổng chi phí</span><span><i style="background:#1b1f24;height:3px;border-radius:2px"></i>Lợi nhuận ròng</span></div>${svg}<div class="tip" role="status"></div>`;
+    const tip = $('.tip', el), svgEl = $('svg', el);
+    $$('.hit', el).forEach((r) => {
+      const show = () => { const i = +r.dataset.i, box = svgEl.getBoundingClientRect(), sc = box.width / W; $$('.hit', el).forEach((x) => x.setAttribute('fill', 'transparent')); r.setAttribute('fill', 'rgba(43,47,53,.06)');
+        tip.innerHTML = `<b>${esc(d.labels[i])}</b><div><i style="background:#2a78d6"></i>Doanh thu: ${esc(money(d.rev[i]))}</div><div><i style="background:#eb6834"></i>Chi phí: ${esc(money(d.cost[i]))}</div><div><i style="background:#1b1f24"></i>${d.net[i] < 0 ? `Lỗ: ${esc(money(-d.net[i]))}` : `Lợi nhuận: ${esc(money(d.net[i]))}`}</div>`;
+        tip.style.left = Math.min(Math.max((L + bw * (i + 0.5)) * sc, 80), box.width - 80) + 'px'; tip.style.top = svgEl.offsetTop + y(Math.max(d.rev[i], d.cost[i])) * sc - 8 + 'px'; tip.style.opacity = 1; };
+      const hide = () => { r.setAttribute('fill', 'transparent'); tip.style.opacity = 0; };
+      r.addEventListener('mouseenter', show); r.addEventListener('mouseleave', hide); r.addEventListener('focus', show); r.addEventListener('blur', hide);
+      r.addEventListener('touchstart', (e) => { e.preventDefault(); show(); }, { passive: false });
+    });
+  }
+  let finRz; window.addEventListener('resize', () => { clearTimeout(finRz); finRz = setTimeout(() => { const c = $('#ch-fin12'); if (c && c._fin && c.offsetParent) finChart(c, c._fin); }, 160); });
+
+  // ---------- Tính thử: không lưu gì ----------
+  function finSimulator(r) {
+    const k = r.proj ? r.dim / r.elapsed : 1;
+    const base = { price: Math.round(r.paid ? r.rev.parking / r.paid : priceNow().day), turns: Math.round(r.paid / r.elapsed), cards: cards.filter((c) => !c.lost && c.expires >= nowT()).length, cardPrice: priceNow().monthly,
+      staff: r.staffN, perStaff: Math.round(r.staffN ? (r.proj ? r.proj.staffLabor : r.staffLabor) / r.staffN : 0) };
+    const admin = Math.round(r.proj ? r.proj.adminLabor : r.adminLabor), lost = Math.round(r.rev.lost * k), other = r.other;
+    const otherCost = (r.proj ? r.proj.cost - r.proj.labor - r.qrFee * k : r.cost - r.labor - r.qrFee);
+    const qrShare = r.rev.cash + r.rev.qr ? r.rev.qr / (r.rev.cash + r.rev.qr) : 0;
+    const calc = (v) => { const revenue = v.turns * v.price * r.dim + v.cards * v.cardPrice + lost + other, labor = admin + v.staff * v.perStaff, qr = (revenue - other) * qrShare * settings.finQr / 100, tax = revenue * settings.finTax / 100, cost = labor + otherCost + qr; return { revenue, cost: cost + tax, net: revenue - cost - tax }; };
+    const f = (id, lb, v, step, hint) => `<label>${esc(lb)}<input type="number" id="${id}" value="${v}" min="0" step="${step}"><span class="hint">${esc(hint)}</span></label>`;
+    $('#finSim').innerHTML = `<div class="simgrid"><div class="formgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      ${f('sm-price', 'Giá bình quân mỗi lượt (đ)', base.price, 500, 'Hiện tại theo dữ liệu tháng')}${f('sm-turns', 'Lượt vãng lai mỗi ngày', base.turns, 1, `Hiện tại ${base.turns}`)}${f('sm-cards', 'Số thẻ tháng', base.cards, 1, `Đang còn hạn ${base.cards}`)}
+      ${f('sm-cardp', 'Giá thẻ tháng (đ)', base.cardPrice, 10000, `Giá hiện tại ${money(base.cardPrice)}`)}${f('sm-staff', 'Số nhân viên trực', base.staff, 1, `Hiện tại ${base.staff}`)}${f('sm-per', 'Chi phí mỗi nhân viên trực/tháng (đ)', base.perStaff, 100000, 'Lương cộng bảo hiểm, bình quân')}</div>
+      <div class="sumgrid" id="sm-out"></div></div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Giữ nguyên: chi phí quản lý ${money(admin)}, chi phí cố định, biến đổi, khấu hao, tiền két thiếu (${money(otherCost)}), phí mất thẻ và thu khác. Phí QR tính theo tỷ lệ khách trả QR hiện tại.</p>`;
+    const b = calc(base);
+    const upd = () => {
+      const v = { price: +$('#sm-price').value || 0, turns: +$('#sm-turns').value || 0, cards: +$('#sm-cards').value || 0, cardPrice: +$('#sm-cardp').value || 0, staff: +$('#sm-staff').value || 0, perStaff: +$('#sm-per').value || 0 };
+      const x = calc(v), d = x.net - b.net;
+      $('#sm-out').innerHTML = `<div class="full"><span>Doanh thu một tháng</span><b>${money(x.revenue)}</b></div><div class="full"><span>Chi phí một tháng</span><b>${money(x.cost)}</b></div>
+        <div class="full"><span>Lợi nhuận ròng</span><b class="${x.net < 0 ? 'neg' : 'pos'}">${x.net < 0 ? `Lỗ ${money(-x.net)}` : money(x.net)}</b></div><div class="full"><span>So với hiện tại</span><b>${d >= 0 ? '+' : '−'}${money(Math.abs(d))}</b></div>`;
+    };
+    $$('#finSim input').forEach((i) => { i.oninput = upd; }); upd();
+  }
+
+  // ---------- chốt, mở chốt ----------
+  async function finCloseMonth() {
+    if (!needAdmin()) return;
+    const mk = finMonth;
+    if (!monthClosed(mk)) { toast(`Chốt lương ${monthLabel(mk).toLowerCase()} trước (Nhân viên → Bảng lương), rồi mới chốt tài chính`); return; }
+    const r = finCompute(mk);
+    const html = `Chốt sẽ lưu toàn bộ số liệu lãi lỗ ${esc(monthLabel(mk).toLowerCase())} và khóa khoản thu chi của tháng.<br>Doanh thu ${money(r.revenue)}, chi phí ${money(r.cost + r.tax)}, ${r.net < 0 ? `<b style="color:var(--stop)">lỗ ${money(-r.net)}</b>` : `lợi nhuận ${money(r.net)}`}.${r.running ? '<br><b>Tháng chưa kết thúc.</b>' : ''}${r.pending ? `<br><b style="color:var(--stop)">Còn ${r.pending} khoản chi chờ duyệt.</b>` : ''}`;
+    const c = await askConfirm({ title: `Chốt tài chính ${monthLabel(mk)}`, html, okText: 'Chốt tháng' }); if (!c.ok) return;
+    const all = finCloses(); all[mk] = { status: 'closed', closedAt: nowT(), by: me.name, report: r, reopens: (all[mk] && all[mk].reopens) || [] }; store.set('bgx_fin_close', all);
+    audit('Tài chính', `Chốt tài chính ${monthLabel(mk)}`, 'Chưa chốt', `Doanh thu ${money(r.revenue)}, chi phí ${money(r.cost + r.tax)}, lợi nhuận ròng ${signMoney(r.net)}`); renderAll();
+  }
+  async function finReopenMonth() {
+    if (!needAdmin()) return;
+    const mk = finMonth, all = finCloses(); if (!all[mk] || all[mk].status !== 'closed') return;
+    const c = await askConfirm({ title: `Mở chốt tài chính ${monthLabel(mk)}`, text: 'Mở chốt để sửa khoản thu chi của tháng. Số liệu sẽ được tính lại từ dữ liệu hiện có.', okText: 'Mở chốt', reason: 'required', danger: true }); if (!c.ok) return;
+    const old = all[mk].report;
+    all[mk].status = 'open'; all[mk].reopens = (all[mk].reopens || []).concat([{ ts: nowT(), by: me.name, reason: c.reason }]); delete all[mk].report; store.set('bgx_fin_close', all);
+    audit('Tài chính', `Mở chốt tài chính ${monthLabel(mk)}, lý do: ${c.reason}`, `Đã chốt, lợi nhuận ròng ${signMoney(old ? old.net : 0)}`, 'Chưa chốt'); renderAll();
+  }
+  function finGuard(ts) { const mk = monthKey(ts); if (finClosed(mk)) { toast(`${monthLabel(mk)} đã chốt tài chính, không sửa được khoản thu chi của tháng này`); return false; } return true; }
+
+  // ---------- xuất Excel (2 sheet), in A4 ----------
+  function exportBook(name, sheets) {
+    const file = `${name}-${isoDate(nowT())}`;
+    if (window.XLSX) {
+      const wb = XLSX.utils.book_new();
+      sheets.forEach((s) => { const ws = XLSX.utils.aoa_to_sheet([s.head, ...s.rows]); ws['!cols'] = s.head.map((h, i) => ({ wch: i === 0 ? 46 : Math.max(14, String(h).length + 2) })); XLSX.utils.book_append_sheet(wb, ws, s.name); });
+      XLSX.writeFile(wb, file + '.xlsx');
+    } else {
+      sheets.forEach((s) => {
+        const csv = '﻿' + [s.head, ...s.rows].map((r) => r.map((c) => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `${file}-${s.slug}.csv`; a.click();
+      });
+    }
+    audit('Xuất Excel', `Xuất ${name}`, '', sheets.map((s) => `${s.name}: ${s.rows.length} dòng`).join(', '));
+    toast(window.XLSX ? 'Đã xuất tệp Excel 2 sheet' : 'Đã xuất 2 tệp CSV (không tải được thư viện Excel)');
+  }
+  function finExport() {
+    if (!needAdmin()) return;
+    const mk = finMonth, r = finReport(mk), pm = mkAdd(mk, -1), p = mkDiff(finFirstMonth(), pm) >= 0 ? finReport(pm) : null;
+    const rows = finLines(r, p).map((l) => (l.head ? [l.head.toUpperCase(), '', '', ''] : [l.label, l.cur, l.prev == null ? '' : l.prev, l.prev ? +(((l.cur - l.prev) / Math.abs(l.prev)) * 100).toFixed(1) : '']));
+    if (r.proj) rows.push(['DỰ KIẾN CUỐI THÁNG', '', '', ''], ['Doanh thu dự kiến', r.proj.revenue, '', ''], ['Chi phí dự kiến', r.proj.cost, '', ''], ['Lợi nhuận ròng dự kiến', r.proj.net, '', '']);
+    rows.push(['', '', '', ''], ['Trạng thái', finClosed(mk) ? 'Đã chốt' : 'Chưa chốt', '', ''], ['Lượt vãng lai có trả tiền', r.paid, '', ''], ['Tỷ lệ lấp đầy (%)', r.occ == null ? '' : +(r.occ * 100).toFixed(1), '', '']);
+    const from = monthStart(mk), to = monthEnd(mk);
+    const det = finEntries.filter((e) => e.ts >= from && e.ts < to).sort((a, b) => a.ts - b.ts).map((e) => [fmtDateY(e.ts), e.kind === 'income' ? 'Thu' : 'Chi', finCat(e.cat).name, FIN_GROUP[finCat(e.cat).group] || '', e.amount, FIN_SRC[e.src] || '', FIN_ST[e.status], e.by, e.note || '', e.meter ? `${e.meter.from} → ${e.meter.to} kWh × ${e.meter.price}` : '', e.photo ? 'Có' : '']);
+    exportBook(`tai-chinh-${mk}`, [{ name: 'Báo cáo', slug: 'bao-cao', head: ['Khoản mục', monthLabel(mk) + ' (đ)', (p ? monthLabel(pm) : 'Tháng trước') + ' (đ)', 'Tăng giảm (%)'], rows },
+      { name: 'Chi tiết thu chi', slug: 'chi-tiet', head: ['Ngày', 'Thu/Chi', 'Danh mục', 'Nhóm', 'Số tiền (đ)', 'Nguồn tiền', 'Trạng thái', 'Người ghi', 'Ghi chú', 'Công tơ điện', 'Ảnh hóa đơn'], rows: det }]);
+  }
+  function finPrint() {
+    if (!needAdmin()) return;
+    const mk = finMonth, r = finReport(mk), pm = mkAdd(mk, -1), p = mkDiff(finFirstMonth(), pm) >= 0 ? finReport(pm) : null;
+    const v = (x, l) => (x == null ? '–' : l && l.cls.includes('profit') && x < 0 ? `Lỗ ${money(-x)}` : signMoney(x));
+    const body = finLines(r, p).map((l) => (l.head ? `<tr><td colspan="3" style="background:#eee;font-weight:700">${esc(l.head)}</td></tr>` : `<tr${l.cls.includes('sum') ? ' style="font-weight:700"' : ''}><td>${esc(l.label)}</td><td style="text-align:right">${esc(v(l.cur, l))}</td><td style="text-align:right">${esc(v(l.prev, l))}</td></tr>`)).join('');
+    audit('In', `In báo cáo tài chính ${monthLabel(mk)}`);
+    printHTML(`<div style="font:12px Arial"><h3 style="font:700 16px Arial;margin:0 0 4px">Báo cáo lãi lỗ ${esc(monthLabel(mk).toLowerCase())}</h3><p style="margin:0 0 8px">Bãi giữ xe máy thông minh. ${finClosed(mk) ? 'Đã chốt.' : '<b>Chưa chốt.</b>'}${r.running ? ' Tháng chưa kết thúc, số liệu đến ngày in.' : ''}</p>
+      <table><thead><tr><th style="text-align:left">Khoản mục</th><th>${esc(monthLabel(mk))}</th><th>${p ? esc(monthLabel(pm)) : 'Tháng trước'}</th></tr></thead><tbody>${body}</tbody></table>
+      ${r.proj ? `<p style="margin:8px 0 0">Dự kiến cuối tháng: doanh thu ${esc(money(r.proj.revenue))}, chi phí ${esc(money(r.proj.cost))}, ${r.proj.net < 0 ? `lỗ ${esc(money(-r.proj.net))}` : `lợi nhuận ${esc(money(r.proj.net))}`}.</p>` : ''}
+      <p style="margin:6px 0 0">Lượt vãng lai có trả tiền: ${num(r.paid)}. Tỷ lệ lấp đầy: ${r.occ == null ? '–' : esc(pctTxt(r.occ))}. Nhân sự trên doanh thu: ${esc(pctTxt(r.revenue ? r.labor / r.revenue : null))}.</p>
+      <p style="font-size:9px;margin-top:10px">Số liệu tham khảo cho đồ án, không thay báo cáo tài chính theo chuẩn mực kế toán. In lúc ${esc(fmtDTY(nowT()))}.</p></div>`, 'A4');
+  }
+
+  // ---------- 2. KHOẢN THU CHI ----------
+  function finViewEntries() {
+    const mk = finMonth, from = monthStart(mk), to = monthEnd(mk), closed = finClosed(mk);
+    const all = finEntries.filter((e) => e.ts >= from && e.ts < to && (!finFilter.group || finCat(e.cat).group === finFilter.group) && (!finFilter.status || e.status === finFilter.status)).sort((a, b) => b.ts - a.ts);
+    const pendAll = finEntries.filter((e) => e.status === 'pending' && (e.ts < from || e.ts >= to));
+    const opt = (sel, list) => list.map(([v, t]) => `<option value="${v}"${sel === v ? ' selected' : ''}>${t}</option>`).join('');
+    const inc = all.filter((e) => e.kind === 'income' && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0), exp = all.filter((e) => e.kind === 'expense' && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0);
+    finBody(`<div class="toolbar">${finMonthInput('f-finm')}<select id="f-feg" aria-label="Nhóm">${opt(finFilter.group, [['', 'Mọi nhóm'], ['fixed', 'Chi phí cố định'], ['variable', 'Chi phí biến đổi'], ['income', 'Thu khác']])}</select>
+      <select id="f-fes" aria-label="Trạng thái">${opt(finFilter.status, [['', 'Mọi trạng thái'], ['pending', 'Chờ duyệt'], ['approved', 'Đã duyệt'], ['rejected', 'Từ chối']])}</select>${closed ? '<span class="pill ok">Tháng đã chốt</span>' : ''}<span class="grow"></span>
+      <button class="btn" data-act="fin-new" data-kind="income"${closed ? ' disabled' : ''}>Thêm khoản thu</button><button class="btn primary" data-act="fin-new" data-kind="expense"${closed ? ' disabled' : ''}>Thêm khoản chi</button></div>
+      ${pendAll.length ? `<div class="note warn" style="margin-bottom:10px">Còn ${pendAll.length} khoản chờ duyệt ở tháng khác: ${pendAll.map((e) => esc(monthLabel(monthKey(e.ts)))).filter((x, i, a) => a.indexOf(x) === i).join(', ')}.</div>` : ''}
+      <div class="tablewrap" style="max-height:64vh"><table><thead><tr><th>Ngày</th><th>Danh mục</th><th>Nhóm</th><th class="num">Số tiền</th><th>Nguồn</th><th>Trạng thái</th><th>Người ghi</th><th>Ghi chú</th><th>Hóa đơn</th><th></th></tr></thead><tbody>
+      ${all.map((e) => `<tr><td>${fmtDate(e.ts)}${e.src === 'cash' ? ` <small class="muted">${fmtTime(e.ts)}</small>` : ''}</td><td>${esc(finCat(e.cat).name)}</td><td><span class="pill ${e.kind === 'income' ? 'ok' : finCat(e.cat).group === 'fixed' ? 'm' : 'g'}">${esc(FIN_GROUP[finCat(e.cat).group] || '')}</span></td>
+        <td class="num">${e.kind === 'income' ? '+' : '−'}${money(e.amount)}</td><td>${esc(FIN_SRC[e.src] || '')}</td><td><span class="pill ${e.status === 'approved' ? 'ok' : e.status === 'pending' ? 'warn' : 'bad'}">${FIN_ST[e.status]}</span>${e.rejectNote ? `<small class="muted" style="display:block">${esc(e.rejectNote)}</small>` : ''}</td>
+        <td>${esc(e.by)}</td><td class="muted" style="white-space:normal;min-width:180px">${esc(e.note || '')}${e.meter ? `<br>Công tơ ${num(e.meter.from)} → ${num(e.meter.to)} kWh × ${money(e.meter.price)}` : ''}</td>
+        <td>${e.photo ? `<button class="btn small" data-act="fin-photo" data-id="${esc(e.id)}">Xem</button>` : ''}</td>
+        <td style="white-space:nowrap">${closed ? '' : `${e.status === 'pending' ? `<button class="btn small primary" data-act="fin-approve" data-id="${esc(e.id)}">Duyệt</button><button class="btn small" data-act="fin-reject" data-id="${esc(e.id)}">Từ chối</button>` : ''}<button class="btn small" data-act="fin-edit" data-id="${esc(e.id)}">Sửa</button><button class="btn small danger" data-act="fin-del" data-id="${esc(e.id)}">Xóa</button>`}</td></tr>`).join('') || '<tr><td colspan="10" class="empty">Chưa có khoản thu chi nào khớp bộ lọc.</td></tr>'}
+      ${all.length ? `<tr><td colspan="3"><b>Cộng (không tính khoản bị từ chối)</b></td><td class="num"><b>Thu ${money(inc)}<br>Chi ${money(exp)}</b></td><td colspan="6"></td></tr>` : ''}</tbody></table></div>
+      <p class="muted" style="font-size:12.5px">Lương, bảo hiểm, phí QR, khấu hao và tiền két thiếu được tính tự động trong báo cáo, không nhập ở đây. Khoản chi bằng tiền mặt két làm giảm tiền phải có trong két của ca đang mở. Khoản bị từ chối mà đã lấy tiền két được tính vào "Tiền két thiếu chưa thu hồi".</p>`);
+    $('#f-feg').onchange = (e) => { finFilter.group = e.target.value; renderFinance(); };
+    $('#f-fes').onchange = (e) => { finFilter.status = e.target.value; renderFinance(); };
+  }
+  // ảnh hóa đơn: tối đa 1000 px, JPEG dưới 150 KB
+  function shrinkReceipt(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !/^image\//.test(file.type)) { reject(new Error('Tệp không phải ảnh')); return; }
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const sc = Math.min(1, 1000 / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+        let q = 0.8, data = cv.toDataURL('image/jpeg', q);
+        while (data.length * 0.75 > 150000 && q > 0.3) { q -= 0.1; data = cv.toDataURL('image/jpeg', q); }
+        if (data.length * 0.75 > 150000) { reject(new Error('Ảnh vẫn lớn hơn 150 KB sau khi nén')); return; }
+        resolve(data);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Không đọc được ảnh')); };
+      img.src = url;
+    });
+  }
+  // thêm hoặc sửa khoản thu chi (quản lý)
+  function finEntryForm(kind, id) {
+    if (!needAdmin()) return;
+    const e = id ? finEntries.find((x) => x.id === id) : null; if (id && !e) return;
+    if (e && !finGuard(e.ts)) return;
+    kind = e ? e.kind : kind;
+    const cats = finCats.filter((c) => (kind === 'income' ? c.group === 'income' : c.group !== 'income') && (c.active !== false || (e && e.cat === c.id)));
+    const cashLocked = e && e.src === 'cash', open = getOpen();
+    const fields = [
+      { name: 'cat', label: 'Danh mục', type: 'select', required: true, options: cats.map((c) => [c.id, c.name]), value: e ? e.cat : cats[0] && cats[0].id },
+      { name: 'date', label: 'Ngày', type: 'date', required: true, value: isoDate(e ? e.ts : nowT()), max: isoDate(nowT()), readonly: cashLocked },
+      { name: 'amount', label: 'Số tiền (đ)', type: 'number', min: 1000, step: 1000, value: e ? e.amount : '', readonly: cashLocked, hint: cashLocked ? 'Đã lấy tiền két, không đổi số tiền được; xóa rồi ghi lại nếu cần' : '' },
+      ...(kind === 'expense' ? [{ name: 'src', label: 'Nguồn tiền', type: 'select', options: cashLocked ? [['cash', FIN_SRC.cash]] : e ? [['bank', FIN_SRC.bank]] : [['bank', FIN_SRC.bank], ['cash', FIN_SRC.cash]], value: e ? e.src : 'bank' }] : []),
+      { name: 'meterFrom', label: 'Chỉ số công tơ đầu kỳ (kWh)', type: 'number', min: 0, step: 1, value: e && e.meter ? e.meter.from : '' },
+      { name: 'meterTo', label: 'Chỉ số công tơ cuối kỳ (kWh)', type: 'number', min: 0, step: 1, value: e && e.meter ? e.meter.to : '' },
+      { name: 'kwh', label: 'Đơn giá điện (đ/kWh)', type: 'number', min: 0, step: 1, value: e && e.meter ? e.meter.price : settings.finKwh },
+      { type: 'html', full: true, html: '<p class="note" id="feNote" style="margin:0"></p>' },
+      { name: 'note', label: 'Ghi chú', type: 'textarea', full: true, value: e ? e.note : '' },
+      { name: 'photo', label: 'Ảnh hóa đơn', type: 'file', full: true, hint: e && e.photo ? 'Đã có ảnh; chọn ảnh mới để thay' : 'Không bắt buộc. Ảnh được nén còn dưới 150 KB' },
+    ];
+    openForm({ title: `${e ? 'Sửa' : 'Thêm'} khoản ${kind === 'income' ? 'thu' : 'chi'}`, okText: e ? 'Lưu' : kind === 'income' ? 'Thêm khoản thu' : 'Thêm khoản chi', wide: true, fields,
+      onRender: (form) => {
+        if (form.photo) form.photo.accept = 'image/*';
+        const sync = () => {
+          const c = finCat(form.cat.value), meter = !!c.meter, cash = form.src && form.src.value === 'cash';
+          ['meterFrom', 'meterTo', 'kwh'].forEach((n) => form[n].closest('label').classList.toggle('hidden', !meter));
+          if (!e && !form.amount.dataset.touched && c.amount && !meter) form.amount.value = c.amount;
+          if (meter && form.meterFrom.value !== '' && form.meterTo.value !== '' && !form.amount.dataset.touched) form.amount.value = Math.max(0, (+form.meterTo.value - +form.meterFrom.value) * (+form.kwh.value || 0));
+          if (cash && !cashLocked) form.date.value = isoDate(nowT());
+          form.date.readOnly = cash || cashLocked;
+          const notes = [];
+          if (meter) notes.push('Nhập chỉ số công tơ để tự tính tiền điện, hoặc nhập thẳng số tiền trên hóa đơn.');
+          if (cash && !cashLocked) notes.push(open ? `Tiền lấy từ két ngay bây giờ, trừ vào két của ca đang mở (${esc(open.name)}, ${esc(shiftLabel(open.day0, open.k))}).` : 'Không có ca nào đang mở: khoản chi vẫn trừ vào két, ghi theo giờ hiện tại.');
+          $('#feNote').innerHTML = notes.join(' '); $('#feNote').classList.toggle('hidden', !notes.length);
+        };
+        form.amount.addEventListener('input', () => { form.amount.dataset.touched = '1'; });
+        ['cat', 'src', 'meterFrom', 'meterTo', 'kwh'].forEach((n) => { if (form[n]) form[n].addEventListener('input', sync); if (form[n]) form[n].addEventListener('change', sync); });
+        sync();
+      },
+      onSubmit: async (v, form) => {
+        if (!needAdmin()) return null;
+        const c = finCat(v.cat), amount = Math.round(+v.amount);
+        if (!(amount >= 1000)) return 'Số tiền ít nhất 1.000đ';
+        if (!v.date || v.date > isoDate(nowT())) return 'Ngày không được sau hôm nay';
+        let meter = null;
+        if (c.meter && (v.meterFrom !== '' || v.meterTo !== '')) {
+          if (v.meterFrom === '' || v.meterTo === '' || +v.meterTo < +v.meterFrom) return 'Chỉ số cuối kỳ phải lớn hơn hoặc bằng chỉ số đầu kỳ';
+          meter = { from: +v.meterFrom, to: +v.meterTo, price: +v.kwh || 0 };
+        }
+        const cash = kind === 'expense' && (cashLocked || (!e && v.src === 'cash'));
+        const ts = cash ? (e ? e.ts : nowT()) : dateTs(v.date);
+        if (!finGuard(ts)) return `${monthLabel(monthKey(ts))} đã chốt tài chính`;
+        let photo = e ? e.photo || '' : '';
+        const file = form.photo && form.photo.files && form.photo.files[0];
+        if (file) { try { photo = await shrinkReceipt(file); } catch (ex) { return ex.message; } }
+        if (cash && !e) {
+          const op = getOpen(), avail = op ? drawerMust(op.openCash, shiftTotals(op.openedAt, nowT() + 1)) : null;
+          if (op && amount > avail) return `Két của ca đang mở chỉ còn ${money(avail)} theo hệ thống`;
+        }
+        if (e) {
+          const before = `${finCat(e.cat).name}, ${money(e.amount)}, ${fmtDateY(e.ts)}${e.note ? ', ' + e.note : ''}`;
+          Object.assign(e, { cat: v.cat, amount: cashLocked ? e.amount : amount, ts, note: v.note, meter, photo, src: cashLocked ? 'cash' : 'bank', editedBy: me.name, editedAt: nowT() });
+          saveFinEntries();
+          audit('Tài chính', `Sửa khoản ${kind === 'income' ? 'thu' : 'chi'}`, before, `${c.name}, ${money(e.amount)}, ${fmtDateY(e.ts)}${e.note ? ', ' + e.note : ''}`);
+        } else {
+          const ne = { id: 'fe' + uid8(), ts, cat: v.cat, kind, amount, src: kind === 'expense' ? v.src : 'bank', note: v.note, meter, photo, status: 'approved', by: me.name, byUser: me.user, created: nowT() };
+          finEntries.push(ne); saveFinEntries();
+          if (cash) { addTx({ kind: 'expense', amount: -amount, pay: 'cash', ref: ne.id, ts }); handCache = null; }
+          audit('Tài chính', `Thêm khoản ${kind === 'income' ? 'thu' : 'chi'} ${c.name}`, '', `${money(amount)}, ${FIN_SRC[ne.src]}, ${fmtDateY(ts)}${v.note ? ', ' + v.note : ''}`);
+        }
+        toast('Đã lưu'); renderAll(); return null;
+      } });
+  }
+  // nhân viên: ghi khoản chi lấy từ két trong ca của mình (chờ quản lý duyệt)
+  function finStaffExpense() {
+    if (!needLogin()) return;
+    const op = getOpen();
+    if (!isStaff() || !op || op.user !== me.user) { toast('Chỉ ghi được khoản chi từ két trong ca bạn đang trực'); return; }
+    const avail = drawerMust(op.openCash, shiftTotals(op.openedAt, nowT() + 1));
+    const cats = finCats.filter((c) => c.group === 'variable' && c.active !== false && !c.meter && !c.bill);   // điện, nước trả bằng chuyển khoản theo hóa đơn
+    openForm({ title: 'Ghi khoản chi từ két', okText: 'Ghi khoản chi', fields: [
+      { type: 'html', full: true, html: `<p class="note" style="margin:0">Tiền lấy từ két của ca ${esc(shiftLabel(op.day0, op.k))}. Két theo hệ thống còn ${money(avail)}. Khoản chi chờ quản lý duyệt; giữ hóa đơn để đối chiếu.</p>` },
+      { name: 'cat', label: 'Khoản chi cho', type: 'select', required: true, options: cats.map((c) => [c.id, c.name]) },
+      { name: 'amount', label: 'Số tiền (đ)', type: 'number', min: 1000, step: 1000, required: true },
+      { name: 'note', label: 'Mua gì, ở đâu', type: 'textarea', full: true, required: true },
+      { name: 'photo', label: 'Ảnh hóa đơn', type: 'file', full: true, hint: 'Nên chụp hóa đơn. Ảnh được nén còn dưới 150 KB' }],
+      onRender: (form) => { form.photo.accept = 'image/*'; },
+      onSubmit: async (v, form) => {
+        const o = getOpen(); if (!isStaff() || !o || o.user !== me.user) return 'Ca của bạn đã đóng';
+        const amount = Math.round(+v.amount), av = drawerMust(o.openCash, shiftTotals(o.openedAt, nowT() + 1));
+        if (!(amount >= 1000)) return 'Số tiền ít nhất 1.000đ';
+        if (amount > av) return `Két chỉ còn ${money(av)} theo hệ thống`;
+        if (!finGuard(nowT())) return 'Tháng này đã chốt tài chính';
+        let photo = ''; const file = form.photo.files && form.photo.files[0];
+        if (file) { try { photo = await shrinkReceipt(file); } catch (ex) { return ex.message; } }
+        const all = store.get('bgx_fin_entries', []), ts = nowT();
+        const ne = { id: 'fe' + uid8(), ts, cat: v.cat, kind: 'expense', amount, src: 'cash', note: v.note, photo, status: 'pending', by: me.name, byUser: me.user, created: ts };
+        all.push(ne); store.set('bgx_fin_entries', all); finEntries = all;
+        addTx({ kind: 'expense', amount: -amount, pay: 'cash', ref: ne.id, ts });
+        audit('Tài chính', `Chi từ két: ${finCat(v.cat).name}`, '', `${money(amount)}, chờ quản lý duyệt, ${v.note}`);
+        toast(`Đã ghi khoản chi ${money(amount)}, chờ quản lý duyệt`); renderAll(); return null;
+      } });
+  }
+  async function finApprove(id, ok) {
+    if (!needAdmin()) return;
+    const e = finEntries.find((x) => x.id === id); if (!e || e.status !== 'pending' || !finGuard(e.ts)) return;
+    if (ok) { e.status = 'approved'; e.approver = me.name; e.approvedAt = nowT(); saveFinEntries(); audit('Tài chính', `Duyệt khoản chi từ két của ${e.by}: ${finCat(e.cat).name}`, 'Chờ duyệt', `Đã duyệt ${money(e.amount)}`); renderAll(); return; }
+    const c = await askConfirm({ title: 'Từ chối khoản chi', html: `${esc(e.by)} đã lấy ${money(e.amount)} từ két cho "${esc(e.note || finCat(e.cat).name)}". Từ chối thì khoản này tính là tiền két thiếu chưa thu hồi; có thể tạo khoản trừ lương ở mục Thưởng – phạt.`, okText: 'Từ chối', reason: 'required', danger: true });
+    if (!c.ok) return;
+    e.status = 'rejected'; e.rejectNote = c.reason; e.approver = me.name; e.approvedAt = nowT(); saveFinEntries();
+    audit('Tài chính', `Từ chối khoản chi từ két của ${e.by}: ${finCat(e.cat).name}, lý do: ${c.reason}`, 'Chờ duyệt', `Từ chối ${money(e.amount)}`); renderAll();
+  }
+  async function finDelete(id) {
+    if (!needAdmin()) return;
+    const e = finEntries.find((x) => x.id === id); if (!e || !finGuard(e.ts)) return;
+    if (e.src === 'cash') {
+      const lastClose = Math.max(0, ...handovers.filter((h) => !h.nobody).map((h) => h.end));
+      if (e.ts < lastClose) { toast('Khoản chi tiền mặt này đã qua một lần kết ca, không xóa được. Ghi một khoản thu khác nếu đã hoàn tiền vào két.'); return; }
+    }
+    const c = await askConfirm({ title: 'Xóa khoản thu chi', html: `Xóa ${e.kind === 'income' ? 'khoản thu' : 'khoản chi'} <b>${esc(finCat(e.cat).name)}</b> ${money(e.amount)} ngày ${fmtDateY(e.ts)}?${e.src === 'cash' ? '<br>Tiền phải có trong két của ca đang mở sẽ tăng lại tương ứng.' : ''}`, okText: 'Xóa', danger: true });
+    if (!c.ok) return;
+    finEntries = finEntries.filter((x) => x !== e); saveFinEntries();
+    if (e.src === 'cash') { txStored = txStored.filter((t) => !(t.kind === 'expense' && t.ref === e.id)); store.set('bgx_transactions', txStored); txCache = null; handCache = null; }
+    audit('Tài chính', `Xóa khoản ${e.kind === 'income' ? 'thu' : 'chi'} ${finCat(e.cat).name}`, `${money(e.amount)}, ${fmtDateY(e.ts)}, ${FIN_SRC[e.src] || ''}${e.note ? ', ' + e.note : ''}`, 'Đã xóa'); renderAll();
+  }
+  function finPhoto(id) {
+    const e = finEntries.find((x) => x.id === id); if (!e || !e.photo || !/^data:image\/jpeg;base64,/.test(e.photo)) return;
+    openForm({ title: `Hóa đơn: ${finCat(e.cat).name}, ${money(e.amount)}`, noOk: true, cancelText: 'Đóng', wide: true, fields: [{ type: 'html', full: true, html: `<img src="${esc(e.photo)}" alt="Ảnh hóa đơn" style="max-width:100%;border-radius:8px;display:block;margin:auto">` }] });
+  }
+
+  // ---------- 3. TÀI SẢN, KHẤU HAO ----------
+  function finViewAssets() {
+    const mk = finMonth, rows = finAssets.slice().sort((a, b) => b.price - a.price);
+    const sum = (f) => rows.reduce((s, a) => s + f(a), 0);
+    finBody(`<div class="toolbar">${finMonthInput('f-finm')}<span class="grow"></span><button class="btn primary" data-act="as-new">Thêm tài sản</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Tài sản</th><th>Vị trí</th><th>Ngày mua</th><th class="num">Giá mua</th><th class="num">Số tháng</th><th class="num">Khấu hao ${esc(monthLabel(mk).toLowerCase())}</th><th class="num">Đã khấu hao</th><th class="num">Giá trị còn lại</th><th></th></tr></thead><tbody>
+      ${rows.map((a) => { const d = depDone(a, mk); return `<tr><td>${esc(a.name)}</td><td>${esc(a.place || '')}</td><td>${fmtDateY(parseISO(a.date))}</td><td class="num">${money(a.price)}</td><td class="num">${a.months}</td><td class="num">${money(depOf(a, mk))}</td><td class="num">${money(d)}</td><td class="num">${money(a.price - d)}</td>
+        <td style="white-space:nowrap"><button class="btn small" data-act="as-edit" data-id="${esc(a.id)}">Sửa</button><button class="btn small danger" data-act="as-del" data-id="${esc(a.id)}">Xóa</button></td></tr>`; }).join('') || '<tr><td colspan="9" class="empty">Chưa có tài sản nào.</td></tr>'}
+      ${rows.length ? `<tr><td colspan="3"><b>Cộng ${rows.length} tài sản</b></td><td class="num"><b>${money(sum((a) => a.price))}</b></td><td></td><td class="num"><b>${money(sum((a) => depOf(a, mk)))}</b></td><td class="num"><b>${money(sum((a) => depDone(a, mk)))}</b></td><td class="num"><b>${money(sum((a) => a.price - depDone(a, mk)))}</b></td><td></td></tr>` : ''}</tbody></table></div>
+      <p class="muted" style="font-size:12.5px">Khấu hao đường thẳng: giá mua chia đều cho số tháng, bắt đầu từ tháng mua; tháng cuối nhận phần lẻ. Danh sách mẫu lấy từ các thiết bị ở mục Thiết bị, giá linh kiện của mô hình. Tháng đã chốt giữ số khấu hao lúc chốt.</p>`);
+  }
+  function finAssetForm(id) {
+    if (!needAdmin()) return;
+    const a = id ? finAssets.find((x) => x.id === id) : null; if (id && !a) return;
+    openForm({ title: a ? 'Sửa tài sản' : 'Thêm tài sản', okText: a ? 'Lưu' : 'Thêm tài sản', fields: [
+      { name: 'name', label: 'Tên tài sản', required: true, full: true, value: a ? a.name : '' },
+      { name: 'place', label: 'Vị trí, nhóm', value: a ? a.place : '' },
+      { name: 'date', label: 'Ngày mua', type: 'date', required: true, max: isoDate(nowT()), value: a ? a.date : isoDate(nowT()) },
+      { name: 'price', label: 'Giá mua (đ)', type: 'number', min: 1000, step: 1000, required: true, value: a ? a.price : '' },
+      { name: 'months', label: 'Số tháng khấu hao', type: 'number', min: 1, max: 240, step: 1, required: true, value: a ? a.months : settings.finDep, hint: `Mặc định ${settings.finDep} tháng` },
+      { type: 'html', full: true, html: '<p class="note" id="asPer" style="margin:0"></p>' }],
+      onRender: (form) => { const u = () => { const p = +form.price.value || 0, n = Math.max(1, +form.months.value || 1); $('#asPer').textContent = p ? `Khấu hao ${money(Math.round(p / n))} mỗi tháng trong ${n} tháng.` : 'Nhập giá mua để xem khấu hao mỗi tháng.'; }; form.price.oninput = u; form.months.oninput = u; u(); },
+      onSubmit: (v) => {
+        if (!needAdmin()) return null;
+        const price = Math.round(+v.price), months = Math.round(+v.months);
+        if (!(price >= 1000)) return 'Giá mua ít nhất 1.000đ'; if (!(months >= 1)) return 'Số tháng ít nhất là 1';
+        const txt = (x) => `${x.name}, ${money(x.price)}, ${x.months} tháng, mua ${x.date}`;
+        if (a) { const before = txt(a); Object.assign(a, { name: v.name, place: v.place, date: v.date, price, months }); saveFinAssets(); audit('Tài chính', 'Sửa tài sản', before, txt(a)); }
+        else { const n = { id: 'as' + uid8(), name: v.name, place: v.place, date: v.date, price, months }; finAssets.push(n); saveFinAssets(); audit('Tài chính', 'Thêm tài sản', '', `${txt(n)}, khấu hao ${money(Math.round(price / months))}/tháng`); }
+        toast('Đã lưu tài sản'); renderAll(); return null;
+      } });
+  }
+  async function finAssetDel(id) {
+    if (!needAdmin()) return;
+    const a = finAssets.find((x) => x.id === id); if (!a) return;
+    const c = await askConfirm({ title: 'Xóa tài sản', html: `Xóa <b>${esc(a.name)}</b> (${money(a.price)})? Các tháng chưa chốt sẽ không còn khấu hao của tài sản này.`, okText: 'Xóa', danger: true }); if (!c.ok) return;
+    finAssets = finAssets.filter((x) => x !== a); saveFinAssets();
+    audit('Tài chính', 'Xóa tài sản', `${a.name}, ${money(a.price)}, ${a.months} tháng`, 'Đã xóa'); renderAll();
+  }
+
+  // ---------- 4. DANH MỤC ----------
+  function finViewCats() {
+    const used = (id) => finEntries.some((e) => e.cat === id);
+    finBody(`<div class="toolbar"><span class="muted" style="font-size:13px">Khoản lặp lại hàng tháng được tự tạo vào ngày 1 với số tiền mặc định; sửa số tiền ở mục Khoản thu chi nếu tháng đó khác.</span><span class="grow"></span><button class="btn primary" data-act="cat-new">Thêm danh mục</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Danh mục</th><th>Nhóm</th><th>Lặp hàng tháng</th><th class="num">Số tiền mặc định</th><th>Ghi chú</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+      ${finCats.map((c) => `<tr><td>${esc(c.name)}</td><td>${esc(FIN_GROUP[c.group])}</td><td>${c.recurring ? 'Có' : 'Không'}</td><td class="num">${c.amount ? money(c.amount) : '–'}</td><td class="muted">${c.meter ? 'Tính theo chỉ số công tơ' : ''}${c.bill ? `${c.meter ? '; ' : ''}hóa đơn hàng tháng` : ''}</td><td><span class="pill ${c.active !== false ? 'ok' : 'g'}">${c.active !== false ? 'Đang dùng' : 'Ngừng dùng'}</span></td>
+        <td style="white-space:nowrap"><button class="btn small" data-act="cat-edit" data-id="${esc(c.id)}">Sửa</button><button class="btn small" data-act="cat-toggle" data-id="${esc(c.id)}">${c.active !== false ? 'Ngừng dùng' : 'Dùng lại'}</button>${used(c.id) ? '' : `<button class="btn small danger" data-act="cat-del" data-id="${esc(c.id)}">Xóa</button>`}</td></tr>`).join('')}</tbody></table></div>`);
+  }
+  function finCatForm(id) {
+    if (!needAdmin()) return;
+    const c = id ? finCats.find((x) => x.id === id) : null; if (id && !c) return;
+    openForm({ title: c ? 'Sửa danh mục' : 'Thêm danh mục', okText: 'Lưu', fields: [
+      { name: 'name', label: 'Tên danh mục', required: true, full: true, value: c ? c.name : '' },
+      { name: 'group', label: 'Nhóm', type: 'select', options: Object.entries(FIN_GROUP), value: c ? c.group : 'variable' },
+      { name: 'amount', label: 'Số tiền mặc định (đ)', type: 'number', min: 0, step: 1000, value: c ? c.amount : 0 },
+      { name: 'recurring', label: 'Lặp lại hàng tháng (tự tạo ngày 1)', type: 'checkbox', value: c ? c.recurring : false }],
+      onSubmit: (v) => {
+        if (!needAdmin()) return null;
+        if (finCats.some((x) => x !== c && x.name.toLowerCase() === v.name.toLowerCase())) return 'Đã có danh mục cùng tên';
+        if (v.recurring && !(+v.amount > 0)) return 'Khoản lặp lại cần số tiền mặc định';
+        const txt = (x) => `${x.name}, ${FIN_GROUP[x.group]}, ${x.recurring ? 'lặp hàng tháng' : 'không lặp'}, ${money(x.amount)}`;
+        if (c) { const before = txt(c); const wasRec = c.recurring; Object.assign(c, { name: v.name, group: v.group, amount: Math.round(+v.amount || 0), recurring: !!v.recurring }); if (c.recurring && !wasRec) c.since = curMonth(); saveFinCats(); audit('Tài chính', 'Sửa danh mục', before, txt(c)); }
+        else { const n = { id: 'c' + uid8(), name: v.name, group: v.group, amount: Math.round(+v.amount || 0), recurring: !!v.recurring, active: true, since: curMonth() }; finCats.push(n); saveFinCats(); audit('Tài chính', 'Thêm danh mục', '', txt(n)); }
+        renderAll(); return null;
+      } });
+  }
+  function finCatToggle(id) { if (!needAdmin()) return; const c = finCats.find((x) => x.id === id); if (!c) return; c.active = c.active === false; saveFinCats(); audit('Tài chính', `${c.active ? 'Dùng lại' : 'Ngừng dùng'} danh mục ${c.name}`, c.active ? 'Ngừng dùng' : 'Đang dùng', c.active ? 'Đang dùng' : 'Ngừng dùng'); renderAll(); }
+  async function finCatDel(id) {
+    if (!needAdmin()) return;
+    const c = finCats.find((x) => x.id === id); if (!c) return;
+    if (finEntries.some((e) => e.cat === id)) { toast('Danh mục đã có khoản thu chi, chỉ ngừng dùng được'); return; }
+    const r = await askConfirm({ title: 'Xóa danh mục', html: `Xóa danh mục <b>${esc(c.name)}</b>?`, okText: 'Xóa', danger: true }); if (!r.ok) return;
+    finCats = finCats.filter((x) => x !== c); saveFinCats(); audit('Tài chính', 'Xóa danh mục', c.name, 'Đã xóa'); renderAll();
+  }
+
+  // ---------- 5. CÀI ĐẶT TÀI CHÍNH ----------
+  function finViewSettings() {
+    const f = (k, lb, step, hint) => `<label>${esc(lb)}<input type="number" name="${k}" value="${settings[k]}" min="0" step="${step}"><span class="hint">${esc(hint)}</span></label>`;
+    finBody(`<div class="card" style="max-width:760px"><form id="finSetForm" class="formgrid">
+      ${f('finIns', 'Bảo hiểm phần chủ trả (%)', 0.1, 'Tính trên lương cơ bản của người có hợp đồng chính thức. Mặc định 21,5%')}
+      ${f('finQr', 'Phí thanh toán QR (%)', 0.01, 'Phần trăm doanh thu thu qua QR')}
+      ${f('finTax', 'Thuế (% doanh thu)', 0.1, 'Mặc định 0. Hộ kinh doanh có thể khai theo tỷ lệ trên doanh thu')}
+      ${f('finDep', 'Số tháng khấu hao mặc định', 1, 'Dùng khi thêm tài sản mới')}
+      ${f('finKwh', 'Đơn giá điện mặc định (đ/kWh)', 1, 'Dùng khi tính tiền điện theo chỉ số công tơ')}
+      <div class="full"><button class="btn primary" type="submit">Lưu cài đặt tài chính</button></div></form></div>
+      <p class="muted" style="font-size:12.5px">Đổi cài đặt chỉ ảnh hưởng các tháng chưa chốt. Giá vé và giá thẻ tháng nằm ở mục Cài đặt chung.</p>`);
+    $('#finSetForm').onsubmit = (ev) => {
+      ev.preventDefault(); if (!needAdmin()) return;
+      const fm = ev.target, keys = Object.keys(FIN_SET_DEFAULT), before = keys.map((k) => `${k}: ${settings[k]}`).join('; ');
+      for (const k of keys) { const x = +fm[k].value; if (!(x >= 0)) { toast('Giá trị không hợp lệ'); return; } }
+      if (+fm.finDep.value < 1) { toast('Số tháng khấu hao ít nhất là 1'); return; }
+      keys.forEach((k) => { settings[k] = +fm[k].value; }); saveSettings();
+      audit('Tài chính', 'Đổi cài đặt tài chính', before, keys.map((k) => `${k}: ${settings[k]}`).join('; ')); toast('Đã lưu cài đặt tài chính'); renderAll();
+    };
+  }
+
+  const FIN_ACTS = {
+    'fin-close': () => finCloseMonth(), 'fin-reopen': () => finReopenMonth(), 'fin-export': () => finExport(), 'fin-print': () => finPrint(),
+    'fin-new': (el) => finEntryForm(el.dataset.kind), 'fin-edit': (el) => finEntryForm(null, el.dataset.id), 'fin-del': (el) => finDelete(el.dataset.id),
+    'fin-approve': (el) => finApprove(el.dataset.id, true), 'fin-reject': (el) => finApprove(el.dataset.id, false), 'fin-photo': (el) => finPhoto(el.dataset.id),
+    'fin-staff-exp': () => finStaffExpense(),
+    'as-new': () => finAssetForm(), 'as-edit': (el) => finAssetForm(el.dataset.id), 'as-del': (el) => finAssetDel(el.dataset.id),
+    'cat-new': () => finCatForm(), 'cat-edit': (el) => finCatForm(el.dataset.id), 'cat-toggle': (el) => finCatToggle(el.dataset.id), 'cat-del': (el) => finCatDel(el.dataset.id),
+  };
+
+  // =====================================================================
   //  ĐIỀU HƯỚNG, PHÂN QUYỀN THEO TRANG, LÀM MỚI, KHỞI ĐỘNG
   // =====================================================================
-  const ADMIN_VIEWS = ['thong-ke', 'nhan-dang', 'nhan-vien', 'nhat-ky', 'cai-dat'], STAFF_VIEWS = ['cua-toi'];
+  const ADMIN_VIEWS = ['thong-ke', 'nhan-dang', 'nhan-vien', 'tai-chinh', 'nhat-ky', 'cai-dat'], STAFF_VIEWS = ['cua-toi'];
   let curView = 'tong-quan';
   function parseHash() { const parts = (location.hash || '#tong-quan').slice(1).split('/'); return { view: parts[0] || 'tong-quan', sub: parts[1] || '', param: decodeURIComponent(parts.slice(2).join('/') || '') }; }
   function renderView(v) {
     if (!me || !sessionValid()) return;
     renderBanners();
     ({ 'tong-quan': renderOverview, 'trong-bai': renderParked, 'lich-su': renderHist, 'the-thang': renderCards, 'canh-bao': renderAlerts, 'thiet-bi': renderDevices,
-      'thong-ke': renderStats, 'nhan-dang': renderOcr, 'nhan-vien': renderHR, 'nhat-ky': renderAudit, 'cai-dat': fillSettings,
+      'thong-ke': renderStats, 'nhan-dang': renderOcr, 'nhan-vien': renderHR, 'tai-chinh': renderFinance, 'nhat-ky': renderAudit, 'cai-dat': fillSettings,
       'cua-toi': () => { if (typeof renderMy === 'function') renderMy(); } }[v] || renderOverview)();
   }
   function renderAll() { if (!me) return; if (!sessionValid()) { logout('Phiên đăng nhập đã hết, vui lòng đăng nhập lại'); return; } renderView(curView); }
@@ -3022,6 +3730,7 @@
   const ACTS = {
     logout: () => logout(me && me.role === 'staff' ? 'Đã đăng xuất. Ca của bạn vẫn đang mở.' : 'Đã đăng xuất'),
     'close-shift': () => openCloseShift(),
+    ...FIN_ACTS,
     drawer: () => document.body.classList.toggle('drawer'),
     'clear-sim': async () => { if (!needAdmin()) return; const r = await askConfirm({ title: 'Xóa dữ liệu mô phỏng', text: 'Xóa các sự kiện trang mô phỏng đã ghi hôm nay? Dữ liệu mẫu và dữ liệu nhập tay vẫn giữ.', okText: 'Xóa', danger: true }); if (!r.ok) return; try { localStorage.removeItem('bgx_events'); localStorage.removeItem('bgx_parked'); } catch (e) { /* bỏ qua */ } audit('Mô phỏng', 'Xóa dữ liệu mô phỏng', `${simEventCount} sự kiện`, 'Đã xóa'); rebuildSessions(); renderAll(); },
     manual: (el) => openManual(el.dataset.lane),
@@ -3089,6 +3798,7 @@
       if (!payroll()[mk]) closeMonth(mk, true);
       store.set('bgx_need_close_prev', false);
     }
+    finSeed();
     if (!auditLog.length) { audit('Hệ thống', 'Nâng cấp dữ liệu lên bản 3: hồ sơ 8 nhân sự, lịch phân ca, bảng giao dịch tiền', '', 'Đã chuyển đổi'); }
     restoreSession();
   })();
