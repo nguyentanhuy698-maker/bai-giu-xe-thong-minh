@@ -291,6 +291,17 @@
   .simgrid .formgrid input { width:100%; min-width:0; }
   .simgrid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:14px; align-items:start; }
   @media (max-width: 760px) { .simgrid { grid-template-columns:1fr; } .simgrid .formgrid { grid-template-columns:repeat(2, minmax(0,1fr)) !important; } .hbar { grid-template-columns:96px 1fr; } .hbar .val { grid-column:1/-1; } }
+
+  /* ĐĂNG KÝ CA, XẾP CA */
+  table.sched td { min-width:118px; vertical-align:top; font-size:12.5px; }
+  table.sched select { width:100%; min-width:0; font-size:12.5px; padding:5px 6px; }
+  table.sched td.reg-zero { background:#fbe7e7; }
+  table.sched td.reg-warn { box-shadow:inset 0 0 0 2px var(--caution); }
+  select.pref-want, .preftag.pref-want { background:#e3f4ea; color:#156b41; border-color:#9fd3b5; }
+  select.pref-can, .preftag.pref-can { background:#e6f0fb; color:#1b5aa6; border-color:#a9c7ec; }
+  select.pref-busy, .preftag.pref-busy { background:#f1f2f3; color:#69737d; }
+  .preftag { display:inline-block; padding:3px 8px; border-radius:6px; font-weight:600; }
+  .linkish { background:none; border:0; padding:0; color:var(--ink); text-decoration:underline; cursor:pointer; font-size:11.5px; }
 </style>
 </head>
 <body class="locked">
@@ -511,6 +522,7 @@
         <label style="grid-column:1/-1">Loại thưởng, phạt (mỗi dòng một loại)<textarea name="rewardTypes" rows="4" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit"></textarea></label>
         <div style="grid-column:1/-1"><button class="btn primary" type="submit">Lưu quy định</button></div>
       </form>
+      <form class="card settings" id="schedSettingsForm" style="margin-top:14px"></form>
     </section>
   </main>
 </div>
@@ -1522,6 +1534,7 @@
       if (req.length) list.push([req.length, 'Yêu cầu sửa biển số trên lượt có cảnh báo chờ quản lý duyệt', '#lich-su', 'warn']);
       const unc = allHandovers().filter((h) => h.unclosed && !h.resolved);
       if (unc.length) list.push([unc.length, 'Ca chưa kết, cần kiểm tra tiền', '#nhan-vien/giao-ca', 'bad']);
+      list.push(...schedTodo());
       const fe = finPendingCount();
       if (fe) list.push([fe, 'Khoản chi từ két chờ duyệt', '#tai-chinh/thu-chi', 'warn']);
       const pr = pwReqPending();
@@ -2602,6 +2615,7 @@
   // ---------- R1 TỔNG QUAN NHÂN SỰ ----------
   function hrTodo() {
     const t = nowT(), b0 = bizToday(), list = [];
+    list.push(...schedTodo());
     const pr = pwReqPending(); if (pr.length) list.push([pr.length, 'Yêu cầu đặt lại mật khẩu', '#nhan-vien/ho-so']);
     const pl = leaves.filter((l) => l.status === 'pending'); if (pl.length) list.push([pl.length, 'Đơn nghỉ chờ duyệt', '#nhan-vien/nghi-phep']);
     const ps = swaps().filter((s) => s.status === 'admin'); if (ps.length) list.push([ps.length, 'Đơn đổi ca chờ quản lý duyệt', '#nhan-vien/nghi-phep']);
@@ -2986,7 +3000,7 @@
     const sw = swaps().filter((x) => x.from === u || x.to === u).sort((a, c) => c.created - a.created);
     const rw = rewards().filter((r) => r.user === u).sort((a, c) => c.ts - a.ts), myOt = ots().filter((o) => o.user === u).sort((a, c) => c.d0 - a.d0);
     const pr = payroll(), slips = Object.keys(pr).filter((k) => pr[k].status === 'closed').sort().reverse().map((k) => ({ mk: k, row: (pr[k].rows || []).find((r) => r.user === u) })).filter((x) => x.row);
-    $('#myBody').innerHTML = `<div class="grid g2"><div class="card"><h2>Lịch ca 2 tuần tới</h2><ul class="todo">${sched.map(({ d, k }) => { const pend = sw.find((x) => x.d0 === d && x.k === k && ['peer', 'admin'].includes(x.status)); return `<li><span class="grow">${esc(dayName(d))} ${esc(fmtDate(d))}, ${SHIFTS[k].name} (${shiftHours(k)})</span>${pend ? statusPill(pend.status) : ''}</li>`; }).join('') || '<li class="muted">Bạn không có ca nào trong 14 ngày tới.</li>'}</ul>
+    $('#myBody').innerHTML = schedMyHTML() + `<div class="grid g2"><div class="card"><h2>Lịch ca 2 tuần tới</h2><ul class="todo">${sched.map(({ d, k }) => { const pend = sw.find((x) => x.d0 === d && x.k === k && ['peer', 'admin'].includes(x.status)); return `<li><span class="grow">${esc(dayName(d))} ${esc(fmtDate(d))}, ${SHIFTS[k].name} (${shiftHours(k)})</span>${pend ? statusPill(pend.status) : ''}</li>`; }).join('') || '<li class="muted">Bạn không có ca nào trong 14 ngày tới.</li>'}</ul>
         <div class="toolbar" style="margin-top:10px"><button class="btn" data-act="swap-new">Đề nghị đổi ca</button></div></div>
       <div class="card"><h2>${esc(monthLabel(mk))}</h2><div class="sumgrid"><div><span>Số ca</span><b>${s.shifts}</b></div><div><span>Giờ làm</span><b>${s.hours.toFixed(1)}</b></div><div><span>Đi trễ</span><b>${s.late}</b></div><div><span>Ngày vắng</span><b>${s.absentDays}</b></div><div><span>Ngày nghỉ phép</span><b>${s.leaveDays}</b></div><div><span>Tăng ca đã duyệt</span><b>${(s.otMin / 60).toFixed(1)} giờ</b></div><div class="full"><span>Phép năm còn lại</span><b>${q.left} / ${q.quota} ngày${q.pending ? `, ${q.pending} ngày chờ duyệt` : ''}</b></div></div></div></div>
       <div class="sec-head"><h2>Đơn nghỉ của tôi</h2><span class="grow"></span><button class="btn primary" data-act="leave-new">Gửi đơn nghỉ</button></div>
@@ -3694,6 +3708,446 @@
   };
 
   // =====================================================================
+  //  ĐĂNG KÝ CA VÀ XẾP CA TỰ ĐỘNG
+  //  Thứ Hai mở đăng ký cho tuần sau, hạn chót (mặc định thứ Năm 20:00).
+  //  Hết hạn hoặc quản lý bấm "Xếp ca" → bản nháp (chỉ quản lý thấy) → chỉnh tay → Công bố.
+  //  Công bố mới ghi vào lịch phân ca (roster), nên Lịch phân ca, Của tôi, Chấm công dùng lịch mới.
+  // =====================================================================
+  HR_ORDER.splice(HR_ORDER.findIndex(([id]) => id === 'lich-ca') + 1, 0, ['dang-ky', 'Đăng ký ca']);
+  const SCHED_DEFAULT = { regDeadlineDow: 4, regDeadlineTime: '20:00', schedMaxWeek: 6, schedMaxNights: 3,
+    tgOfficial: 5, tgSeasonal: 4, tgParttime: 3, minOfficial: 5, minSeasonal: 4, minParttime: 3,
+    wWant: 10, wCan: 4, wUnder: 3, wOver: 5, wRej: 2, wRejMax: 8, wHard: 2, schedIters: 200 };
+  Object.keys(SCHED_DEFAULT).forEach((k) => { if (settings[k] == null) settings[k] = SCHED_DEFAULT[k]; });
+  const PREF_TXT = { want: 'Muốn làm', can: 'Làm được', busy: 'Bận' };
+  const CK = (i, k) => `${i}|${k}`;                       // ô trong tuần: ngày i (0 = thứ Hai), ca k
+  const cellD = (wk, c) => wk + +c.split('|')[0] * DAY;
+  const cellK = (c) => +c.split('|')[1];
+  const CELLS = []; for (let i = 0; i < 7; i++) for (let k = 0; k < 3; k++) CELLS.push(CK(i, k));
+  const schedAll = () => store.get('bgx_sched', {});
+  // nhân viên trực đang làm và có tài khoản đăng nhập (người chưa có tài khoản không tự đăng ký được)
+  const schedStaff = () => activeStaff().filter((p) => p.user && accBy(p.user) && accBy(p.user).active);
+  const schedSave = (all) => store.set('bgx_sched', all);
+  const schedOf = (wk) => schedAll()[wk] || null;
+  const tgOf = (u) => { const c = (profBy(u) || {}).contract; return settings[c === 'official' ? 'tgOfficial' : c === 'seasonal' ? 'tgSeasonal' : 'tgParttime']; };
+  const minOf = (u) => { const c = (profBy(u) || {}).contract; return settings[c === 'official' ? 'minOfficial' : c === 'seasonal' ? 'minSeasonal' : 'minParttime']; };
+  const isHardCell = (d, k) => k === 2 || [0, 6].includes(new Date(d).getDay());
+  const fmtWeek = (wk) => `${fmtDate(wk)} đến ${fmtDate(wk + 6 * DAY)}`;
+  const nextWeek = () => weekStart(nowT()) + 7 * DAY;
+  function deadlineOf(wk) {
+    const d = new Date(wk - 7 * DAY + (Math.min(7, Math.max(1, +settings.regDeadlineDow || 4)) - 1) * DAY), [hh, mm] = String(settings.regDeadlineTime || '20:00').split(':').map(Number);
+    d.setHours(hh || 0, mm || 0, 0, 0); return Math.min(d.getTime(), wk - MIN);
+  }
+  const DOW_TXT = ['', 'thứ Hai', 'thứ Ba', 'thứ Tư', 'thứ Năm', 'thứ Sáu', 'thứ Bảy', 'Chủ nhật'];
+  // bộ sinh số ngẫu nhiên có hạt giống: cùng tuần, cùng dữ liệu thì chạy lại ra cùng kết quả
+  function mulberry32(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  // ---------- lịch sử 4 tuần: giờ làm, ca khó, số lần "Muốn làm" bị từ chối ----------
+  function hist4w(u, wk) {
+    let hours = 0, hard = 0, rej = 0;
+    for (let d = wk - 28 * DAY; d < wk; d += DAY) rosterGet(d).forEach((x, k) => { if (x === u) { hours += 8; if (isHardCell(d, k)) hard++; } });
+    const all = schedAll();
+    for (let w = wk - 28 * DAY; w < wk; w += 7 * DAY) { const s = all[w]; if (!s || s.status !== 'published' || !s.final) continue; const r = s.regs && s.regs[u]; if (!r) continue; CELLS.forEach((c) => { if (r.c[c] === 'want' && s.final[c] !== u) rej++; }); }
+    return { hours, hard, rej };
+  }
+
+  // ---------- luật cứng ----------
+  //  get(d, k): người ở ô (d, k) theo trạng thái đang xét (trong tuần) hoặc lịch đã công bố (ngoài tuần)
+  function hardIssues(ctx, u, c, assign, opts = {}) {
+    if (!u) return ['không có tài khoản đăng nhập'];
+    const d = cellD(ctx.wk, c), k = cellK(c), out = [], p = profBy(u);
+    const get = (dd, kk) => { const i = Math.round((dd - ctx.wk) / DAY); if (i >= 0 && i < 7) { const x = assign[CK(i, kk)]; return x && x !== '' ? x : ''; } return rosterGet(dd)[kk]; };
+    if (!p || p.status !== 'active' || p.position !== 'staff') out.push('không ở trạng thái Đang làm');
+    else if (parseISO(p.startDate) > d) out.push('chưa vào làm');
+    if (!opts.ignorePref) { const r = ctx.regs[u]; if (!r || !r.c[c] || r.c[c] === 'busy') out.push(r ? 'đăng ký Bận ô này' : 'chưa gửi đăng ký (coi như Bận)'); }
+    if (leaveOn(u, d, k)) out.push('có ngày nghỉ đã duyệt');
+    const prev = k > 0 ? [d, k - 1] : [d - DAY, 2], next = k < 2 ? [d, k + 1] : [d + DAY, 0];
+    if (get(...prev) === u) out.push(`liền ca trước (${shiftLabel(...prev)})`);
+    if (get(...next) === u) out.push(`liền ca sau (${shiftLabel(...next)})`);
+    const n = CELLS.filter((x) => x !== c && assign[x] === u).length;
+    if (n + 1 > settings.schedMaxWeek) out.push(`vượt ${settings.schedMaxWeek} ca/tuần`);
+    if (k === 2) { let run = 1; for (let x = d - DAY, j = 0; j < 14 && get(x, 2) === u; x -= DAY, j++) run++; for (let x = d + DAY, j = 0; j < 14 && get(x, 2) === u; x += DAY, j++) run++; if (run > settings.schedMaxNights) out.push(`quá ${settings.schedMaxNights} ca đêm liên tiếp`); }
+    return out;
+  }
+  // ---------- điểm của một người cho một ô (count = số ca khác của người đó trong tuần) ----------
+  function scoreOf(ctx, u, c, assign) {
+    const pref = (ctx.regs[u] || { c: {} }).c[c], n = CELLS.filter((x) => x !== c && assign[x] === u).length, tg = tgOf(u), h = ctx.hist[u] || { hours: 0, hard: 0, rej: 0 };
+    const parts = [];
+    let s = pref === 'want' ? settings.wWant : pref === 'can' ? settings.wCan : 0; parts.push(`${PREF_TXT[pref] || 'Không đăng ký'} +${s}`);
+    if (n < tg) { const v = (tg - n) * settings.wUnder; s += v; parts.push(`có ${n}/${tg} ca khác trong tuần, thiếu ${tg - n} ca so với mục tiêu: +${v}`); }
+    if (n > tg) { const v = (n - tg) * settings.wOver; s -= v; parts.push(`có ${n}/${tg} ca khác, đã vượt mục tiêu ${n - tg} ca: −${v}`); }
+    if (h.rej) { const v = Math.min(settings.wRejMax, h.rej * settings.wRej); s += v; parts.push(`${h.rej} lần bị từ chối "Muốn làm" trong 4 tuần: +${v}`); }
+    if (pref === 'can' && isHardCell(cellD(ctx.wk, c), cellK(c)) && h.hard) { const v = h.hard * settings.wHard; s -= v; parts.push(`ca khó, đã làm ${h.hard} ca khó trong 4 tuần: −${v}`); }
+    return { s, why: parts.join('; ') };
+  }
+  // so sánh 2 ứng viên cùng ô: điểm cao hơn, rồi ít giờ hơn trong 4 tuần, rồi gửi đăng ký sớm hơn
+  function better(ctx, a, b) {
+    if (a.s !== b.s) return a.s > b.s;
+    const ha = (ctx.hist[a.u] || {}).hours || 0, hb = (ctx.hist[b.u] || {}).hours || 0; if (ha !== hb) return ha < hb;
+    const ta = (ctx.regs[a.u] || {}).at || Infinity, tb = (ctx.regs[b.u] || {}).at || Infinity; if (ta !== tb) return ta < tb;
+    return a.u < b.u;
+  }
+  function objective(ctx, assign) {
+    let filled = 0, score = 0; const cnt = {};
+    CELLS.forEach((c) => { const u = assign[c]; if (u) { filled++; cnt[u] = (cnt[u] || 0) + 1; if (!ctx.pins[c]) score += scoreOf(ctx, u, c, assign).s; } });
+    const under = ctx.staff.filter((u) => ctx.regs[u] && (cnt[u] || 0) < minOf(u)).length;
+    return [filled, -under, score];
+  }
+  const objBetter = (a, b) => (a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] > b[2]);
+  const validAssign = (ctx, assign) => CELLS.every((c) => !assign[c] || ctx.pins[c] || hardIssues(ctx, assign[c], c, assign).length === 0);
+
+  function schedContext(wk) {
+    const s = schedOf(wk) || {}, staff = schedStaff().map((p) => p.user).sort();
+    const hist = {}; staff.forEach((u) => { hist[u] = hist4w(u, wk); });
+    return { wk, regs: s.regs || {}, pins: s.pins || {}, staff, hist };
+  }
+  // ---------- thuật toán xếp ca ----------
+  function runSchedule(wk) {
+    const ctx = schedContext(wk), assign = {};
+    CELLS.forEach((c) => { assign[c] = ctx.pins[c] ? ctx.pins[c].u : ''; });
+    // sắp 21 ô theo số người hợp lệ tăng dần (ô khó tìm người xếp trước)
+    const elig = (c) => ctx.staff.filter((u) => hardIssues(ctx, u, c, {}).length === 0).length;
+    const order = CELLS.filter((c) => !ctx.pins[c]).map((c, idx) => ({ c, n: elig(c), idx })).sort((a, b) => a.n - b.n || a.idx - b.idx).map((x) => x.c);
+    order.forEach((c) => {
+      let best = null;
+      ctx.staff.forEach((u) => { if (hardIssues(ctx, u, c, assign).length) return; const sc = { u, ...scoreOf(ctx, u, c, assign) }; if (!best || better(ctx, sc, best)) best = sc; });
+      assign[c] = best ? best.u : '';
+    });
+    // cải thiện: đổi người hoặc hoán đổi 2 ô, giữ thay đổi nếu hợp lệ và tốt hơn
+    const rnd = mulberry32(Math.round(wk / DAY) * 2654435761), free = CELLS.filter((c) => !ctx.pins[c]);
+    let cur = objective(ctx, assign), kept = 0;
+    for (let it = 0; it < settings.schedIters && free.length; it++) {
+      const trial = { ...assign };
+      if (rnd() < 0.5) { const c = free[Math.floor(rnd() * free.length)]; trial[c] = ctx.staff[Math.floor(rnd() * ctx.staff.length)] || ''; }
+      else { const a = free[Math.floor(rnd() * free.length)], b = free[Math.floor(rnd() * free.length)]; [trial[a], trial[b]] = [trial[b], trial[a]]; }
+      if (!validAssign(ctx, trial)) continue;
+      const ob = objective(ctx, trial);
+      if (objBetter(ob, cur)) { Object.assign(assign, trial); cur = ob; kept++; }
+    }
+    // lưu điểm và lý do từng ô
+    const draft = {};
+    CELLS.forEach((c) => {
+      const u = assign[c], without = { ...assign, [c]: '' };
+      const rivals = ctx.staff.filter((v) => v !== u && hardIssues(ctx, v, c, without).length === 0).map((v) => ({ u: v, ...scoreOf(ctx, v, c, without) })).sort((a, b) => b.s - a.s);
+      if (ctx.pins[c]) { draft[c] = { u, pin: true, score: null, why: `Quản lý ghim${ctx.pins[c].reason ? `, lý do: ${ctx.pins[c].reason}` : ''}`, rivals: rivals.slice(0, 3) }; return; }
+      if (!u) { draft[c] = { u: '', score: null, why: rivals.length ? 'Để trống để giữ luật cứng của các ô khác' : 'Không có người hợp lệ (đăng ký Bận, nghỉ phép, liền ca hoặc đã đủ ca)', rivals: [] }; return; }
+      const sc = scoreOf(ctx, u, c, assign);
+      draft[c] = { u, score: sc.s, why: `${nameOf(u)}: ${sc.why} = ${sc.s}`, rivals: rivals.slice(0, 3) };
+    });
+    return { draft, report: schedReport(ctx, assign), kept, obj: cur };
+  }
+  function schedReport(ctx, assign) {
+    const cnt = {}, hard = {}; let wants = 0, got = 0;
+    CELLS.forEach((c) => { const u = assign[c]; if (u) { cnt[u] = (cnt[u] || 0) + 1; if (isHardCell(cellD(ctx.wk, c), cellK(c))) hard[u] = (hard[u] || 0) + 1; } });
+    Object.keys(ctx.regs).forEach((u) => CELLS.forEach((c) => { if (ctx.regs[u].c[c] === 'want') { wants++; if (assign[c] === u) got++; } }));
+    return { filled: CELLS.filter((c) => assign[c]).length, empty: CELLS.filter((c) => !assign[c]), wants, got,
+      people: ctx.staff.map((u) => ({ u, n: cnt[u] || 0, min: minOf(u), tg: tgOf(u), hard: hard[u] || 0, submitted: !!ctx.regs[u] })) };
+  }
+  // ca "Muốn làm" không được xếp, kèm lý do (lưu lúc công bố cho nhân viên xem)
+  function missedOf(ctx, assign) {
+    const out = {};
+    Object.keys(ctx.regs).forEach((u) => CELLS.forEach((c) => {
+      if (ctx.regs[u].c[c] !== 'want' || assign[c] === u) return;
+      const v = assign[c], without = { ...assign, [c]: '' }, iss = hardIssues(ctx, u, c, without);
+      let why;
+      if (iss.length) why = `Không xếp được vì ${iss.join(', ')}`;
+      else if (v) { const a = scoreOf(ctx, v, c, without), b = scoreOf(ctx, u, c, without); why = a.s > b.s ? `Đã xếp cho ${nameOf(v)}, điểm ${a.s} cao hơn ${b.s} của bạn` : `Đã xếp cho ${nameOf(v)} (bằng điểm hoặc quản lý chọn)`; }
+      else why = 'Ô để trống';
+      (out[u] = out[u] || []).push({ c, why });
+    }));
+    return out;
+  }
+
+  // ---------- mở tuần, tự xếp khi hết hạn ----------
+  function schedTick() {
+    const all = schedAll(), wk = nextWeek(), t = nowT(); let ch = false;
+    if (!all[wk]) { all[wk] = { wk, status: 'open', openedAt: t, deadline: deadlineOf(wk), regs: {}, pins: {} }; ch = true; }
+    Object.values(all).forEach((s) => {
+      if (s.status === 'open' && t > s.deadline) {
+        schedSave(all); const r = runSchedule(s.wk); const a2 = schedAll(), s2 = a2[s.wk];
+        Object.assign(s2, { status: 'draft', draft: r.draft, report: r.report, runAt: t, runBy: 'Tự động khi hết hạn' }); schedSave(a2);
+        audit('Xếp ca', `Tự xếp ca tuần ${fmtWeek(s.wk)} khi hết hạn đăng ký`, 'Đang mở đăng ký', `Bản nháp: lấp ${r.report.filled}/21 ca`, { user: '', name: 'Hệ thống' });
+        Object.assign(all, schedAll()); ch = false;
+      }
+    });
+    if (ch) schedSave(all);
+  }
+  // dữ liệu mẫu: 4 tuần trước có đăng ký (suy từ lịch đã phân), tuần sau có 5/6 người đã gửi
+  function schedSeed() {
+    if (store.get('bgx_sched_seeded', false)) return;
+    const all = schedAll(), cur = weekStart(nowT()), staff = schedStaff();
+    for (let w = cur - 28 * DAY; w <= cur; w += 7 * DAY) {
+      if (all[w]) continue;
+      const regs = {}, final = {};
+      CELLS.forEach((c) => { final[c] = rosterGet(cellD(w, c))[cellK(c)] || ''; });
+      staff.forEach((p, pi) => {
+        if (parseISO(p.startDate) > w) return;
+        const c = {}; CELLS.forEach((x) => { if (final[x] === p.user) c[x] = 'want'; });
+        const others = CELLS.filter((x) => !c[x]);
+        [0, 1, 2, 3, 4].forEach((j) => { const x = others[Math.floor(hrand(w / 1e7 + pi * 3.1 + j) * others.length)]; if (x && !c[x]) c[x] = j < 1 && hrand(w / 1e7 + pi * 1.3) < 0.5 ? 'want' : 'can'; });
+        regs[p.user] = { c, at: deadlineOf(w) - (10 + Math.floor(hrand(w / 1e7 + pi) * 60)) * H };
+      });
+      all[w] = { wk: w, status: 'published', openedAt: w - 7 * DAY, deadline: deadlineOf(w), regs, pins: {}, final, publishedAt: deadlineOf(w) + H, publishedBy: 'Dữ liệu mẫu', seed: true };
+    }
+    const nw = nextWeek();
+    const reg = (want, can) => { const c = {}; want.forEach(([i, k]) => { c[CK(i, k)] = 'want'; }); can.forEach(([i, k]) => { c[CK(i, k)] = 'can'; }); return c; };
+    const t = nowT(), dl = deadlineOf(nw);
+    const plans = {
+      phanquochuy: reg([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]], [[0, 1], [1, 1], [2, 1], [5, 0]]),
+      nguyenthanhphat: reg([[0, 1], [1, 1], [2, 1], [3, 1], [4, 1]], [[5, 0], [6, 0], [5, 1]]),
+      lytuananh: reg([[0, 2], [1, 2], [2, 2]], [[3, 2], [4, 2], [6, 1], [6, 0]]),
+      dinhphamphuhung: reg([[5, 0], [6, 0], [5, 1], [6, 1]], [[5, 2], [3, 1]]),
+      nguyenhoangquan: reg([[3, 1], [4, 1], [5, 2]], [[6, 2], [4, 2]]),
+    };
+    if (!all[nw]) all[nw] = { wk: nw, status: 'open', openedAt: weekStart(t), deadline: dl, regs: {}, pins: {} };
+    if (all[nw].status === 'open') Object.entries(plans).forEach(([u, c], i) => { if (profBy(u) && !all[nw].regs[u]) all[nw].regs[u] = { c, at: Math.min(t, dl) - (30 - i * 5) * H, seed: true }; });
+    schedSave(all); store.set('bgx_sched_seeded', true);
+  }
+
+  // =====================================================================
+  //  QUẢN LÝ: tab "Đăng ký ca" trong Nhân viên
+  // =====================================================================
+  let schedWk = 0;
+  HR_TABS['dang-ky'] = () => {
+    schedTick();
+    if (!schedWk) schedWk = nextWeek();
+    const wk = schedWk, s = schedOf(wk), t = nowT(), days = Array.from({ length: 7 }, (_, i) => wk + i * DAY);
+    const staff = schedStaff();
+    const head = `<div class="toolbar"><button class="btn small" data-act="sw-wk" data-d="-7">Tuần trước</button><b style="font-size:13.5px">Tuần ${esc(fmtWeek(wk))}</b><button class="btn small" data-act="sw-wk" data-d="7"${wk >= nextWeek() ? ' disabled' : ''}>Tuần sau</button><button class="btn small" data-act="sw-wk" data-d="0">Tuần đăng ký</button><span class="grow"></span>
+      ${s ? `<span class="pill ${s.status === 'open' ? 'warn' : s.status === 'draft' ? 'm' : 'ok'}">${{ open: 'Đang mở đăng ký', draft: 'Bản nháp, chỉ quản lý thấy', published: 'Đã công bố' }[s.status]}</span>` : ''}
+      ${s && s.status !== 'published' ? `<button class="btn" data-act="sw-run">${s.status === 'draft' ? 'Xếp lại' : 'Xếp ca'}</button>` : ''}${s && s.status === 'draft' ? '<button class="btn primary" data-act="sw-publish">Công bố</button>' : ''}</div>`;
+    if (!s) { hrBody(head + '<p class="muted">Tuần này chưa có dữ liệu đăng ký ca (lịch được phân trước khi có chức năng đăng ký).</p>' + openShiftsAdminHTML()); return; }
+    const regs = s.regs || {}, sub = staff.filter((p) => regs[p.user]), notSub = staff.filter((p) => !regs[p.user]);
+    const sumCell = (c) => {
+      const w = sub.filter((p) => regs[p.user].c[c] === 'want'), cn = sub.filter((p) => regs[p.user].c[c] === 'can'), zero = !w.length && !cn.length;
+      const pin = (s.pins || {})[c];
+      const title = `Muốn làm: ${w.map((p) => p.name).join(', ') || 'không ai'}\nLàm được: ${cn.map((p) => p.name).join(', ') || 'không ai'}`;
+      const pinSel = s.status !== 'published' ? `<select class="pinsel" data-act-change="sw-pin" data-c="${c}" aria-label="Ghim người vào ${esc(shiftLabel(cellD(wk, c), cellK(c)))}"><option value="">Không ghim</option>${staff.map((p) => `<option value="${esc(p.user)}"${pin && pin.u === p.user ? ' selected' : ''}>Ghim: ${esc(p.name)}</option>`).join('')}</select>` : (pin ? `<small>Ghim: ${esc(nameOf(pin.u))}</small>` : '');
+      return `<td class="${zero ? 'reg-zero' : ''}" title="${esc(title)}"><b>${w.length}</b> muốn · <b>${cn.length}</b> được${pinSel ? `<div style="margin-top:4px">${pinSel}</div>` : ''}</td>`;
+    };
+    const grid = (fn) => `<div class="tablewrap"><table class="roster sched"><thead><tr><th>Ca</th>${days.map((d) => `<th>${esc(dayName(d))}<br>${esc(fmtDate(d))}</th>`).join('')}</tr></thead><tbody>${[0, 1, 2].map((k) => `<tr><td><b>${SHIFTS[k].name}</b><br><span class="muted">${shiftHours(k)}</span></td>${days.map((d, i) => fn(CK(i, k))).join('')}</tr>`).join('')}</tbody></table></div>`;
+    let html = head + `<p class="muted" style="font-size:12.5px;margin:0 0 8px">Mở đăng ký ${fmtDT(s.openedAt)}, hạn chót <b>${fmtDT(s.deadline)}</b>${s.status === 'open' ? (t > s.deadline ? ' (đã quá hạn, sẽ tự xếp)' : '') : ''}. Ô đỏ: không ai đăng ký. Rê chuột lên ô để xem tên.</p>`;
+    html += `<div class="grid g2" style="align-items:start"><div><div class="sec-head" style="margin-top:0"><h2>Tổng hợp đăng ký</h2></div>${grid(sumCell)}</div>
+      <div class="card"><h2>Người đã gửi ${sub.length}/${staff.length}</h2><ul class="todo">${staff.map((p) => { const r = regs[p.user], n = r ? Object.values(r.c).filter((x) => x !== 'busy').length : 0, rem = (s.reminders || {})[p.user];
+        return `<li><span class="grow">${esc(p.name)} <small class="muted">${r ? `gửi ${fmtDT(r.at)}, ${n} ca có thể làm` : 'chưa gửi'}${rem ? `, đã nhắc ${fmtDT(rem)}` : ''}</small></span>${r ? '<span class="pill ok">Đã gửi</span>' : s.status === 'open' ? `<button class="btn small" data-act="sw-remind" data-u="${esc(p.user)}">Nhắc</button>` : '<span class="pill bad">Không gửi</span>'}</li>`; }).join('')}</ul>
+        ${notSub.length && s.status === 'open' ? `<div class="toolbar" style="margin-top:8px"><button class="btn" data-act="sw-remind" data-u="*">Nhắc ${notSub.length} người chưa gửi</button></div>` : ''}</div></div>`;
+    if (s.status !== 'open' && s.draft) {
+      const draftCell = (c) => {
+        const x = s.draft[c] || { u: '' }, d = cellD(wk, c), k = cellK(c);
+        const sel = s.status === 'draft' ? `<select data-act-change="sw-edit" data-c="${c}" aria-label="${esc(shiftLabel(d, k))}"><option value="">Để trống</option>${staff.map((p) => `<option value="${esc(p.user)}"${p.user === x.u ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>` : `<b>${esc(nameOf(x.u) || 'Trống')}</b>`;
+        const tip = `${x.why || ''}${x.rivals && x.rivals.length ? `\nNgười khác hợp lệ: ${x.rivals.map((r) => `${nameOf(r.u)} ${r.s}`).join(', ')}` : ''}${x.manual ? `\nQuản lý sửa tay${x.reason ? `, lý do: ${x.reason}` : ''}` : ''}`;
+        return `<td class="${!x.u ? 'reg-zero' : ''} ${x.manual && x.issues && x.issues.length ? 'reg-warn' : ''}" title="${esc(tip)}">${sel}<div class="muted" style="font-size:11.5px;margin-top:3px">${x.pin ? 'Ghim' : x.manual ? 'Sửa tay' : x.score != null ? `${x.score} điểm` : ''} <button class="linkish" data-act="sw-why" data-c="${c}" aria-label="Xem lý do">Lý do</button></div></td>`;
+      };
+      const r = s.report || {};
+      html += `<div class="sec-head"><h2>${s.status === 'draft' ? 'Bản nháp' : 'Lịch đã công bố'}</h2><span class="muted" style="font-size:12.5px">${s.runAt ? `Xếp lúc ${fmtDT(s.runAt)} (${esc(s.runBy || '')})` : ''}${s.publishedAt ? `, công bố ${fmtDT(s.publishedAt)} bởi ${esc(s.publishedBy || '')}` : ''}</span></div>${grid(draftCell)}`;
+      if (r.people) html += `<div class="grid g2" style="margin-top:12px;align-items:start"><div class="card"><h2>Kết quả xếp</h2><div class="sumgrid">
+          <div><span>Số ca đã lấp</span><b>${r.filled}/21</b></div><div><span>Ca trống</span><b class="${r.empty.length ? 'neg' : ''}">${r.empty.length}</b></div>
+          <div class="full"><span>Ca trống</span><b>${r.empty.map((c) => esc(shiftLabel(cellD(wk, c), cellK(c)))).join(', ') || 'Không có'}</b></div>
+          <div class="full"><span>Ca "Muốn làm" được đáp ứng</span><b>${r.got}/${r.wants} (${r.wants ? Math.round(r.got / r.wants * 100) : 0}%)</b></div></div>
+          <p class="muted" style="font-size:12px;margin:8px 0 0">Ca trống sẽ đưa lên "Ca cần người" sau khi công bố.</p></div>
+        <div class="tablewrap"><table><thead><tr><th>Nhân viên</th><th class="num">Số ca</th><th class="num">Tối thiểu</th><th class="num">Mục tiêu</th><th class="num">Ca khó</th><th></th></tr></thead><tbody>${r.people.map((p) => `<tr><td>${esc(nameOf(p.u))}</td><td class="num">${p.n}</td><td class="num">${p.min}</td><td class="num">${p.tg}</td><td class="num">${p.hard}</td><td>${!p.submitted ? '<span class="pill g">Không gửi đăng ký</span>' : p.n < p.min ? '<span class="pill warn">Dưới mức tối thiểu</span>' : ''}</td></tr>`).join('')}</tbody></table></div></div>`;
+    }
+    html += openShiftsAdminHTML();
+    hrBody(html);
+  };
+  // các ô select trong tab dùng data-act-change
+  document.addEventListener('change', (e) => {
+    const el = e.target.closest('[data-act-change]'); if (!el) return;
+    if (el.dataset.actChange === 'sw-pin') schedPin(el.dataset.c, el.value);
+    else if (el.dataset.actChange === 'sw-edit') schedEdit(el.dataset.c, el.value);
+    else if (el.dataset.actChange === 'sr-cell') { myRegDraft = myRegDraft || {}; myRegDraft[el.dataset.c] = el.value; el.className = 'pref-' + el.value; }
+  });
+  async function schedPin(c, u) {
+    if (!needAdmin()) return;
+    const all = schedAll(), s = all[schedWk]; if (!s || s.status === 'published') return;
+    const lb = shiftLabel(cellD(schedWk, c), cellK(c)), before = s.pins[c] ? nameOf(s.pins[c].u) : 'Không ghim';
+    if (!u) { delete s.pins[c]; schedSave(all); audit('Xếp ca', `Bỏ ghim ${lb}`, before, 'Không ghim'); renderHR(); return; }
+    const ctx = schedContext(schedWk), tmp = {}; Object.entries(s.pins).forEach(([x, v]) => { if (x !== c) tmp[x] = v.u; });
+    const iss = hardIssues(ctx, u, c, tmp);
+    let reason = '';
+    if (iss.length) { const r = await askConfirm({ title: 'Ghim phạm luật cứng', html: `Ghim <b>${esc(nameOf(u))}</b> vào ${esc(lb)}: ${esc(iss.join(', '))}.<br>Ghi lý do nếu vẫn ghim.`, okText: 'Vẫn ghim', reason: 'required', danger: true }); if (!r.ok) { renderHR(); return; } reason = r.reason; }
+    s.pins[c] = { u, reason, by: me.name, ts: nowT() }; schedSave(all);
+    audit('Xếp ca', `Ghim ${lb}`, before, `${nameOf(u)}${reason ? `, lý do: ${reason}` : ''}`); renderHR();
+  }
+  async function schedEdit(c, u) {
+    if (!needAdmin()) return;
+    const all = schedAll(), s = all[schedWk]; if (!s || s.status !== 'draft') return;
+    const ctx = schedContext(schedWk), assign = {}; CELLS.forEach((x) => { assign[x] = (s.draft[x] || {}).u || ''; });
+    const lb = shiftLabel(cellD(schedWk, c), cellK(c)), before = nameOf(assign[c]) || 'Trống';
+    let reason = '', iss = [];
+    if (u) { assign[c] = ''; iss = hardIssues(ctx, u, c, assign); }
+    if (iss.length) { const r = await askConfirm({ title: 'Phạm luật cứng', html: `Xếp <b>${esc(nameOf(u))}</b> vào ${esc(lb)}: ${esc(iss.join(', '))}.<br>Ghi lý do nếu vẫn xếp.`, okText: 'Vẫn xếp', reason: 'required', danger: true }); if (!r.ok) { renderHR(); return; } reason = r.reason; }
+    s.draft[c] = { u, manual: true, reason, issues: iss, score: null, why: `Quản lý sửa tay: ${nameOf(u) || 'để trống'}${reason ? `, lý do: ${reason}` : ''}`, rivals: (s.draft[c] || {}).rivals || [] };
+    assign[c] = u; s.report = schedReport(ctx, assign); schedSave(all);
+    audit('Xếp ca', `Sửa bản nháp ${lb}`, before, `${nameOf(u) || 'Trống'}${reason ? `, phạm luật (${iss.join(', ')}), lý do: ${reason}` : ''}`); renderHR();
+  }
+  function schedRun() {
+    if (!needAdmin()) return;
+    const all = schedAll(), s = all[schedWk]; if (!s || s.status === 'published') return;
+    const r = runSchedule(schedWk), a2 = schedAll(), s2 = a2[schedWk], before = s2.status === 'draft' ? `Bản nháp cũ ${s2.report ? s2.report.filled : 0}/21` : 'Đang mở đăng ký';
+    Object.assign(s2, { status: 'draft', draft: r.draft, report: r.report, runAt: nowT(), runBy: me.name }); schedSave(a2);
+    audit('Xếp ca', `Xếp ca tuần ${fmtWeek(schedWk)}`, before, `Bản nháp: lấp ${r.report.filled}/21, đáp ứng ${r.report.got}/${r.report.wants} ca Muốn làm, ${r.kept} lần cải thiện`);
+    toast(`Đã xếp ${r.report.filled}/21 ca. Bản nháp chỉ quản lý thấy.`); renderHR();
+  }
+  async function schedPublish() {
+    if (!needAdmin()) return;
+    const all = schedAll(), s = all[schedWk]; if (!s || s.status !== 'draft') return;
+    const r = s.report || {};
+    const c0 = await askConfirm({ title: `Công bố lịch tuần ${fmtWeek(schedWk)}`, html: `Lịch sẽ ghi vào Lịch phân ca và nhân viên thấy ngay. Đã lấp ${r.filled}/21 ca${r.empty && r.empty.length ? `; ${r.empty.length} ca trống sẽ đưa lên "Ca cần người"` : ''}.`, okText: 'Công bố' });
+    if (!c0.ok) return;
+    const ctx = schedContext(schedWk), final = {}; CELLS.forEach((c) => { final[c] = (s.draft[c] || {}).u || ''; });
+    const t = nowT(); let changed = 0;
+    CELLS.forEach((c) => { const d = cellD(schedWk, c), k = cellK(c); if (shiftSpan(d, k).end <= t) return; if (rosterGet(d)[k] !== final[c]) changed++; rosterSet(d, k, final[c]); });
+    saveRoster(); handCache = null;
+    Object.assign(s, { status: 'published', final, missed: missedOf(ctx, final), publishedAt: t, publishedBy: me.name }); schedSave(all);
+    audit('Xếp ca', `Công bố lịch tuần ${fmtWeek(schedWk)}`, 'Bản nháp', `${r.filled}/21 ca có người, ${changed} ô lịch thay đổi`); toast('Đã công bố lịch'); renderAll();
+  }
+  function schedRemind(u) {
+    if (!needAdmin()) return;
+    const all = schedAll(), s = all[schedWk]; if (!s || s.status !== 'open') return;
+    const list = u === '*' ? schedStaff().filter((p) => !s.regs[p.user]).map((p) => p.user) : [u];
+    s.reminders = s.reminders || {}; list.forEach((x) => { s.reminders[x] = nowT(); }); schedSave(all);
+    audit('Xếp ca', `Nhắc đăng ký ca tuần ${fmtWeek(schedWk)}`, '', list.map(nameOf).join(', '));
+    toast(`Đã nhắc ${list.length} người. Họ sẽ thấy lời nhắc ở mục Của tôi.`); renderHR();
+  }
+  function schedWhy(c) {
+    const s = schedOf(schedWk); if (!s || !s.draft) return; const x = s.draft[c] || {};
+    openForm({ title: `Lý do: ${shiftLabel(cellD(schedWk, c), cellK(c))}`, noOk: true, cancelText: 'Đóng', fields: [{ type: 'html', full: true, html: `<p style="margin:0 0 8px"><b>${esc(nameOf(x.u) || 'Để trống')}</b>${x.score != null ? `, ${x.score} điểm` : ''}</p><p class="note" style="margin:0">${esc(x.why || '')}</p>${x.rivals && x.rivals.length ? `<p style="margin:10px 0 4px;font-weight:600">Người khác hợp lệ cho ô này</p><ul style="margin:0;padding-left:18px">${x.rivals.map((r) => `<li>${esc(nameOf(r.u))}: ${r.s} điểm (${esc(r.why)})</li>`).join('')}</ul>` : ''}` }] });
+  }
+
+  // ---------- ca cần người ----------
+  const openBonus = () => store.get('bgx_open_bonus', {});
+  function openShifts() {
+    const t = nowT(), b0 = bizToday(), out = [];
+    const all = schedAll(), cw = weekStart(t);
+    // chỉ lấy tuần đã công bố (tuần hiện tại, hoặc tuần có lịch xếp đã công bố); tuần đang đăng ký hay đang nháp thì chưa
+    const pub = (d) => { const w = weekStart(d); return w <= cw ? !all[w] || all[w].status === 'published' : !!all[w] && all[w].status === 'published'; };
+    for (let d = b0; d < b0 + 14 * DAY; d += DAY) [0, 1, 2].forEach((k) => { if (pub(d) && !rosterGet(d)[k] && shiftSpan(d, k).start > t) out.push({ d, k, key: `${d}|${k}`, bonus: openBonus()[`${d}|${k}`] || 0, soon: shiftSpan(d, k).start - t <= DAY }); });
+    return out;
+  }
+  // luật cứng khi nhân viên tự nhận ca trống (theo lịch đã công bố)
+  function claimIssues(u, d, k) {
+    const wk = weekStart(d), ctx = { wk, regs: {}, pins: {} }, assign = {};
+    CELLS.forEach((c) => { assign[c] = rosterGet(cellD(wk, c))[cellK(c)] || ''; });
+    return hardIssues(ctx, u, CK(Math.round((d - wk) / DAY), k), assign, { ignorePref: true });
+  }
+  function openShiftsAdminHTML() {
+    const list = openShifts();
+    return `<div class="sec-head"><h2>Ca cần người</h2><span class="muted" style="font-size:12.5px">Ca trống trong 14 ngày tới theo lịch đã công bố. Nhân viên hợp lệ bấm "Nhận ca", ai trước được trước.</span></div>
+      <div class="tablewrap"><table><thead><tr><th>Ca</th><th>Bắt đầu</th><th class="num">Tiền thưởng</th><th></th></tr></thead><tbody>${list.map((o) => `<tr><td>${esc(shiftLabel(o.d, o.k))}${o.soon ? ' <span class="pill bad">Trong 24 giờ</span>' : ''}</td><td>${fmtDT(shiftSpan(o.d, o.k).start)}</td><td class="num">${o.bonus ? money(o.bonus) : '–'}</td><td><button class="btn small" data-act="os-bonus" data-key="${o.key}">Đặt tiền thưởng</button></td></tr>`).join('') || '<tr><td colspan="4" class="empty">Không có ca trống.</td></tr>'}</tbody></table></div>`;
+  }
+  function openSetBonus(key) {
+    if (!needAdmin()) return;
+    const [d, k] = key.split('|').map(Number), cur = openBonus()[key] || 0;
+    openForm({ title: `Tiền thưởng ${shiftLabel(d, k)}`, okText: 'Lưu', fields: [{ name: 'amount', label: 'Thưởng cho người nhận ca (đ)', type: 'number', min: 0, step: 10000, value: cur, hint: 'Ghi vào Thưởng – phạt của người nhận ca. Để 0 nếu không thưởng' }],
+      onSubmit: (v) => { if (!needAdmin()) return null; const all = openBonus(), a = Math.max(0, Math.round(+v.amount || 0)); if (a) all[key] = a; else delete all[key]; store.set('bgx_open_bonus', all); audit('Xếp ca', `Tiền thưởng ca cần người ${shiftLabel(d, k)}`, money(cur), money(a)); renderAll(); return null; } });
+  }
+  async function openClaim(key) {
+    if (!isStaff()) return;
+    const [d, k] = key.split('|').map(Number);
+    if (rosterGet(d)[k]) { toast('Ca này đã có người nhận trước'); renderAll(); return; }
+    if (shiftSpan(d, k).start <= nowT()) { toast('Ca đã bắt đầu'); return; }
+    const iss = claimIssues(me.user, d, k); if (iss.length) { toast(`Bạn không nhận được ca này: ${iss.join(', ')}`); return; }
+    const bonus = openBonus()[key] || 0;
+    const r = await askConfirm({ title: 'Nhận ca', html: `Nhận <b>${esc(shiftLabel(d, k))}</b> (${shiftHours(k)})?${bonus ? ` Thưởng ${money(bonus)}.` : ''}`, okText: 'Nhận ca' }); if (!r.ok) return;
+    if (rosterGet(d)[k]) { toast('Ca này vừa có người nhận trước'); renderAll(); return; }
+    rosterSet(d, k, me.user); saveRoster(); handCache = null;
+    if (bonus) { const list = rewards(); list.push({ id: 'rw' + uid8(), user: me.user, ts: shiftSpan(d, k).start, kind: 'bonus', type: 'Nhận ca cần người', amount: bonus, reason: `Nhận ${shiftLabel(d, k)} đang trống`, ref: `open:${key}`, by: 'Hệ thống' }); saveRewards(list); const all = openBonus(); delete all[key]; store.set('bgx_open_bonus', all); }
+    audit('Xếp ca', `${me.name} nhận ca cần người`, 'Trống', `${shiftLabel(d, k)}${bonus ? `, thưởng ${money(bonus)}` : ''}`);
+    toast(`Đã nhận ${shiftLabel(d, k)}`); renderAll();
+  }
+
+  // =====================================================================
+  //  NHÂN VIÊN: phần đăng ký ca trong mục "Của tôi"
+  // =====================================================================
+  let myRegDraft = null, myRegWk = 0;
+  function schedMyHTML() {
+    if (!isStaff()) return '';
+    schedTick();
+    const u = me.user, wk = nextWeek(), s = schedOf(wk), t = nowT(), days = Array.from({ length: 7 }, (_, i) => wk + i * DAY);
+    if (myRegWk !== wk) { myRegDraft = null; myRegWk = wk; }
+    const mine = s && s.regs[u], editable = s && s.status === 'open' && t <= s.deadline;
+    if (!myRegDraft) myRegDraft = { ...((mine && mine.c) || {}) };
+    const rem = s && s.reminders && s.reminders[u] && !mine;
+    const sel = (c) => { const v = myRegDraft[c] || 'busy'; return editable ? `<select data-act-change="sr-cell" data-c="${c}" class="pref-${v}" aria-label="${esc(shiftLabel(cellD(wk, c), cellK(c)))}">${['want', 'can', 'busy'].map((x) => `<option value="${x}"${x === v ? ' selected' : ''}>${PREF_TXT[x]}</option>`).join('')}</select>` : `<span class="pref-${v} preftag">${PREF_TXT[v]}</span>`; };
+    const n = Object.values(myRegDraft).filter((x) => x === 'want' || x === 'can').length;
+    let html = `<div class="card" style="margin-bottom:14px"><div class="gates" style="margin-bottom:6px"><div style="flex:1;min-width:220px"><h2>Đăng ký ca tuần ${esc(s ? fmtWeek(wk) : '')}</h2>
+      <p class="sub" style="margin:0">${!s ? 'Chưa mở đăng ký.' : s.status !== 'open' ? 'Đã hết hạn đăng ký, quản lý đang xếp lịch.' : t > s.deadline ? 'Đã quá hạn chót, không sửa được nữa.' : `Hạn chót <b>${fmtDT(s.deadline)}</b>. Chọn ít nhất <b>${minOf(u)}</b> ca Muốn làm hoặc Làm được. Ô để Bận sẽ không bị xếp.`}
+      ${mine ? ` Đã gửi lúc ${fmtDT(mine.at)}${mine.updated ? `, sửa lần cuối ${fmtDT(mine.updated)}` : ''}.` : ''}</p></div>
+      ${editable ? `<button class="btn" data-act="sr-copy">Giống tuần trước</button><button class="btn primary" data-act="sr-submit">${mine ? 'Gửi lại' : 'Gửi đăng ký'}</button>` : ''}</div>
+      ${rem ? `<div class="note warn" style="margin-bottom:8px">Quản lý nhắc bạn gửi đăng ký ca trước ${fmtDT(s.deadline)}.</div>` : ''}
+      ${s ? `<div class="tablewrap"><table class="roster sched my"><thead><tr><th>Ca</th>${days.map((d) => `<th>${esc(dayName(d))}<br>${esc(fmtDate(d))}</th>`).join('')}</tr></thead><tbody>${[0, 1, 2].map((k) => `<tr><td><b>${SHIFTS[k].name}</b><br><span class="muted">${shiftHours(k)}</span></td>${days.map((d, i) => `<td>${sel(CK(i, k))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      ${editable ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0" id="srCount">Đang chọn ${n} ca có thể làm.</p>` : ''}` : ''}</div>`;
+    // ca muốn mà không được xếp (tuần đã công bố gần nhất)
+    const all = schedAll(), pubs = [weekStart(t), wk].filter((w) => all[w] && all[w].status === 'published' && all[w].missed && all[w].missed[u]);
+    if (pubs.length) html += `<div class="card" style="margin-bottom:14px"><h2>Ca bạn muốn nhưng không được xếp</h2><ul class="todo">${pubs.map((w) => all[w].missed[u].map((m) => `<li><span class="grow">${esc(shiftLabel(cellD(w, m.c), cellK(m.c)))}</span><span class="muted" style="font-size:12.5px">${esc(m.why)}</span></li>`).join('')).join('')}</ul></div>`;
+    const os = openShifts();
+    html += `<div class="card" style="margin-bottom:14px"><h2>Ca cần người</h2><p class="sub">Ca trống trong 14 ngày tới. Ai bấm "Nhận ca" trước thì được.</p><ul class="todo">${os.map((o) => { const iss = claimIssues(u, o.d, o.k); return `<li><span class="grow">${esc(dayName(o.d))} ${esc(shiftLabel(o.d, o.k))} (${shiftHours(o.k)})${o.bonus ? ` <span class="pill ok">Thưởng ${money(o.bonus)}</span>` : ''}</span>${iss.length ? `<span class="muted" style="font-size:12px">Không nhận được: ${esc(iss.join(', '))}</span>` : `<button class="btn small primary" data-act="os-claim" data-key="${o.key}">Nhận ca</button>`}</li>`; }).join('') || '<li class="muted">Không có ca trống.</li>'}</ul></div>`;
+    return html;
+  }
+  function myRegCopy() {
+    if (!isStaff()) return;
+    const wk = nextWeek(), prev = schedOf(wk - 7 * DAY), r = prev && prev.regs && prev.regs[me.user];
+    if (!r) { toast('Tuần trước bạn chưa có đăng ký để chép'); return; }
+    myRegDraft = { ...r.c }; renderMy(); toast('Đã chép đăng ký tuần trước, kiểm tra rồi bấm Gửi');
+  }
+  function myRegSubmit() {
+    if (!isStaff()) return;
+    const all = schedAll(), wk = nextWeek(), s = all[wk], t = nowT();
+    if (!s || s.status !== 'open' || t > s.deadline) { toast('Đã quá hạn đăng ký, không sửa được nữa'); renderMy(); return; }
+    const c = {}; Object.entries(myRegDraft || {}).forEach(([k, v]) => { if (v === 'want' || v === 'can') c[k] = v; });
+    const n = Object.keys(c).length, min = minOf(me.user);
+    if (n < min) { toast(`Cần chọn ít nhất ${min} ca Muốn làm hoặc Làm được (đang chọn ${n})`); return; }
+    const old = s.regs[me.user];
+    s.regs[me.user] = { c, at: old ? old.at : t, updated: old ? t : undefined }; schedSave(all);
+    audit('Đăng ký ca', `${me.name} ${old ? 'sửa' : 'gửi'} đăng ký tuần ${fmtWeek(wk)}`, old ? `${Object.keys(old.c).length} ca` : '', `${n} ca (${Object.values(c).filter((x) => x === 'want').length} Muốn làm)`);
+    toast(old ? 'Đã gửi lại đăng ký' : 'Đã gửi đăng ký'); renderMy();
+  }
+  document.addEventListener('change', (e) => { if (e.target.matches('[data-act-change="sr-cell"]')) { const n = Object.values(myRegDraft || {}).filter((x) => x === 'want' || x === 'can').length, el = $('#srCount'); if (el) el.textContent = `Đang chọn ${n} ca có thể làm.`; } });
+
+  // ---------- việc cần xử lý ----------
+  function schedTodo() {
+    const list = [], s = schedOf(nextWeek()), t = nowT();
+    if (s && s.status === 'draft') list.push([1, `Bản nháp lịch tuần ${fmtWeek(s.wk)} chờ công bố`, '#nhan-vien/dang-ky', 'warn']);
+    if (s && s.status === 'open') { const n = schedStaff().filter((p) => !s.regs[p.user]).length; if (n && s.deadline - t < 2 * DAY) list.push([n, `Người chưa gửi đăng ký ca, hạn ${fmtDT(s.deadline)}`, '#nhan-vien/dang-ky', 'warn']); }
+    const soon = openShifts().filter((o) => o.soon); if (soon.length) list.push([soon.length, `Ca trống trong 24 giờ tới chưa ai nhận: ${soon.map((o) => shiftLabel(o.d, o.k)).join(', ')}`, '#nhan-vien/dang-ky', 'bad']);
+    return list;
+  }
+
+  // ---------- cài đặt ----------
+  const SCHED_FIELDS = [['regDeadlineDow', 'Hạn chót: thứ (1 = thứ Hai … 7 = Chủ nhật)', 1, 7, 1], ['regDeadlineTime', 'Hạn chót: giờ (HH:MM)', null, null, null], ['schedMaxWeek', 'Số ca tối đa mỗi tuần', 1, 21, 1], ['schedMaxNights', 'Số ca đêm liên tiếp tối đa', 1, 7, 1],
+    ['minOfficial', 'Số ca tối thiểu phải đăng ký: chính thức', 0, 21, 1], ['minSeasonal', 'Tối thiểu: thời vụ', 0, 21, 1], ['minParttime', 'Tối thiểu: bán thời gian', 0, 21, 1],
+    ['tgOfficial', 'Mục tiêu tuần: chính thức', 0, 21, 1], ['tgSeasonal', 'Mục tiêu tuần: thời vụ', 0, 21, 1], ['tgParttime', 'Mục tiêu tuần: bán thời gian', 0, 21, 1],
+    ['wWant', 'Điểm "Muốn làm"', 0, 100, 1], ['wCan', 'Điểm "Làm được"', 0, 100, 1], ['wUnder', 'Điểm cộng mỗi ca còn thiếu so với mục tiêu', 0, 100, 1], ['wOver', 'Điểm trừ mỗi ca đã vượt mục tiêu', 0, 100, 1],
+    ['wRej', 'Điểm cộng mỗi lần bị từ chối "Muốn làm" (4 tuần)', 0, 100, 1], ['wRejMax', 'Cộng tối đa cho lần bị từ chối', 0, 100, 1], ['wHard', 'Điểm trừ mỗi ca khó đã làm (4 tuần, người chọn "Làm được")', 0, 100, 1], ['schedIters', 'Số lần thử cải thiện', 0, 5000, 1]];
+  function schedFillSettings() {
+    if (!isAdmin()) return;
+    const f = $('#schedSettingsForm'); if (!f) return;
+    SCHED_FIELDS.forEach(([k]) => { f[k].value = settings[k]; });
+  }
+  function schedSettingsSave(e) {
+    e.preventDefault(); if (!needAdmin()) return;
+    const f = e.target, before = SCHED_FIELDS.map(([k]) => `${k}: ${settings[k]}`).join('; ');
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(f.regDeadlineTime.value)) { toast('Giờ hạn chót phải có dạng 20:00'); return; }
+    for (const [k, , lo, hi] of SCHED_FIELDS) { if (lo == null) continue; const v = +f[k].value; if (!(v >= lo && v <= hi)) { toast(`Giá trị "${k}" phải từ ${lo} đến ${hi}`); return; } }
+    SCHED_FIELDS.forEach(([k, , lo]) => { settings[k] = lo == null ? f[k].value : Math.round(+f[k].value); }); saveSettings();
+    const all = schedAll(); Object.values(all).forEach((s) => { if (s.status === 'open') s.deadline = deadlineOf(s.wk); }); schedSave(all);
+    audit('Cài đặt', 'Đổi cài đặt đăng ký và xếp ca', before, SCHED_FIELDS.map(([k]) => `${k}: ${settings[k]}`).join('; ')); toast('Đã lưu cài đặt xếp ca');
+  }
+  if ($('#schedSettingsForm')) {
+    $('#schedSettingsForm').innerHTML = `<h2 style="grid-column:1/-1">Đăng ký ca và xếp ca tự động</h2>${SCHED_FIELDS.map(([k, lb, lo, hi]) => `<label>${esc(lb)}<input name="${k}" ${lo == null ? 'type="text" pattern="[0-2][0-9]:[0-5][0-9]"' : `type="number" min="${lo}" max="${hi}" step="1"`} required></label>`).join('')}
+      <p class="muted" style="grid-column:1/-1;margin:0;font-size:12.5px">Đăng ký tự mở vào thứ Hai cho tuần sau. Mỗi ca cần 1 người (bãi có một chốt trực). Đổi hạn chót áp dụng cho tuần đang mở đăng ký.</p>
+      <div style="grid-column:1/-1"><button class="btn primary" type="submit">Lưu cài đặt xếp ca</button></div>`;
+    $('#schedSettingsForm').onsubmit = schedSettingsSave;
+  }
+
+  const SCHED_ACTS = {
+    'sw-wk': (el) => { const d = +el.dataset.d; schedWk = d ? schedWk + d * DAY : nextWeek(); if (schedWk > nextWeek()) schedWk = nextWeek(); renderHR(); },
+    'sw-run': () => schedRun(), 'sw-publish': () => schedPublish(), 'sw-remind': (el) => schedRemind(el.dataset.u), 'sw-why': (el) => schedWhy(el.dataset.c),
+    'os-bonus': (el) => openSetBonus(el.dataset.key), 'os-claim': (el) => openClaim(el.dataset.key),
+    'sr-copy': () => myRegCopy(), 'sr-submit': () => myRegSubmit(),
+  };
+
+  // =====================================================================
   //  ĐIỀU HƯỚNG, PHÂN QUYỀN THEO TRANG, LÀM MỚI, KHỞI ĐỘNG
   // =====================================================================
   const ADMIN_VIEWS = ['thong-ke', 'nhan-dang', 'nhan-vien', 'tai-chinh', 'nhat-ky', 'cai-dat'], STAFF_VIEWS = ['cua-toi'];
@@ -3701,9 +4155,10 @@
   function parseHash() { const parts = (location.hash || '#tong-quan').slice(1).split('/'); return { view: parts[0] || 'tong-quan', sub: parts[1] || '', param: decodeURIComponent(parts.slice(2).join('/') || '') }; }
   function renderView(v) {
     if (!me || !sessionValid()) return;
+    schedTick();
     renderBanners();
     ({ 'tong-quan': renderOverview, 'trong-bai': renderParked, 'lich-su': renderHist, 'the-thang': renderCards, 'canh-bao': renderAlerts, 'thiet-bi': renderDevices,
-      'thong-ke': renderStats, 'nhan-dang': renderOcr, 'nhan-vien': renderHR, 'tai-chinh': renderFinance, 'nhat-ky': renderAudit, 'cai-dat': fillSettings,
+      'thong-ke': renderStats, 'nhan-dang': renderOcr, 'nhan-vien': renderHR, 'tai-chinh': renderFinance, 'nhat-ky': renderAudit, 'cai-dat': () => { fillSettings(); schedFillSettings(); },
       'cua-toi': () => { if (typeof renderMy === 'function') renderMy(); } }[v] || renderOverview)();
   }
   function renderAll() { if (!me) return; if (!sessionValid()) { logout('Phiên đăng nhập đã hết, vui lòng đăng nhập lại'); return; } renderView(curView); }
@@ -3731,6 +4186,7 @@
     logout: () => logout(me && me.role === 'staff' ? 'Đã đăng xuất. Ca của bạn vẫn đang mở.' : 'Đã đăng xuất'),
     'close-shift': () => openCloseShift(),
     ...FIN_ACTS,
+    ...SCHED_ACTS,
     drawer: () => document.body.classList.toggle('drawer'),
     'clear-sim': async () => { if (!needAdmin()) return; const r = await askConfirm({ title: 'Xóa dữ liệu mô phỏng', text: 'Xóa các sự kiện trang mô phỏng đã ghi hôm nay? Dữ liệu mẫu và dữ liệu nhập tay vẫn giữ.', okText: 'Xóa', danger: true }); if (!r.ok) return; try { localStorage.removeItem('bgx_events'); localStorage.removeItem('bgx_parked'); } catch (e) { /* bỏ qua */ } audit('Mô phỏng', 'Xóa dữ liệu mô phỏng', `${simEventCount} sự kiện`, 'Đã xóa'); rebuildSessions(); renderAll(); },
     manual: (el) => openManual(el.dataset.lane),
@@ -3799,6 +4255,7 @@
       store.set('bgx_need_close_prev', false);
     }
     finSeed();
+    schedSeed();
     if (!auditLog.length) { audit('Hệ thống', 'Nâng cấp dữ liệu lên bản 3: hồ sơ 8 nhân sự, lịch phân ca, bảng giao dịch tiền', '', 'Đã chuyển đổi'); }
     restoreSession();
   })();

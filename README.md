@@ -114,3 +114,32 @@ Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và t
   - Có sẵn hóa đơn điện, nước, vật tư, một khoản sửa chữa và một khoản chi từ két chờ duyệt.
   - Doanh thu mẫu (khoảng 8–9 triệu/tháng) không đủ trả lương 8 người (khoảng 40 triệu), nên báo cáo hiện **lỗ**. Số liệu không bị chỉnh cho đẹp.
 - **Khóa localStorage mới:** `bgx_fin_cats`, `bgx_fin_entries`, `bgx_fin_assets`, `bgx_fin_close`, `bgx_fin_auto`, `bgx_fin_seeded`, `bgx_hr_from`. Giao dịch có thêm loại `expense`.
+
+## Đăng ký ca và xếp ca tự động (Nhân viên → Đăng ký ca, mục Của tôi)
+
+- **Quy trình tuần:**
+  - Đăng ký cho tuần sau tự mở vào thứ Hai. Hạn chót mặc định thứ Năm 20:00, sửa được ở Cài đặt → "Đăng ký ca và xếp ca tự động".
+  - Nhân viên đăng ký ở mục Của tôi: bảng 7 ngày × 3 ca, mỗi ô chọn Muốn làm, Làm được hoặc Bận. Có nút "Giống tuần trước". Phải chọn đủ số ca tối thiểu mới gửi được (chính thức 5, thời vụ 4, bán thời gian 3). Quá hạn chót thì không sửa được nữa.
+  - Quản lý thấy bảng tổng hợp đăng ký từng ca, ô không ai đăng ký tô đỏ, danh sách ai chưa gửi và nút Nhắc. Quản lý ghim được người vào ô; ghim phạm luật cứng thì phải ghi lý do.
+  - Hết hạn thì hệ thống tự xếp, hoặc quản lý bấm "Xếp ca". Kết quả là bản nháp chỉ quản lý thấy. Quản lý chỉnh tay được; chỉnh phạm luật cứng thì có cảnh báo và phải ghi lý do. Công bố xong mới ghi vào Lịch phân ca, nên Của tôi và Chấm công dùng lịch mới.
+  - Ca trống đưa lên "Ca cần người": nhân viên hợp lệ bấm "Nhận ca", ai trước được trước. Quản lý đặt được tiền thưởng cho ca đó; tiền thưởng ghi vào Thưởng – phạt của người nhận. Ca còn trống trong 24 giờ tới hiện ở Việc cần xử lý.
+- **Luật cứng:**
+  - Không xếp vào ô Bận, ngày nghỉ đã duyệt, người không ở trạng thái Đang làm.
+  - Không 2 ca liền nhau, tính cả nối giữa hai tuần.
+  - Không quá 6 ca/tuần, không quá 3 ca đêm liên tiếp.
+  - Mỗi ca 1 người; không đủ người hợp lệ thì để trống.
+- **Điểm khi nhiều người cùng muốn một ca:**
+  - Muốn làm +10, Làm được +4.
+  - +3 cho mỗi ca còn thiếu so với mục tiêu tuần (5/4/3), −5 cho mỗi ca đã vượt mục tiêu.
+  - +2 cho mỗi lần bị từ chối "Muốn làm" trong 4 tuần (tối đa +8).
+  - −2 cho mỗi ca khó đã làm trong 4 tuần; chỉ trừ khi người đó chọn "Làm được" cho một ca khó.
+  - Hòa điểm thì người ít giờ làm hơn trong 4 tuần được ưu tiên, rồi đến người gửi đăng ký sớm hơn.
+  - Mọi trọng số nằm trong Cài đặt.
+- **Thuật toán:**
+  - Đặt các ô ghim trước, sắp 21 ca theo số người hợp lệ tăng dần, rồi chọn người điểm cao nhất cho từng ca.
+  - Sau đó thử 200 lần đổi người hoặc hoán đổi hai ô. Bộ sinh số ngẫu nhiên lấy hạt giống theo tuần, nên chạy lại cho cùng kết quả.
+  - Chỉ giữ thay đổi khi hợp lệ và tốt hơn: ưu tiên lấp ô trống, rồi bớt người dưới mức tối thiểu, rồi tăng tổng điểm.
+  - Mỗi ô lưu điểm và lý do bằng chữ, hiện khi rê chuột hoặc bấm "Lý do".
+  - Báo cáo sau khi xếp gồm: số ca đã lấp/21, ca trống, người dưới mức tối thiểu, tỷ lệ ca "Muốn làm" được đáp ứng và số ca khó của từng người.
+  - Sau khi công bố, nhân viên thấy những ca mình muốn mà không được xếp, kèm lý do.
+- **Khóa localStorage mới:** `bgx_sched` (theo tuần: đăng ký, ghim, bản nháp, lịch công bố, lý do), `bgx_sched_seeded`, `bgx_open_bonus`. Cài đặt thêm các khóa `regDeadline*`, `schedMax*`, `tg*`, `min*`, `w*`, `schedIters`.
