@@ -25,3 +25,10 @@ Hai trang web là HTML độc lập, mở trực tiếp bằng trình duyệt, k
 - Phí vãng lai theo lượt, giá ngày / đêm, phụ thu mỗi đêm gửi qua; vẫn chọn được tính theo giờ trong trang quản lý.
 - Quy trình mất thẻ: tra theo biển số, đối chiếu ảnh lúc vào, khóa thẻ, thu phí, ghi nhật ký.
 - Thống kê theo ca trực, vai trò quản lý / nhân viên (nhân viên không xem doanh thu tổng và cài đặt), lọc xe gửi quá 24 giờ.
+
+## Cập nhật: đăng nhập, quản lý nhân viên, giao ca
+
+- Vào trang quản lý phải đăng nhập, chọn vai trò Quản lý hoặc Nhân viên. Tài khoản mẫu: `quanly` / admin123, `nv01` đến `nv04` / 123456. Đây là bản mô hình chạy trên trình duyệt; hệ thống thật kiểm tra mật khẩu ở máy chủ.
+- Quản lý: mục Nhân viên gồm danh sách tài khoản (thêm, sửa, đổi mật khẩu, khóa), lịch phân ca theo tuần, nhật ký giao ca và chấm công, hiệu suất từng người. Tổng quan có doanh thu hôm nay và doanh thu từng ca.
+- Lịch sử gửi xe chọn được đúng một ngày.
+- Nhân viên: nhận ca khi đăng nhập, chỉ thấy doanh thu ca đang làm, kết ca bằng cách đếm tiền mặt, hệ thống tính chênh lệch, chọn người nhận bàn giao và ghi chú.
