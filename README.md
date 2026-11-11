@@ -75,3 +75,11 @@ Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và t
 ## Báo cáo kiểm thử
 
 [docs/bao-cao-kiem-thu.pdf](docs/bao-cao-kiem-thu.pdf): 29 tình huống kiểm thử trang quản lý (đăng nhập, ca trực, vận hành bãi xe, nhân sự, đồng bộ và giao diện điện thoại), mỗi tình huống có các bước, kết quả mong đợi, kết quả thực tế và ảnh chụp màn hình. Kết quả: đạt 29/29, chạy trên bản commit 8d2f273. Cuối báo cáo có bảng các lỗi đã tìm ra và cách sửa.
+
+## Quên mật khẩu
+
+- **Nhân viên quên mật khẩu:** bấm "Quên mật khẩu?" ở màn đăng nhập, chọn Nhân viên trực, nhập tên đăng nhập. Yêu cầu hiện ở mục Việc cần xử lý của quản lý và ở đầu trang Nhân viên → Hồ sơ. Quản lý bấm "Đặt mật khẩu tạm" rồi báo mật khẩu đó cho nhân viên. Lần đăng nhập tới, nhân viên phải đổi sang mật khẩu riêng (mật khẩu mới phải khác mật khẩu tạm). Tài khoản mới do quản lý tạo cũng phải đổi mật khẩu ở lần đăng nhập đầu.
+- **Quản lý quên mật khẩu:** bấm "Quên mật khẩu?", chọn Quản lý, nhập tên đăng nhập, số CCCD và số điện thoại. Cả ba phải khớp hồ sơ thì mới đặt được mật khẩu mới. Trang chỉ báo "Thông tin không khớp", không nói sai ô nào. Sai 5 lần thì khóa chức năng này 15 phút cho tên đăng nhập đó. Quản lý còn lại thấy thông báo ở lần đăng nhập tới. Tài khoản nhân viên không dùng được cách này.
+- Mọi lần gửi yêu cầu, đặt mật khẩu tạm, đổi mật khẩu và mọi lần xác minh sai đều ghi vào Nhật ký thao tác. Sau khi đổi mật khẩu, phiên đăng nhập cũ của tài khoản đó hết hiệu lực.
+- Khóa localStorage mới: `bgx_pw_req` (yêu cầu của nhân viên), `bgx_pw_fail` (đếm lần sai), `bgx_pw_notice` (thông báo cho quản lý). Tài khoản có thêm trường `mustChange`.
+- Hướng phát triển khi có máy chủ: gửi mã OTP về số điện thoại hoặc email trong hồ sơ, thay cho việc gõ lại số CCCD và SĐT.

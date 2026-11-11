@@ -72,7 +72,7 @@
   /* tables */
   .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
   .toolbar .grow { flex:1; }
-  input[type=search], input[type=text], input[type=number], input[type=date], select {
+  input[type=search], input[type=text], input[type=number], input[type=date], input[type=password], input[type=tel], input[type=email], select {
     border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 10px; min-width:0; }
   input[type=search] { width:280px; }
   .seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; background:#fff; }
@@ -132,6 +132,8 @@
   .loginbox input { border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:14px; }
   .loginbox .seg { display:grid; grid-template-columns:1fr 1fr; } .loginbox .seg button { padding:9px; font-size:13.5px; }
   .loginbox .btn.accent { padding:11px; font-size:14.5px; }
+  .loginbox .linkbtn { justify-self:center; background:none; border:0; padding:2px 4px; color:var(--ink); font:inherit; font-size:13px; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .loginbox .linkbtn:focus-visible { outline:2px solid var(--ink); outline-offset:2px; border-radius:4px; }
   .loginbox .err { margin:0; color:var(--stop); font-size:12.5px; min-height:1em; }
   .loginbox .demo { margin:0; font-size:12px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:12px; }
 
@@ -280,6 +282,7 @@
     <label>Mật khẩu<input name="pw" type="password" autocomplete="current-password" required></label>
     <p class="err" id="loginErr" role="alert"></p>
     <button class="btn accent" type="submit">Đăng nhập</button>
+    <button class="linkbtn" type="button" id="forgotBtn">Quên mật khẩu?</button>
     <p class="demo">Tài khoản mẫu: quản lý <b>nguyentanhuy</b>, mật khẩu admin123. Nhân viên trực, ví dụ <b>phanquochuy</b>, mật khẩu 123456. Vai trò lấy theo tài khoản.</p>
   </form>
 </div>
@@ -766,8 +769,9 @@
   // =====================================================================
   let me = null;
   const auditLog = store.get('bgx_audit', null) || [];
-  function audit(action, detail, before, after) {
-    auditLog.unshift({ ts: nowT(), user: me ? me.user : '', name: me ? me.name : '', action, detail, before: before == null ? '' : String(before), after: after == null ? '' : String(after) });
+  function audit(action, detail, before, after, who) {
+    const by = who || me;   // who: người làm khi chưa đăng nhập (màn quên mật khẩu)
+    auditLog.unshift({ ts: nowT(), user: by ? by.user : '', name: by ? by.name : '', action, detail, before: before == null ? '' : String(before), after: after == null ? '' : String(after) });
     while (auditLog.length > 3000) auditLog.pop();
     store.set('bgx_audit', auditLog);
   }
@@ -922,6 +926,8 @@
     const all = store.get('bgx_sessions', {}); if (user && all[user]) { delete all[user]; store.set('bgx_sessions', all); }
     try { sessionStorage.removeItem('bgx_session'); } catch (e) { /* bỏ qua */ }
   }
+  // hủy phiên của một tài khoản khác (khi đổi mật khẩu), không đụng phiên của người đang dùng máy này
+  function kickSessions(user) { const all = store.get('bgx_sessions', {}); if (all[user]) { delete all[user]; store.set('bgx_sessions', all); } }
   function sessionValid() {
     if (!me) return false;
     let ss = null; try { ss = JSON.parse(sessionStorage.getItem('bgx_session') || 'null'); } catch (e) { ss = null; }
@@ -1059,14 +1065,132 @@
     const prof = profBy(user);
     if (!acc.active || (prof && prof.status !== 'active')) { err.textContent = 'Tài khoản đang bị khóa hoặc nhân viên không còn làm. Liên hệ quản lý bãi.'; return; }
     err.textContent = ''; f.pw.value = '';
-    if (acc.role === 'staff') { const o = getOpen(); if (!o || o.user !== acc.user) { askOpenShift(acc); return; } }
-    finishLogin(acc);
+    const go = () => { if (acc.role === 'staff') { const o = getOpen(); if (!o || o.user !== acc.user) { askOpenShift(acc); return; } } finishLogin(acc); };
+    if (acc.mustChange) { setOwnPassword(acc, 'temp', go); return; }   // mật khẩu tạm do quản lý đặt: bắt đổi trước khi vào
+    go();
   };
+
+  // ---------- QUÊN MẬT KHẨU ----------
+  //  Nhân viên: gửi yêu cầu, quản lý đặt mật khẩu tạm (bắt đổi ở lần đăng nhập tới).
+  //  Quản lý: tự đặt lại khi nhập khớp tên đăng nhập + số CCCD + số điện thoại trong hồ sơ.
+  //  Sai 5 lần thì khóa chức năng này 15 phút cho tên đăng nhập đó; quản lý còn lại được báo.
+  const PW_MAX_FAIL = 5, PW_LOCK = 15 * MIN;
+  const digits = (x) => String(x || '').replace(/\D/g, '');
+  const normPhone = (x) => { const d = digits(x); return d.length === 11 && d.startsWith('84') ? '0' + d.slice(2) : d; };
+  const pwReqs = () => store.get('bgx_pw_req', []);
+  const pwReqPending = () => pwReqs().filter((r) => r.status === 'pending');
+  function pwLockedUntil(u) { const f = store.get('bgx_pw_fail', {})[u]; return f && f.until > nowT() ? f.until : 0; }
+  function pwFail(u) {   // trả về số lần còn được thử (0 = vừa bị khóa)
+    const all = store.get('bgx_pw_fail', {}); let f = all[u] || { n: 0, until: 0 };
+    if (f.until && f.until <= nowT()) f = { n: 0, until: 0 };
+    f.n++; let left = PW_MAX_FAIL - f.n;
+    if (left <= 0) { f = { n: 0, until: nowT() + PW_LOCK }; left = 0; }
+    all[u] = f; store.set('bgx_pw_fail', all); return left;
+  }
+  function pwClearFail(u) { const all = store.get('bgx_pw_fail', {}); delete all[u]; store.set('bgx_pw_fail', all); }
+  $('#forgotBtn').onclick = async () => {
+    await ready;
+    const pre = $('#loginForm').user.value.trim().toLowerCase();
+    $('#loginErr').textContent = '';
+    openForm({ title: 'Quên mật khẩu', okText: 'Tiếp tục',
+      fields: [
+        { name: 'who', label: 'Bạn là', type: 'select', full: true, options: [['staff', 'Nhân viên trực'], ['admin', 'Quản lý']] },
+        { name: 'user', label: 'Tên đăng nhập', required: true, value: pre, full: true },
+        { name: 'cccd', label: 'Số CCCD', full: true, hint: '12 số, như trong hồ sơ' },
+        { name: 'phone', label: 'Số điện thoại', type: 'tel', full: true, hint: 'Số đang lưu trong hồ sơ' },
+        { type: 'html', full: true, html: '<p class="note" id="fgNote" style="margin:0"></p>' }],
+      onRender: (form) => {
+        const sync = () => {
+          const adm = form.who.value === 'admin';
+          ['cccd', 'phone'].forEach((n) => { form[n].closest('label').classList.toggle('hidden', !adm); form[n].required = adm; });
+          $('#fgNote').textContent = adm
+            ? 'Nhập đúng cả ba thông tin như trong hồ sơ thì bạn tự đặt được mật khẩu mới. Sai 5 lần phải chờ 15 phút. Quản lý còn lại sẽ được báo khi bạn đặt lại.'
+            : 'Yêu cầu gửi tới quản lý. Quản lý sẽ đặt cho bạn một mật khẩu tạm; lần đăng nhập tới bạn phải đổi sang mật khẩu của riêng mình.';
+          $('#gOk').textContent = adm ? 'Xác minh' : 'Gửi yêu cầu';
+        };
+        form.who.onchange = sync; sync();
+      },
+      onSubmit: async (v) => {
+        const u = v.user.toLowerCase(), acc = accBy(u), prof = profBy(u);
+        const usable = acc && acc.active && (!prof || prof.status === 'active');
+        if (v.who === 'staff') {
+          if (usable && !pwReqPending().some((r) => r.user === u)) {
+            const list = pwReqs(); list.push({ id: 'pw' + uid8(), user: u, name: prof ? prof.name : acc.name, ts: nowT(), status: 'pending' });
+            store.set('bgx_pw_req', list);
+            audit('Tài khoản', `${u} báo quên mật khẩu, gửi yêu cầu đặt lại`, '', 'Chờ quản lý', { user: u, name: prof ? prof.name : acc.name });
+          }
+          // không nói tên đăng nhập có tồn tại hay không
+          toast('Đã gửi yêu cầu. Nếu tên đăng nhập đúng, quản lý sẽ đặt mật khẩu tạm cho bạn.');
+          return null;
+        }
+        const until = pwLockedUntil(u);
+        if (until) return `Đã nhập sai ${PW_MAX_FAIL} lần. Thử lại sau ${fmtTime(until)}.`;
+        const ok = usable && acc.role === 'admin' && prof && digits(prof.cccd).length === 12 && digits(v.cccd) === digits(prof.cccd)
+          && normPhone(prof.phone).length >= 10 && normPhone(v.phone) === normPhone(prof.phone);
+        if (!ok) {
+          const left = pwFail(u);
+          audit('Tài khoản', `Đặt lại mật khẩu bằng CCCD và SĐT thất bại, tên đăng nhập "${u}"`, '', left ? `Còn ${left} lần thử` : 'Khóa 15 phút', { user: '', name: 'Màn đăng nhập' });
+          return left ? `Thông tin không khớp. Còn ${left} lần thử.` : `Thông tin không khớp. Đã sai ${PW_MAX_FAIL} lần, thử lại sau ${fmtTime(pwLockedUntil(u))}.`;
+        }
+        pwClearFail(u);
+        setTimeout(() => setOwnPassword(acc, 'cccd'), 0);
+        return null;
+      } });
+  };
+  // đặt mật khẩu riêng: sau khi xác minh CCCD ('cccd') hoặc khi đang dùng mật khẩu tạm ('temp')
+  function setOwnPassword(acc, how, then) {
+    const prof = profBy(acc.user), who = { user: acc.user, name: prof ? prof.name : acc.name };
+    openForm({ title: how === 'temp' ? 'Đổi mật khẩu tạm' : 'Đặt mật khẩu mới', okText: 'Lưu mật khẩu', cancelText: 'Hủy',
+      fields: [
+        { type: 'html', full: true, html: `<p class="note" style="margin:0">${how === 'temp' ? 'Bạn đang dùng mật khẩu tạm do quản lý đặt. Đặt mật khẩu của riêng bạn để tiếp tục.' : `Xác minh thành công cho tài khoản <b>${esc(acc.user)}</b>. Đặt mật khẩu mới rồi đăng nhập lại.`}</p>` },
+        { name: 'npw', label: 'Mật khẩu mới', type: 'password', required: true, hint: 'Ít nhất 6 ký tự', full: true },
+        { name: 'npw2', label: 'Nhập lại mật khẩu mới', type: 'password', required: true, full: true }],
+      onSubmit: async (v) => {
+        if (v.npw.length < 6) return 'Mật khẩu ít nhất 6 ký tự';
+        if (v.npw !== v.npw2) return 'Hai lần nhập không khớp';
+        const h = await hashPw(acc.user, v.npw);
+        if (how === 'temp' && h === acc.pw) return 'Mật khẩu mới phải khác mật khẩu tạm';
+        acc.pw = h; acc.mustChange = false; saveStaff();
+        kickSessions(acc.user);   // phiên cũ ở máy khác (nếu có) hết hiệu lực
+        if (how === 'cccd') {
+          const ns = store.get('bgx_pw_notice', []); ns.push({ id: 'pn' + uid8(), ts: nowT(), user: acc.user, name: who.name, seen: [] }); store.set('bgx_pw_notice', ns);
+          audit('Tài khoản', `${who.name} tự đặt lại mật khẩu bằng CCCD và SĐT`, '', 'Đã đổi', who);
+          toast('Đã đặt mật khẩu mới. Đăng nhập lại bằng mật khẩu này.');
+          $('#loginForm').user.value = acc.user; $('#loginForm').pw.focus();
+        } else {
+          audit('Tài khoản', `${who.name} đổi mật khẩu tạm sang mật khẩu riêng`, 'Mật khẩu tạm', 'Đã đổi', who);
+          toast('Đã đổi mật khẩu');
+        }
+        if (then) setTimeout(then, 0);
+        return null;
+      } });
+  }
+  // báo cho quản lý khi quản lý khác tự đặt lại mật khẩu bằng CCCD
+  async function showPwNotices() {
+    if (!me || me.role !== 'admin') return;
+    const ns = store.get('bgx_pw_notice', []), mine = ns.filter((n) => n.user !== me.user && !n.seen.includes(me.user) && n.ts > nowT() - 30 * DAY);
+    if (!mine.length) return;
+    await askConfirm({ title: 'Có tài khoản vừa đặt lại mật khẩu', okText: 'Đã biết',
+      html: `<p style="margin:0 0 8px">${mine.map((n) => `<b>${esc(n.name)}</b> (${esc(n.user)}) tự đặt lại mật khẩu bằng CCCD và số điện thoại lúc ${fmtDT(n.ts)}.`).join('<br>')}</p><p class="muted" style="margin:0">Nếu không phải người đó làm, vào Nhân viên → Hồ sơ, đặt mật khẩu tạm và khóa tài khoản đó.</p>` });
+    mine.forEach((n) => n.seen.push(me.user)); store.set('bgx_pw_notice', ns);
+  }
+  function pwReqDismiss(id) {
+    if (!needAdmin()) return;
+    const list = pwReqs(), r = list.find((x) => x.id === id); if (!r || r.status !== 'pending') return;
+    r.status = 'dismissed'; r.by = me.user; r.doneAt = nowT(); store.set('bgx_pw_req', list);
+    audit('Tài khoản', `Bỏ qua yêu cầu đặt lại mật khẩu của ${r.user}`, 'Chờ quản lý', 'Bỏ qua'); renderAll();
+  }
+  function pwReqResolve(user) {
+    const list = pwReqs(); let n = 0;
+    list.forEach((r) => { if (r.user === user && r.status === 'pending') { r.status = 'done'; r.by = me ? me.user : ''; r.doneAt = nowT(); n++; } });
+    if (n) store.set('bgx_pw_req', list);
+  }
   function makeMe(acc) { const p = profBy(acc.user); return { user: acc.user, role: acc.role, active: acc.active, name: p ? p.name : acc.name, code: p ? p.code : '' }; }
   function finishLogin(acc) {
     me = makeMe(acc); startSession(acc);
     audit('Đăng nhập', me.role === 'admin' ? 'Vào trang với vai trò quản lý' : 'Vào trang với vai trò nhân viên');
     enter();
+    showPwNotices();
   }
   function enter() {
     document.body.classList.remove('locked'); document.body.classList.toggle('staff', me.role === 'staff');
@@ -1366,6 +1490,8 @@
       if (req.length) list.push([req.length, 'Yêu cầu sửa biển số trên lượt có cảnh báo chờ quản lý duyệt', '#lich-su', 'warn']);
       const unc = allHandovers().filter((h) => h.unclosed && !h.resolved);
       if (unc.length) list.push([unc.length, 'Ca chưa kết, cần kiểm tra tiền', '#nhan-vien/giao-ca', 'bad']);
+      const pr = pwReqPending();
+      if (pr.length) list.push([pr.length, 'Nhân viên quên mật khẩu, chờ đặt mật khẩu tạm', '#nhan-vien/ho-so', 'warn']);
     }
     return list;
   }
@@ -2057,7 +2183,9 @@
     const rows = profRows(), pages = Math.max(1, Math.ceil(rows.length / 20)); profState.page = Math.min(profState.page, pages - 1);
     const sl = rows.slice(profState.page * 20, profState.page * 20 + 20), th = (k, lb, cls = '') => `<th class="sortable ${cls} ${profState.sort === k ? (profState.dir > 0 ? 'asc' : 'desc') : ''}" data-act="prof-sort" data-k="${k}">${lb}</th>`;
     const opt = (sel, list) => list.map(([v, t]) => `<option value="${v}"${sel === v ? ' selected' : ''}>${t}</option>`).join('');
-    hrBody(`<div class="toolbar"><input type="search" id="q-prof" placeholder="Tìm tên, mã nhân viên, số điện thoại" value="${esc(profState.q)}">
+    const preq = pwReqPending();
+    const reqHTML = preq.length ? `<div class="note warn" style="margin-bottom:12px"><b>Yêu cầu đặt lại mật khẩu</b>${preq.map((r) => { const pr = profBy(r.user); return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px"><span class="grow">${esc(r.name)} (${esc(r.user)}) báo quên mật khẩu lúc ${fmtDT(r.ts)}</span>${pr ? `<button class="btn small primary" data-act="prof-pw" data-code="${esc(pr.code)}">Đặt mật khẩu tạm</button>` : ''}<button class="btn small" data-act="pwreq-dismiss" data-id="${esc(r.id)}">Bỏ qua</button></div>`; }).join('')}</div>` : '';
+    hrBody(`${reqHTML}<div class="toolbar"><input type="search" id="q-prof" placeholder="Tìm tên, mã nhân viên, số điện thoại" value="${esc(profState.q)}">
       <select id="f-pst" aria-label="Trạng thái">${opt(profState.status, [['', 'Mọi trạng thái'], ['active', 'Đang làm'], ['paused', 'Tạm nghỉ'], ['left', 'Đã nghỉ việc']])}</select>
       <select id="f-ppos" aria-label="Chức vụ">${opt(profState.pos, [['', 'Mọi chức vụ'], ['admin', 'Quản lý'], ['staff', 'Nhân viên trực']])}</select>
       <select id="f-pct" aria-label="Hợp đồng">${opt(profState.contract, [['', 'Mọi loại hợp đồng'], ['official', 'Chính thức'], ['seasonal', 'Thời vụ'], ['parttime', 'Bán thời gian']])}</select>
@@ -2161,7 +2289,7 @@
           if (!/^[a-z0-9_]{3,30}$/.test(u)) return 'Tên đăng nhập 3–30 ký tự: chữ thường, số, gạch dưới';
           if (accBy(u)) return `Tên đăng nhập ${u} đã có`;
           if ((v.newPw || '').length < 6) return 'Mật khẩu ít nhất 6 ký tự';
-          newAcc = { user: u, name: v.name, role: v.position, active: v.status === 'active', pw: await hashPw(u, v.newPw) };
+          newAcc = { user: u, name: v.name, role: v.position, active: v.status === 'active', pw: await hashPw(u, v.newPw), mustChange: true };
         }
         const fields = ['name', 'dob', 'gender', 'phone', 'email', 'address', 'cccd', 'startDate', 'contract', 'contractEnd', 'position', 'payType', 'bankName', 'bankAcc', 'emName', 'emPhone', 'status', 'leftDate', 'note'];
         const before = p ? fields.filter((k) => String(p[k] || '') !== String(v[k] || '')).map((k) => `${k}: ${k === 'cccd' || k === 'bankAcc' ? mask4(p[k]) : p[k] || ''}`).join('; ') + (String(p.rate) !== String(v.rate) ? `; rate: ${p.rate}` : '') : '';
@@ -2222,8 +2350,16 @@
   function profPassword(code) {
     if (!needAdmin()) return;
     const p = profByCode(code), a = p && accBy(p.user); if (!a) { toast('Người này chưa có tài khoản, tạo trong hộp thoại Sửa'); return; }
-    openForm({ title: `Đổi mật khẩu ${a.user}`, okText: 'Đổi mật khẩu', fields: [{ name: 'pw', label: 'Mật khẩu mới', type: 'password', required: true, hint: 'Ít nhất 6 ký tự' }, { name: 'pw2', label: 'Nhập lại', type: 'password', required: true }],
-      onSubmit: async (v) => { if (v.pw.length < 6) return 'Mật khẩu ít nhất 6 ký tự'; if (v.pw !== v.pw2) return 'Hai lần nhập không khớp'; a.pw = await hashPw(a.user, v.pw); saveStaff(); audit('Tài khoản', `Đặt mật khẩu mới cho ${a.user}`, '', 'Đã đổi'); toast('Đã đổi mật khẩu'); return null; } });
+    const self = a.user === me.user;
+    openForm({ title: self ? 'Đổi mật khẩu của bạn' : `Đặt mật khẩu tạm cho ${a.user}`, okText: self ? 'Đổi mật khẩu' : 'Đặt mật khẩu tạm',
+      fields: [...(self ? [] : [{ type: 'html', full: true, html: `<p class="note" style="margin:0">${esc(p.name)} đăng nhập bằng mật khẩu này một lần, sau đó phải đổi sang mật khẩu riêng. Báo mật khẩu tạm trực tiếp cho người đó.</p>` }]),
+        { name: 'pw', label: self ? 'Mật khẩu mới' : 'Mật khẩu tạm', type: 'password', required: true, hint: 'Ít nhất 6 ký tự' }, { name: 'pw2', label: 'Nhập lại', type: 'password', required: true }],
+      onSubmit: async (v) => {
+        if (v.pw.length < 6) return 'Mật khẩu ít nhất 6 ký tự'; if (v.pw !== v.pw2) return 'Hai lần nhập không khớp';
+        a.pw = await hashPw(a.user, v.pw); a.mustChange = !self; saveStaff();
+        if (!self) { kickSessions(a.user); pwReqResolve(a.user); }
+        audit('Tài khoản', self ? `${me.name} đổi mật khẩu` : `Đặt mật khẩu tạm cho ${a.user}`, '', self ? 'Đã đổi' : 'Phải đổi ở lần đăng nhập tới');
+        toast(self ? 'Đã đổi mật khẩu' : `Đã đặt mật khẩu tạm cho ${a.user}`); renderAll(); return null; } });
   }
   const revealed = new Set();
   function revealField(code, field) {
@@ -2429,6 +2565,7 @@
   // ---------- R1 TỔNG QUAN NHÂN SỰ ----------
   function hrTodo() {
     const t = nowT(), b0 = bizToday(), list = [];
+    const pr = pwReqPending(); if (pr.length) list.push([pr.length, 'Yêu cầu đặt lại mật khẩu', '#nhan-vien/ho-so']);
     const pl = leaves.filter((l) => l.status === 'pending'); if (pl.length) list.push([pl.length, 'Đơn nghỉ chờ duyệt', '#nhan-vien/nghi-phep']);
     const ps = swaps().filter((s) => s.status === 'admin'); if (ps.length) list.push([ps.length, 'Đơn đổi ca chờ quản lý duyệt', '#nhan-vien/nghi-phep']);
     const po = ots().filter((o) => o.status === 'pending'); if (po.length) list.push([po.length, 'Tăng ca chờ duyệt', '#nhan-vien/tang-ca']);
@@ -2904,7 +3041,7 @@
     'prof-new': () => profileForm(null), 'prof-edit': (el) => profileForm(profByCode(el.dataset.code)),
     'prof-view': (el) => { location.hash = `#nhan-vien/ho-so/${encodeURIComponent(el.dataset.code)}`; },
     'prof-menu': (el, e) => { e.stopPropagation(); profMenu(el, el.dataset.code); },
-    'prof-pw': (el) => profPassword(el.dataset.code), 'prof-lock': (el) => profToggleLock(el.dataset.code), 'prof-leave-job': (el) => profLeaveJob(el.dataset.code),
+    'prof-pw': (el) => profPassword(el.dataset.code), 'pwreq-dismiss': (el) => pwReqDismiss(el.dataset.id), 'prof-lock': (el) => profToggleLock(el.dataset.code), 'prof-leave-job': (el) => profLeaveJob(el.dataset.code),
     reveal: (el) => revealField(el.dataset.code, el.dataset.f), 'x-prof': () => exportProfiles(),
     wk: (el) => { const d = +el.dataset.d; wk0 = d ? wk0 + d * DAY : weekStart(nowT()); renderHR(); }, 'wk-copy': () => rosterCopyPrev(), 'wk-auto': () => rosterAuto(), 'x-roster': () => rosterExport(), 'print-roster': () => rosterPrint(),
     'ded-new': (el) => (typeof deductFromShift === 'function' ? deductFromShift(el.dataset.id) : null), 'hand-resolve': (el) => handResolve(el.dataset.id), 'x-hand': () => exportHand(),
