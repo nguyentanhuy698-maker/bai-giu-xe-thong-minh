@@ -2418,6 +2418,437 @@
   }
 
   // =====================================================================
+  //  NHÂN SỰ (tiếp): tổng quan (R1), chấm công (R4), nghỉ phép + đổi ca (R5),
+  //  tăng ca (R6), thưởng – phạt (R7), bảng lương (R8), mục "Của tôi" (R11)
+  // =====================================================================
+  const saveOts = (x) => store.set('bgx_ot', x), saveRewards = (x) => store.set('bgx_rewards', x), saveSwaps = (x) => store.set('bgx_swaps', x);
+  const otCoef = (type) => ({ normal: settings.otNormal, weekend: settings.otWeekend, holiday: settings.otHoliday }[type] || 1);
+  const fmtLeaveRange = (l) => (l.shift != null ? `${SHIFTS[l.shift].name} ${fmtDate(l.from)}` : l.from === l.to ? fmtDate(l.from) : `${fmtDate(l.from)} đến ${fmtDate(l.to)}`);
+  const leaveDays = (l) => (l.shift != null ? 1 : Math.round((l.to - l.from) / DAY) + 1);
+
+  // ---------- R1 TỔNG QUAN NHÂN SỰ ----------
+  function hrTodo() {
+    const t = nowT(), b0 = bizToday(), list = [];
+    const pl = leaves.filter((l) => l.status === 'pending'); if (pl.length) list.push([pl.length, 'Đơn nghỉ chờ duyệt', '#nhan-vien/nghi-phep']);
+    const ps = swaps().filter((s) => s.status === 'admin'); if (ps.length) list.push([ps.length, 'Đơn đổi ca chờ quản lý duyệt', '#nhan-vien/nghi-phep']);
+    const po = ots().filter((o) => o.status === 'pending'); if (po.length) list.push([po.length, 'Tăng ca chờ duyệt', '#nhan-vien/tang-ca']);
+    const unc = allHandovers().filter((h) => h.unclosed && !h.resolved && !handResolved[h.id]); if (unc.length) list.push([unc.length, 'Ca chưa kết, cần kiểm tra tiền', `#nhan-vien/giao-ca`]);
+    const dif = allHandovers().filter((h) => h.diff && h.diff !== 0 && !h.resolved && !handResolved[h.id] && !rewards().some((r) => r.ref === h.id) && h.end > t - 30 * DAY); if (dif.length) list.push([dif.length, 'Ca lệch tiền chưa xử lý (30 ngày)', '#nhan-vien/giao-ca']);
+    let empty = 0; for (let d = b0; d < b0 + 7 * DAY; d += DAY) [0, 1, 2].forEach((k) => { if (!rosterGet(d)[k] && shiftSpan(d, k).end > t) empty++; });
+    if (empty) list.push([empty, 'Ca trong 7 ngày tới chưa có người', '#nhan-vien/lich-ca']);
+    const ct = profiles.filter((p) => p.status === 'active' && p.contractEnd && parseISO(p.contractEnd) >= startOfDay(t) && parseISO(p.contractEnd) - t <= 30 * DAY);
+    if (ct.length) list.push([ct.length, `Hợp đồng hết hạn trong 30 ngày: ${ct.map((p) => `${p.name} (${fmtDateY(parseISO(p.contractEnd))})`).join(', ')}`, '#nhan-vien/ho-so']);
+    return list;
+  }
+  HR_TABS['tong-quan'] = () => {
+    const t = nowT(), b0 = bizToday(), open = getOpen(), mk = curMonth();
+    const offToday = leaves.filter((l) => l.status === 'approved' && b0 >= l.from && b0 <= l.to);
+    const pending = leaves.filter((l) => l.status === 'pending').length + swaps().filter((s) => s.status === 'admin').length + ots().filter((o) => o.status === 'pending').length;
+    const w0 = weekStart(t); let unassigned = 0; for (let d = w0; d < w0 + 7 * DAY; d += DAY) [0, 1, 2].forEach((k) => { if (!rosterGet(d)[k]) unassigned++; });
+    const monthDiff = allHandovers().filter((h) => h.day0 >= monthStart(mk) && h.day0 < monthEnd(mk) && h.diff).reduce((a, h) => a + h.diff, 0);
+    const todo = hrTodo();
+    hrBody(`<div class="kpis6">
+      <div class="card stat"><div class="k">Nhân viên đang làm</div><div class="v">${workingProfiles().length}</div><div class="d">${activeStaff().length} nhân viên trực, ${workingProfiles().filter((p) => p.position === 'admin').length} quản lý</div></div>
+      <div class="card stat"><div class="k">Người đang trực</div><div class="v small">${open ? esc(open.name) : '—'}</div><div class="d">${open ? `${esc(shiftLabel(open.day0, open.k))}, từ ${fmtTime(open.openedAt)}` : 'Chưa có ai nhận ca'}</div></div>
+      <div class="card stat"><div class="k">Nghỉ hôm nay</div><div class="v">${offToday.length}</div><div class="d">${esc(offToday.map((l) => nameOf(l.user)).join(', ') || 'Không ai nghỉ')}</div></div>
+      <div class="card stat"><div class="k">Đơn chờ duyệt</div><div class="v ${pending ? 'bad' : ''}">${pending}</div><div class="d">Nghỉ phép, đổi ca, tăng ca</div></div>
+      <div class="card stat"><div class="k">Ca tuần này chưa phân</div><div class="v ${unassigned ? 'bad' : ''}">${unassigned}</div><div class="d">Tuần ${esc(fmtDate(w0))} đến ${esc(fmtDate(w0 + 6 * DAY))}</div></div>
+      <div class="card stat"><div class="k">Tổng lệch tiền ${esc(monthLabel(mk).toLowerCase())}</div><div class="v ${monthDiff < 0 ? 'bad' : ''}">${monthDiff < 0 ? '−' : ''}${money(Math.abs(monthDiff))}</div><div class="d">Cộng chênh lệch các ca đã kết</div></div></div>
+      <div class="card" style="margin-top:14px"><h2>Việc cần xử lý</h2><ul class="todo">${todo.length ? todo.map(([n, txt, href]) => `<li><span class="n" style="color:var(--stop)">${n}</span><span class="grow">${esc(txt)}</span><a class="btn small" href="${href}">Xử lý</a></li>`).join('') : '<li class="muted">Không có việc nào cần xử lý.</li>'}</ul></div>`);
+  };
+
+  // ---------- R4 CHẤM CÔNG ----------
+  let attMonth = curMonth();
+  function attRows(mk) {
+    const from = monthStart(mk), to = monthEnd(mk);
+    return profiles.filter((p) => (p.position === 'staff' || allHandovers().some((h) => h.user === p.user && h.day0 >= from && h.day0 < to)) && parseISO(p.startDate) < to && (!p.leftDate || parseISO(p.leftDate) >= from - DAY))
+      .map((p) => ({ p, s: attSummary(p.user, from, Math.min(to, bizToday() + DAY)) }));
+  }
+  HR_TABS['cham-cong'] = () => {
+    const mk = attMonth, n = daysInMonth(mk), from = monthStart(mk), closed = monthClosed(mk), rows = attRows(mk), td0 = bizToday();
+    const cellHTML = (u, d0) => {
+      if (d0 > td0) { const pl = rosterGet(d0).map((x, k) => (x === u ? SHIFTS[k].short : '')).filter(Boolean).join('·'); return `<td class="muted">${pl}</td>`; }
+      const cs = (rows.find((r) => r.p.user === u).s.cells[d0]) || attCell(u, d0);
+      if (!cs.length) return `<td>${closed ? '' : `<button class="cell-btn" data-act="att-adj" data-u="${esc(u)}" data-d="${d0}" aria-label="Chỉnh công ${esc(fmtDate(d0))}">·</button>`}</td>`;
+      const worst = ['absent', 'late', 'sub', 'leave', 'ok', 'plan'].find((s) => cs.some((c) => c.st === s)) || 'ok';
+      const txt = cs.map((c) => (c.st === 'leave' ? 'P' : SHIFTS[c.k].short)).join('·');
+      const title = cs.map((c) => `${SHIFTS[c.k].name}: ${(ATT[c.st] || ['Theo lịch'])[0]}${c.adj ? ' (đã chỉnh tay)' : ''}`).join('; ');
+      return `<td class="${(ATT[worst] || ['', ''])[1]} ${cs.some((c) => c.adj) ? 'c-adj' : ''}" title="${esc(title)}">${closed ? esc(txt) : `<button class="cell-btn" data-act="att-adj" data-u="${esc(u)}" data-d="${d0}" aria-label="${esc(title)}">${esc(txt)}</button>`}</td>`;
+    };
+    hrBody(`<div class="toolbar">${monthInput('f-attm', mk)}${closed ? '<span class="pill ok">Đã chốt lương, không sửa được</span>' : ''}<span class="grow"></span><button class="btn" data-act="print-att">In bảng công</button><button class="btn accent" data-act="x-att">Xuất Excel</button></div>
+      <div class="legend-att">${Object.entries(ATT).map(([k, [lb, cls]]) => `<span><i class="${cls}"></i>${lb}</span>`).join('')}<span><i style="outline:2px dashed #8a939c;outline-offset:-3px"></i>Đã chỉnh tay</span><span>S, C, Đ: ca sáng, chiều, đêm. P: nghỉ phép</span></div>
+      <div class="tablewrap" style="margin-top:8px"><table class="att"><thead><tr><th>Nhân viên</th>${Array.from({ length: n }, (_, i) => `<th>${i + 1}</th>`).join('')}<th>Số ca</th><th>Giờ làm</th><th>Trễ</th><th>Vắng</th><th>Tăng ca (giờ)</th></tr></thead>
+      <tbody>${rows.map(({ p, s }) => `<tr><td>${esc(p.name)}</td>${Array.from({ length: n }, (_, i) => cellHTML(p.user, from + i * DAY)).join('')}<td>${s.shifts}</td><td>${s.hours.toFixed(1)}</td><td>${s.late}</td><td class="${s.absentDays ? 'over' : ''}">${s.absentDays}</td><td>${(s.otMin / 60).toFixed(1)}</td></tr>`).join('') || `<tr><td colspan="${n + 6}" class="empty">Không có nhân viên.</td></tr>`}</tbody></table></div>
+      <p class="muted" style="font-size:12.5px">Trễ khi nhận ca muộn hơn ${settings.lateMin} phút. Vắng: có ca trong lịch, không có đơn nghỉ đã duyệt, và người khác nhận ca hoặc không ai nhận. Bấm vào ô để chỉnh công tay (phải ghi lý do).</p>`);
+    $('#f-attm').onchange = (e) => { attMonth = e.target.value || curMonth(); renderHR(); };
+  };
+  function attAdjust(u, d0) {
+    if (!needAdmin()) return;
+    if (!guardOpenMonth(d0, 'sửa công')) return;
+    const cs = attCell(u, d0);
+    openForm({ title: `Chỉnh công ${nameOf(u)}, ${fmtDateY(d0)}`, okText: 'Lưu chỉnh công',
+      fields: [{ type: 'html', full: true, html: `<p style="margin:0;font-size:13px">Hiện tại: ${cs.length ? esc(cs.map((c) => `${SHIFTS[c.k].name}: ${(ATT[c.st] || ['Theo lịch'])[0]}`).join('; ')) : 'không có công'}. Giá trị gốc được giữ lại.</p>` },
+        { name: 'k', label: 'Ca', type: 'select', required: true, options: [0, 1, 2].map((k) => [k, `${SHIFTS[k].name} (${shiftHours(k)})`]), value: cs.length ? cs[0].k : 0 },
+        { name: 'status', label: 'Công', type: 'select', required: true, options: [['ok', 'Đúng giờ'], ['late', 'Đi trễ'], ['absent', 'Vắng không phép'], ['leave', 'Nghỉ có phép'], ['sub', 'Làm thay'], ['none', 'Không tính công'], ['reset', 'Bỏ chỉnh tay, về giá trị gốc']] },
+        { name: 'reason', label: 'Lý do', type: 'textarea', full: true, required: true }],
+      onSubmit: (v) => {
+        if (!guardOpenMonth(d0, 'sửa công')) return null;
+        const key = `${u}|${d0}|${+v.k}`, prev = attAdj[key], cur = attCell(u, d0).find((c) => c.k === +v.k);
+        const before = cur ? (ATT[cur.st] || ['Theo lịch'])[0] : 'Không có';
+        if (v.status === 'reset') delete attAdj[key];
+        else attAdj[key] = { status: v.status, reason: v.reason, by: me.name, ts: nowT(), orig: prev ? prev.orig : (cur ? cur.st : null) };
+        store.set('bgx_att_adjust', attAdj);
+        audit('Chấm công', `Chỉnh công ${nameOf(u)}, ${shiftLabel(d0, +v.k)}, lý do: ${v.reason}`, before, v.status === 'reset' ? 'Về giá trị gốc' : (ATT[v.status] || ['Không tính công'])[0]);
+        renderAll(); return null;
+      } });
+  }
+  function exportAtt() {
+    if (!needAdmin()) return;
+    const mk = attMonth, n = daysInMonth(mk), from = monthStart(mk);
+    exportSheet(`cham-cong-${mk}`, ['Nhân viên', 'Mã NV', ...Array.from({ length: n }, (_, i) => fmtDateY(from + i * DAY)), 'Số ca', 'Giờ làm', 'Số lần trễ', 'Số ngày vắng', 'Giờ tăng ca'],
+      attRows(mk).map(({ p, s }) => [p.name, p.code, ...Array.from({ length: n }, (_, i) => (s.cells[from + i * DAY] || []).filter((c) => c.st !== 'plan').map((c) => `${c.st === 'leave' ? 'P' : SHIFTS[c.k].short}:${(ATT[c.st] || [''])[0]}`).join(', ')), s.shifts, +s.hours.toFixed(1), s.late, s.absentDays, +(s.otMin / 60).toFixed(1)]));
+  }
+  function printAtt() {
+    if (!needAdmin()) return;
+    const mk = attMonth, n = daysInMonth(mk), from = monthStart(mk), rows = attRows(mk);
+    audit('In', `In bảng công ${monthLabel(mk)}`);
+    printHTML(`<h3 style="font:700 15px Arial;margin:0 0 6px">Bảng chấm công ${esc(monthLabel(mk))}</h3><table><thead><tr><th>Nhân viên</th>${Array.from({ length: n }, (_, i) => `<th>${i + 1}</th>`).join('')}<th>Ca</th><th>Giờ</th><th>Trễ</th><th>Vắng</th><th>TC</th></tr></thead><tbody>${rows.map(({ p, s }) => `<tr><td>${esc(p.name)}</td>${Array.from({ length: n }, (_, i) => `<td>${esc((s.cells[from + i * DAY] || []).filter((c) => c.st !== 'plan').map((c) => (c.st === 'leave' ? 'P' : c.st === 'absent' ? 'V' : SHIFTS[c.k].short + (c.st === 'late' ? '*' : ''))).join(''))}</td>`).join('')}<td>${s.shifts}</td><td>${s.hours.toFixed(0)}</td><td>${s.late}</td><td>${s.absentDays}</td><td>${(s.otMin / 60).toFixed(1)}</td></tr>`).join('')}</tbody></table><p style="font:10px Arial">S, C, Đ: ca sáng, chiều, đêm; * đi trễ; V vắng; P nghỉ phép. In lúc ${esc(fmtDTY(nowT()))}.</p>`, 'A4 landscape');
+  }
+
+  // ---------- R5 NGHỈ PHÉP + ĐỔI CA ----------
+  let leaveFilter = 'pending';
+  HR_TABS['nghi-phep'] = () => {
+    const rows = leaves.filter((l) => leaveFilter === 'all' || l.status === leaveFilter).sort((a, b) => (b.created || 0) - (a.created || 0));
+    const sw = swaps().slice().sort((a, b) => b.created - a.created);
+    hrBody(`<div class="toolbar"><div class="seg">${[['pending', 'Chờ duyệt'], ['approved', 'Đã duyệt'], ['all', 'Tất cả']].map(([v, t]) => `<button data-act="leave-filter" data-v="${v}" class="${leaveFilter === v ? 'on' : ''}">${t}</button>`).join('')}</div><span class="grow"></span><button class="btn" data-act="x-leave">Xuất Excel</button><button class="btn primary" data-act="leave-new">Thêm đơn nghỉ</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Người</th><th>Loại</th><th>Thời gian</th><th class="num">Ngày</th><th>Lý do</th><th>Trạng thái</th><th>Người duyệt</th><th></th></tr></thead><tbody>
+      ${rows.map((l) => { const p = profBy(l.user), q = p ? leaveQuota(p) : null, lt = leaveTypeOf(l.type); return `<tr><td>${esc(nameOf(l.user))}</td><td>${esc(lt.name)}${lt.quota && q ? `<small class="muted" style="display:block">còn ${q.left}/${q.quota} ngày phép</small>` : ''}</td><td>${esc(fmtLeaveRange(l))}</td><td class="num">${leaveDays(l)}</td><td style="white-space:normal">${esc(l.reason)}</td><td>${statusPill(l.status)}${l.rejectNote ? `<small class="muted" style="display:block">${esc(l.rejectNote)}</small>` : ''}</td><td>${esc(l.approver || '')}${l.approvedAt ? `<small class="muted" style="display:block">${fmtDT(l.approvedAt)}</small>` : ''}</td>
+      <td>${l.status === 'pending' ? `<button class="btn small" data-act="leave-ok" data-id="${l.id}">Duyệt</button> <button class="btn small danger" data-act="leave-no" data-id="${l.id}">Từ chối</button> <button class="btn small" data-act="leave-cancel" data-id="${l.id}">Hủy</button>` : ''}</td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">Không có đơn nào.</td></tr>'}</tbody></table></div>
+      <div class="sec-head"><h2>Đơn đổi ca</h2></div><p class="muted" style="font-size:12.5px;margin:0 0 8px">Nhân viên đề nghị, đồng nghiệp chấp nhận, quản lý duyệt, rồi lịch phân ca mới cập nhật.</p>
+      <div class="tablewrap"><table><thead><tr><th>Người đề nghị</th><th>Ca</th><th>Người nhận làm</th><th>Ghi chú</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+      ${sw.map((s) => `<tr><td>${esc(nameOf(s.from))}</td><td>${esc(shiftLabel(s.d0, s.k))}</td><td>${esc(nameOf(s.to))}</td><td class="muted">${esc(s.note || '')}</td><td>${statusPill(s.status)}</td><td>${s.status === 'admin' ? `<button class="btn small" data-act="swap-ok" data-id="${s.id}">Duyệt</button> <button class="btn small danger" data-act="swap-no" data-id="${s.id}">Từ chối</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Không có đơn đổi ca.</td></tr>'}</tbody></table></div>`);
+  };
+  function leaveForm(forUser) {
+    if (!needLogin()) return;
+    const admin = isAdmin(), u0 = admin ? forUser || '' : me.user;
+    if (!admin && forUser && forUser !== me.user) return;
+    const people = admin ? workingProfiles().map((p) => [p.user, `${p.name} (${p.code})`]) : [[me.user, me.name]];
+    openForm({ title: 'Đơn nghỉ', okText: admin ? 'Tạo đơn' : 'Gửi đơn', wide: true,
+      fields: [{ name: 'user', label: 'Người nghỉ', type: 'select', required: true, options: people, value: u0 },
+        { name: 'type', label: 'Loại nghỉ', type: 'select', required: true, options: leaveTypes.map((x) => [x.id, `${x.name}${x.paid ? ', có lương' : ', không lương'}`]) },
+        { name: 'from', label: 'Từ ngày', type: 'date', required: true, value: isoDate(bizToday() + DAY), min: admin ? undefined : isoDate(bizToday()) },
+        { name: 'to', label: 'Đến ngày', type: 'date', required: true, value: isoDate(bizToday() + DAY) },
+        { name: 'shift', label: 'Phạm vi', type: 'select', options: [['', 'Cả ngày'], ['0', 'Chỉ ca sáng'], ['1', 'Chỉ ca chiều'], ['2', 'Chỉ ca đêm']], hint: 'Chọn một ca khi nghỉ đúng một ngày' },
+        { name: 'reason', label: 'Lý do', type: 'textarea', full: true, required: true }],
+      onSubmit: async (v) => {
+        if (!needLogin()) return null;
+        const u = isAdmin() ? v.user : me.user, from = parseISO(v.from) + 6 * H, to = parseISO(v.to) + 6 * H, shift = v.shift === '' ? null : +v.shift;
+        if (to < from) return 'Ngày kết thúc phải sau ngày bắt đầu';
+        if (shift != null && to !== from) return 'Chỉ chọn một ca khi nghỉ đúng một ngày';
+        if (!isAdmin() && from < bizToday()) return 'Không gửi đơn cho ngày đã qua';
+        if (leaves.some((l) => l.user === u && ['pending', 'approved'].includes(l.status) && l.from <= to && l.to >= from && (l.shift == null || shift == null || l.shift === shift))) return 'Đã có đơn nghỉ trùng thời gian';
+        if (!guardOpenMonth(from, 'tạo đơn nghỉ')) return null;
+        const lt = leaveTypeOf(v.type), p = profBy(u), rec = { id: 'lv' + uid8(), user: u, type: v.type, from, to, shift, reason: v.reason, status: 'pending', by: me.user, created: nowT() };
+        if (lt.quota && p) { const q = leaveQuota(p); if (q.used + q.pending + leaveDays(rec) > q.quota) { const r = await askConfirm({ title: 'Vượt quỹ phép năm', html: `${esc(p.name)} còn ${q.left} ngày phép (đã dùng ${q.used}, chờ duyệt ${q.pending}). Đơn này ${leaveDays(rec)} ngày sẽ vượt quỹ. Vẫn gửi?`, okText: 'Vẫn gửi' }); if (!r.ok) return 'Đã hủy vì vượt quỹ phép'; } }
+        leaves.push(rec); saveLeaves();
+        audit('Nghỉ phép', `${isAdmin() && u !== me.user ? 'Tạo thay' : 'Gửi'} đơn nghỉ của ${nameOf(u)}: ${lt.name}, ${fmtLeaveRange(rec)}`, '', `Chờ duyệt. Lý do: ${v.reason}`);
+        renderAll(); toast('Đã gửi đơn nghỉ'); return null;
+      } });
+  }
+  function leaveApprove(id) {
+    if (!needAdmin()) return;
+    const l = leaves.find((x) => x.id === id); if (!l || l.status !== 'pending') return;
+    if (!guardOpenMonth(l.from, 'duyệt đơn')) return;
+    const t = nowT(), conflicts = [];
+    for (let d = l.from; d <= l.to; d += DAY) [0, 1, 2].forEach((k) => { if ((l.shift == null || l.shift === k) && rosterGet(d)[k] === l.user && shiftSpan(d, k).end > t) conflicts.push({ d, k }); });
+    const p = profBy(l.user), q = p ? leaveQuota(p) : null, lt = leaveTypeOf(l.type);
+    const fields = [{ type: 'html', full: true, html: `<p style="margin:0;font-size:13px"><b>${esc(nameOf(l.user))}</b> xin ${esc(lt.name.toLowerCase())}, ${esc(fmtLeaveRange(l))} (${leaveDays(l)} ngày). Lý do: ${esc(l.reason)}.${lt.quota && q ? `<br>Phép năm còn ${q.left}/${q.quota} ngày${q.left < leaveDays(l) ? ' <b style="color:var(--stop)">, đơn này vượt quỹ phép</b>' : ''}.` : ''}${conflicts.length ? `<br>Đơn trùng ${conflicts.length} ca đã phân. Chọn người thay cho từng ca rồi mới duyệt được.` : '<br>Không trùng ca nào đã phân.'}</p>` }];
+    conflicts.forEach((c, i) => {
+      const cands = activeStaff().filter((x) => x.user !== l.user && !leaveOn(x.user, c.d, c.k) && !rosterGet(c.d).includes(x.user));
+      fields.push({ name: `rep${i}`, label: `Người thay ${shiftLabel(c.d, c.k)}`, type: 'select', required: true, options: [['', 'Chọn người thay…'], ...cands.map((x) => [x.user, x.name])] });
+    });
+    openForm({ title: 'Duyệt đơn nghỉ', okText: 'Duyệt đơn', wide: true, fields,
+      onSubmit: (v) => {
+        const reps = {};
+        for (let i = 0; i < conflicts.length; i++) { if (!v[`rep${i}`]) return `Chọn người thay cho ${shiftLabel(conflicts[i].d, conflicts[i].k)}`; reps[`${conflicts[i].d}|${conflicts[i].k}`] = v[`rep${i}`]; }
+        Object.entries(reps).forEach(([key, u]) => { const [d, k] = key.split('|').map(Number); rosterSet(d, k, u); });
+        saveRoster(); handCache = null;
+        l.status = 'approved'; l.approver = me.name; l.approvedAt = nowT(); l.replacements = reps; saveLeaves();
+        audit('Nghỉ phép', `Duyệt đơn nghỉ của ${nameOf(l.user)}, ${fmtLeaveRange(l)}`, 'Chờ duyệt', `Đã duyệt${conflicts.length ? '. Người thay: ' + Object.entries(reps).map(([key, u]) => { const [d, k] = key.split('|').map(Number); return `${shiftLabel(d, k)} ${nameOf(u)}`; }).join('; ') : ''}`);
+        renderAll(); toast('Đã duyệt đơn, lịch phân ca đã cập nhật'); return null;
+      } });
+  }
+  async function leaveReject(id) {
+    if (!needAdmin()) return;
+    const l = leaves.find((x) => x.id === id); if (!l || l.status !== 'pending') return;
+    const r = await askConfirm({ title: 'Từ chối đơn nghỉ', text: `Từ chối đơn của ${nameOf(l.user)}, ${fmtLeaveRange(l)}?`, okText: 'Từ chối', reason: 'required', danger: true });
+    if (!r.ok) return;
+    l.status = 'rejected'; l.approver = me.name; l.approvedAt = nowT(); l.rejectNote = r.reason; saveLeaves();
+    audit('Nghỉ phép', `Từ chối đơn nghỉ của ${nameOf(l.user)}, ${fmtLeaveRange(l)}`, 'Chờ duyệt', `Từ chối: ${r.reason}`); renderAll();
+  }
+  async function leaveCancel(id) {
+    if (!needLogin()) return;
+    const l = leaves.find((x) => x.id === id); if (!l || l.status !== 'pending') return;
+    if (!isAdmin() && l.user !== me.user) return;
+    const r = await askConfirm({ title: 'Hủy đơn nghỉ', text: `Hủy đơn nghỉ ${fmtLeaveRange(l)}?`, okText: 'Hủy đơn', danger: true });
+    if (!r.ok) return;
+    l.status = 'cancelled'; saveLeaves(); audit('Nghỉ phép', `Hủy đơn nghỉ của ${nameOf(l.user)}, ${fmtLeaveRange(l)}`, 'Chờ duyệt', 'Đã hủy'); renderAll();
+  }
+  function exportLeaves() {
+    if (!needAdmin()) return;
+    exportSheet('don-nghi-phep', ['Người', 'Mã NV', 'Loại', 'Có lương', 'Từ ngày', 'Đến ngày', 'Ca', 'Số ngày', 'Lý do', 'Trạng thái', 'Người duyệt', 'Thời điểm duyệt', 'Ghi chú từ chối'],
+      leaves.map((l) => [nameOf(l.user), (profBy(l.user) || {}).code || '', leaveTypeOf(l.type).name, leaveTypeOf(l.type).paid ? 'Có' : 'Không', fmtDateY(l.from), fmtDateY(l.to), l.shift == null ? 'Cả ngày' : SHIFTS[l.shift].name, leaveDays(l), l.reason, { pending: 'Chờ duyệt', approved: 'Đã duyệt', rejected: 'Từ chối', cancelled: 'Đã hủy' }[l.status], l.approver || '', l.approvedAt ? fmtDTY(l.approvedAt) : '', l.rejectNote || '']));
+  }
+  // đổi ca
+  function swapNew() {
+    if (!isStaff()) return;
+    const t = nowT(), b0 = bizToday(), mine = [];
+    for (let d = b0; d < b0 + 14 * DAY; d += DAY) rosterGet(d).forEach((u, k) => { if (u === me.user && shiftSpan(d, k).start > t) mine.push([`${d}|${k}`, shiftLabel(d, k)]); });
+    if (!mine.length) { toast('Bạn không có ca nào trong 14 ngày tới'); return; }
+    openForm({ title: 'Đề nghị đổi ca', okText: 'Gửi đề nghị',
+      fields: [{ name: 'slot', label: 'Ca của bạn', type: 'select', required: true, options: mine }, { name: 'to', label: 'Nhờ đồng nghiệp làm thay', type: 'select', required: true, options: activeStaff().filter((p) => p.user !== me.user).map((p) => [p.user, p.name]) }, { name: 'note', label: 'Ghi chú', type: 'textarea', full: true }],
+      onSubmit: (v) => {
+        const [d, k] = v.slot.split('|').map(Number);
+        if (rosterGet(d).includes(v.to)) return `${nameOf(v.to)} đã có ca khác trong ngày này`;
+        if (leaveOn(v.to, d, k)) return `${nameOf(v.to)} đang có đơn nghỉ ngày này`;
+        const list = swaps(); if (list.some((s) => s.d0 === d && s.k === k && ['peer', 'admin'].includes(s.status))) return 'Ca này đã có đề nghị đổi đang chờ';
+        list.push({ id: 'sw' + uid8(), from: me.user, d0: d, k, to: v.to, note: v.note, status: 'peer', created: nowT() }); saveSwaps(list);
+        audit('Đổi ca', `${me.name} nhờ ${nameOf(v.to)} làm ${shiftLabel(d, k)}`, '', 'Chờ đồng nghiệp'); renderAll(); return null;
+      } });
+  }
+  function swapPeer(id, ok) {
+    if (!isStaff()) return;
+    const list = swaps(), s = list.find((x) => x.id === id); if (!s || s.status !== 'peer' || s.to !== me.user) return;
+    s.status = ok ? 'admin' : 'rejected'; s.peerAt = nowT(); saveSwaps(list);
+    audit('Đổi ca', `${me.name} ${ok ? 'chấp nhận' : 'từ chối'} làm ${shiftLabel(s.d0, s.k)} thay ${nameOf(s.from)}`, 'Chờ đồng nghiệp', ok ? 'Chờ quản lý' : 'Từ chối'); renderAll();
+  }
+  async function swapAdmin(id, ok) {
+    if (!needAdmin()) return;
+    const list = swaps(), s = list.find((x) => x.id === id); if (!s || s.status !== 'admin') return;
+    if (ok && rosterGet(s.d0)[s.k] !== s.from) { toast('Lịch ca đã thay đổi, ca này không còn của người đề nghị'); return; }
+    if (ok && rosterGet(s.d0).includes(s.to)) { toast(`${nameOf(s.to)} đã có ca khác trong ngày`); return; }
+    const r = await askConfirm({ title: ok ? 'Duyệt đổi ca' : 'Từ chối đổi ca', text: `${shiftLabel(s.d0, s.k)}: ${nameOf(s.from)} → ${nameOf(s.to)}`, okText: ok ? 'Duyệt' : 'Từ chối', reason: ok ? false : 'required' });
+    if (!r.ok) return;
+    s.status = ok ? 'approved' : 'rejected'; s.approver = me.name; s.approvedAt = nowT(); if (!ok) s.rejectNote = r.reason; saveSwaps(list);
+    if (ok) { rosterSet(s.d0, s.k, s.to); saveRoster(); handCache = null; }
+    audit('Đổi ca', `${ok ? 'Duyệt' : 'Từ chối'} đổi ${shiftLabel(s.d0, s.k)}`, nameOf(s.from), ok ? nameOf(s.to) : `Giữ nguyên. ${r.reason}`); renderAll();
+  }
+
+  // ---------- R6 TĂNG CA ----------
+  let otFilter = 'pending';
+  HR_TABS['tang-ca'] = () => {
+    const list = ots().filter((o) => otFilter === 'all' || o.status === otFilter).sort((a, b) => b.d0 - a.d0 || (b.created || 0) - (a.created || 0));
+    const mk = curMonth(), from = monthStart(mk), to = monthEnd(mk), over = {};
+    ots().filter((o) => o.d0 >= from && o.d0 < to && ['approved', 'pending'].includes(o.status)).forEach((o) => { over[o.user] = (over[o.user] || 0) + o.minutes; });
+    hrBody(`<div class="toolbar"><div class="seg">${[['pending', 'Chờ duyệt'], ['approved', 'Đã duyệt'], ['all', 'Tất cả']].map(([v, t]) => `<button data-act="ot-filter" data-v="${v}" class="${otFilter === v ? 'on' : ''}">${t}</button>`).join('')}</div><span class="grow"></span><button class="btn" data-act="x-ot">Xuất Excel</button><button class="btn primary" data-act="ot-new">Thêm tăng ca</button></div>
+      <p class="muted" style="font-size:12.5px;margin:0 0 8px">Hệ thống tự tạo đề xuất khi kết ca trễ quá 15 phút hoặc làm ca ngoài lịch. Hệ số: ngày thường ${settings.otNormal}, cuối tuần ${settings.otWeekend}, lễ ${settings.otHoliday}. Giới hạn ${settings.otCap} giờ/tháng.</p>
+      <div class="tablewrap"><table><thead><tr><th>Người</th><th>Ngày, ca</th><th class="num">Số phút</th><th>Loại</th><th class="num">Hệ số</th><th>Lý do</th><th>Trạng thái</th><th>Người duyệt</th><th></th></tr></thead><tbody>
+      ${list.map((o) => `<tr><td>${esc(nameOf(o.user))}${(over[o.user] || 0) > settings.otCap * 60 ? ` <span class="pill bad">Vượt ${settings.otCap} giờ tháng này</span>` : ''}</td><td>${esc(o.k != null ? shiftLabel(o.d0, o.k) : fmtDate(o.d0))}</td><td class="num">${o.minutes}</td><td>${esc(OT_TYPE[o.type])}</td><td class="num">${otCoef(o.type)}</td><td style="white-space:normal">${esc(o.reason)}${o.auto ? ' <span class="pill g">Tự động</span>' : ''}</td><td>${statusPill(o.status)}</td><td>${esc(o.approver || '')}</td>
+      <td>${o.status === 'pending' ? `<button class="btn small" data-act="ot-ok" data-id="${o.id}">Duyệt</button> <button class="btn small danger" data-act="ot-no" data-id="${o.id}">Từ chối</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Không có đề xuất nào.</td></tr>'}</tbody></table></div>`);
+  };
+  function otNew() {
+    if (!needAdmin()) return;
+    openForm({ title: 'Thêm tăng ca', okText: 'Thêm',
+      fields: [{ name: 'user', label: 'Người', type: 'select', required: true, options: activeStaff().map((p) => [p.user, p.name]) }, { name: 'date', label: 'Ngày làm việc', type: 'date', required: true, value: isoDate(bizToday()), max: isoDate(nowT()) },
+        { name: 'k', label: 'Ca', type: 'select', options: [['', 'Không gắn ca'], ['0', 'Ca sáng'], ['1', 'Ca chiều'], ['2', 'Ca đêm']] }, { name: 'minutes', label: 'Số phút', type: 'number', min: 1, max: 960, required: true },
+        { name: 'type', label: 'Loại', type: 'select', options: [['auto', 'Tự xác định theo ngày'], ['normal', 'Ngày thường'], ['weekend', 'Cuối tuần'], ['holiday', 'Ngày lễ']] }, { name: 'reason', label: 'Lý do', type: 'textarea', full: true, required: true }],
+      onSubmit: (v) => {
+        const d0 = parseISO(v.date) + 6 * H; if (!guardOpenMonth(d0, 'thêm tăng ca')) return null;
+        const list = ots(), rec = { id: 'ot' + uid8(), user: v.user, d0, k: v.k === '' ? null : +v.k, minutes: Math.round(+v.minutes), type: v.type === 'auto' ? otTypeOf(d0) : v.type, reason: v.reason, status: 'approved', auto: false, by: me.name, approver: me.name, approvedAt: nowT(), created: nowT() };
+        list.push(rec); saveOts(list); audit('Tăng ca', `Thêm tăng ca cho ${nameOf(v.user)}, ${fmtDate(d0)}`, '', `${rec.minutes} phút, ${OT_TYPE[rec.type]}, đã duyệt`); renderAll(); return null;
+      } });
+  }
+  async function otDecide(id, ok) {
+    if (!needAdmin()) return;
+    const list = ots(), o = list.find((x) => x.id === id); if (!o || o.status !== 'pending') return;
+    if (!guardOpenMonth(o.d0, 'duyệt tăng ca')) return;
+    const r = await askConfirm({ title: ok ? 'Duyệt tăng ca' : 'Từ chối tăng ca', text: `${nameOf(o.user)}, ${o.k != null ? shiftLabel(o.d0, o.k) : fmtDate(o.d0)}: ${o.minutes} phút.`, okText: ok ? 'Duyệt' : 'Từ chối', reason: ok ? false : 'required' });
+    if (!r.ok) return;
+    o.status = ok ? 'approved' : 'rejected'; o.approver = me.name; o.approvedAt = nowT(); if (!ok) o.rejectNote = r.reason; saveOts(list);
+    audit('Tăng ca', `${ok ? 'Duyệt' : 'Từ chối'} tăng ca của ${nameOf(o.user)}, ${fmtDate(o.d0)}`, 'Chờ duyệt', ok ? `Đã duyệt ${o.minutes} phút × ${otCoef(o.type)}` : `Từ chối: ${r.reason}`); renderAll();
+  }
+  function exportOt() {
+    if (!needAdmin()) return;
+    exportSheet('tang-ca', ['Người', 'Mã NV', 'Ngày', 'Ca', 'Số phút', 'Loại', 'Hệ số', 'Lý do', 'Tự động', 'Trạng thái', 'Người duyệt'], ots().map((o) => [nameOf(o.user), (profBy(o.user) || {}).code || '', fmtDateY(o.d0), o.k != null ? SHIFTS[o.k].name : '', o.minutes, OT_TYPE[o.type], otCoef(o.type), o.reason, o.auto ? 'Có' : 'Không', { pending: 'Chờ duyệt', approved: 'Đã duyệt', rejected: 'Từ chối' }[o.status], o.approver || '']));
+  }
+
+  // ---------- R7 KHEN THƯỞNG – KỶ LUẬT ----------
+  let rwMonth = curMonth();
+  HR_TABS['thuong-phat'] = () => {
+    const from = monthStart(rwMonth), to = monthEnd(rwMonth), closed = monthClosed(rwMonth);
+    const list = rewards().filter((r) => r.ts >= from && r.ts < to).sort((a, b) => b.ts - a.ts);
+    hrBody(`<div class="toolbar">${monthInput('f-rwm', rwMonth)}${closed ? '<span class="pill ok">Đã chốt lương, không sửa được</span>' : ''}<span class="grow"></span><button class="btn" data-act="x-rw">Xuất Excel</button><button class="btn primary" data-act="reward-new">Thêm thưởng/phạt</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Ngày</th><th>Người</th><th>Hình thức</th><th>Loại</th><th class="num">Số tiền</th><th>Lý do</th><th>Liên kết ca</th><th>Người tạo</th><th></th></tr></thead><tbody>
+      ${list.map((r) => { const h = r.ref ? allHandovers().find((x) => x.id === r.ref) : null; return `<tr><td>${fmtDate(r.ts)}</td><td>${esc(nameOf(r.user))}</td><td><span class="pill ${r.kind === 'bonus' ? 'ok' : r.kind === 'deduct' ? 'bad' : 'warn'}">${esc(RW_KIND[r.kind])}</span></td><td>${esc(r.type)}</td><td class="num">${money(r.amount)}</td><td style="white-space:normal">${esc(r.reason)}</td><td>${h ? esc(shiftLabel(h.day0, h.k)) : ''}</td><td>${esc(r.by)}</td><td>${closed ? '' : `<button class="btn small" data-act="reward-edit" data-id="${r.id}">Sửa</button> <button class="btn small danger" data-act="reward-del" data-id="${r.id}">Xóa</button>`}</td></tr>`; }).join('') || '<tr><td colspan="9" class="empty">Không có khoản nào trong tháng.</td></tr>'}</tbody></table></div>`);
+    $('#f-rwm').onchange = (e) => { rwMonth = e.target.value || curMonth(); renderHR(); };
+  };
+  function rewardForm(rec, preset = {}) {
+    if (!needAdmin()) return;
+    const x = rec || { user: preset.user || '', kind: preset.kind || 'bonus', type: preset.type || rewardTypes[0], amount: preset.amount || 0, reason: preset.reason || '', ref: preset.ref || '', ts: nowT() };
+    if (rec && !guardOpenMonth(rec.ts, 'sửa khoản này')) return;
+    openForm({ title: rec ? 'Sửa thưởng/phạt' : 'Thêm thưởng/phạt', okText: 'Lưu',
+      fields: [{ name: 'user', label: 'Người', type: 'select', required: true, value: x.user, options: workingProfiles().map((p) => [p.user, p.name]) },
+        { name: 'kind', label: 'Hình thức', type: 'select', required: true, value: x.kind, options: Object.entries(RW_KIND) },
+        { name: 'type', label: 'Loại', type: 'select', value: x.type, options: [...new Set([...rewardTypes, x.type])].filter(Boolean).map((t) => [t, t]) },
+        { name: 'amount', label: 'Số tiền (đ)', type: 'number', min: 0, step: 1000, required: true, value: x.amount, hint: 'Kỷ luật không trừ tiền thì để 0' },
+        { name: 'date', label: 'Ngày', type: 'date', required: true, value: isoDate(x.ts), max: isoDate(nowT()) },
+        { name: 'reason', label: 'Lý do', type: 'textarea', full: true, required: true, value: x.reason },
+        ...(x.ref ? [{ type: 'html', full: true, html: `<p class="muted" style="margin:0;font-size:12.5px">Liên kết ca: ${esc((() => { const h = allHandovers().find((y) => y.id === x.ref); return h ? `${shiftLabel(h.day0, h.k)}, ${h.name}` : x.ref; })())}</p>` }] : [])],
+      onSubmit: (v) => {
+        const ts = parseISO(v.date) + 12 * H; if (!guardOpenMonth(ts, 'thêm khoản này')) return null;
+        const amount = v.kind === 'discipline' ? 0 : Math.round(+v.amount || 0); if (v.kind !== 'discipline' && amount <= 0) return 'Nhập số tiền lớn hơn 0';
+        const list = rewards();
+        if (!rec && x.ref && list.some((r) => r.ref === x.ref && r.kind === 'deduct')) return 'Ca này đã có khoản trừ';
+        const before = rec ? `${RW_KIND[rec.kind]} ${money(rec.amount)}, ${rec.reason}` : '';
+        const target = rec ? list.find((r) => r.id === rec.id) : { id: 'rw' + uid8(), ref: x.ref, by: me.name };
+        Object.assign(target, { user: v.user, kind: v.kind, type: v.type, amount, reason: v.reason, ts });
+        if (!rec) list.push(target); saveRewards(list);
+        audit('Thưởng – phạt', `${rec ? 'Sửa' : 'Thêm'} ${RW_KIND[v.kind].toLowerCase()} cho ${nameOf(v.user)}`, before, `${RW_KIND[v.kind]} ${money(amount)}, ${v.reason}`); renderAll(); return null;
+      } });
+  }
+  async function rewardDelete(id) {
+    if (!needAdmin()) return;
+    const list = rewards(), r0 = list.find((x) => x.id === id); if (!r0 || !guardOpenMonth(r0.ts, 'xóa khoản này')) return;
+    const c = await askConfirm({ title: 'Xóa khoản thưởng/phạt', text: `Xóa ${RW_KIND[r0.kind].toLowerCase()} ${money(r0.amount)} của ${nameOf(r0.user)}?`, okText: 'Xóa', danger: true });
+    if (!c.ok) return;
+    list.splice(list.indexOf(r0), 1); saveRewards(list); audit('Thưởng – phạt', `Xóa khoản của ${nameOf(r0.user)}`, `${RW_KIND[r0.kind]} ${money(r0.amount)}, ${r0.reason}`, 'Đã xóa'); renderAll();
+  }
+  function deductFromShift(hid) {
+    if (!needAdmin()) return;
+    const h = allHandovers().find((x) => x.id === hid); if (!h || !(h.diff < 0)) return;
+    if (rewards().some((r) => r.ref === hid && r.kind === 'deduct')) { toast('Ca này đã có khoản trừ'); return; }
+    rewardForm(null, { user: h.user, kind: 'deduct', type: 'Thiếu tiền giao ca', amount: -h.diff, reason: `Thiếu ${money(-h.diff)} khi kết ${shiftLabel(h.day0, h.k)}`, ref: hid });
+  }
+  function exportRw() {
+    if (!needAdmin()) return;
+    const from = monthStart(rwMonth), to = monthEnd(rwMonth);
+    exportSheet(`thuong-phat-${rwMonth}`, ['Ngày', 'Người', 'Mã NV', 'Hình thức', 'Loại', 'Số tiền (đ)', 'Lý do', 'Liên kết ca', 'Người tạo'], rewards().filter((r) => r.ts >= from && r.ts < to).map((r) => [fmtDateY(r.ts), nameOf(r.user), (profBy(r.user) || {}).code || '', RW_KIND[r.kind], r.type, r.amount, r.reason, r.ref || '', r.by]));
+  }
+
+  // ---------- R8 BẢNG LƯƠNG ----------
+  let payMonth = (() => { const d = new Date(bizToday()); d.setMonth(d.getMonth() - 1); return monthKey(d.getTime() + 6 * H); })();
+  function payRows(mk) {
+    const from = monthStart(mk), to = monthEnd(mk), end = Math.min(to, bizToday() + DAY), dim = daysInMonth(mk);
+    return profiles.filter((p) => parseISO(p.startDate) < to && (!p.leftDate || parseISO(p.leftDate) >= from)).map((p) => {
+      const s = attSummary(p.user, from, end), hourly = p.payType === 'hour' ? p.rate : p.rate / 26 / 8;
+      let base, paidLeave = 0;
+      if (p.payType === 'hour') { base = s.hours * p.rate; paidLeave = s.paidLeaveDays * 8 * p.rate; }
+      else {
+        const a = Math.max(from, parseISO(p.startDate) + 6 * H), b = p.leftDate ? Math.min(to, parseISO(p.leftDate) + 6 * H + DAY) : to, worked = Math.max(0, Math.round((b - a) / DAY));
+        base = p.rate * Math.min(1, worked / dim) - s.unpaidLeaveDays * p.rate / 26;
+      }
+      const otList = ots().filter((o) => o.user === p.user && o.status === 'approved' && o.d0 >= from && o.d0 < to);
+      const ot = otList.reduce((a, o) => a + o.minutes / 60 * hourly * otCoef(o.type), 0), otMin = otList.reduce((a, o) => a + o.minutes, 0);
+      const night = s.nights * settings.nightAllow;
+      const rw = rewards().filter((r) => r.user === p.user && r.ts >= from && r.ts < to);
+      const bonus = rw.filter((r) => r.kind === 'bonus').reduce((a, r) => a + r.amount, 0), deduct = rw.filter((r) => r.kind === 'deduct').reduce((a, r) => a + r.amount, 0);
+      const r2 = (x) => Math.round(x);
+      return { user: p.user, code: p.code, name: p.name, payType: p.payType, rate: p.rate, hours: +s.hours.toFixed(2), shifts: s.shifts, nights: s.nights, paidLeaveDays: s.paidLeaveDays, unpaidLeaveDays: s.unpaidLeaveDays, base: r2(base), paidLeave: r2(paidLeave), otMin, ot: r2(ot), night: r2(night), bonus: r2(bonus), deduct: r2(deduct), net: r2(base + paidLeave + ot + night + bonus - deduct) };
+    });
+  }
+  const payData = (mk) => { const pr = payroll()[mk]; return pr && pr.status === 'closed' ? pr.rows : payRows(mk); };
+  HR_TABS['bang-luong'] = () => {
+    const mk = payMonth, pr = payroll()[mk], closed = !!pr && pr.status === 'closed', rows = payData(mk), tot = rows.reduce((a, r) => a + r.net, 0);
+    hrBody(`<div class="toolbar">${monthInput('f-paym', mk)}${closed ? `<span class="pill ok">Đã chốt ${esc(fmtDT(pr.closedAt))} bởi ${esc(pr.by)}</span>` : '<span class="pill warn">Nháp</span>'}<span class="grow"></span>
+      <button class="btn" data-act="x-pay">Xuất Excel</button><button class="btn" data-act="pay-print">In phiếu lương</button>${closed ? '<button class="btn danger" data-act="pay-reopen">Mở chốt</button>' : '<button class="btn primary" data-act="pay-close">Chốt lương</button>'}</div>
+      <div class="note warn" style="margin-bottom:10px">Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và thuế thu nhập cá nhân. ${closed ? 'Số liệu đã lưu lúc chốt; đổi đơn giá sau đó không làm thay đổi.' : 'Chốt lương sẽ lưu toàn bộ số liệu tháng và khóa chấm công, tăng ca, thưởng phạt của tháng.'}</div>
+      <div class="tablewrap"><table><thead><tr><th>Nhân viên</th><th>Cách trả</th><th class="num">Giờ làm</th><th class="num">Số ca</th><th class="num">Lương cơ bản</th><th class="num">Tăng ca</th><th class="num">Phụ cấp ca đêm</th><th class="num">Nghỉ có lương</th><th class="num">Thưởng</th><th class="num">Trừ</th><th class="num">Thực lĩnh</th><th></th></tr></thead><tbody>
+      ${rows.map((r) => `<tr><td>${esc(r.name)} <small class="muted">${esc(r.code)}</small></td><td>${r.payType === 'hour' ? `${money(r.rate)}/giờ` : `${money(r.rate)}/tháng`}</td><td class="num">${r.hours.toFixed(1)}</td><td class="num">${r.shifts}</td><td class="num">${money(r.base)}</td><td class="num">${money(r.ot)}${r.otMin ? `<small class="muted" style="display:block">${(r.otMin / 60).toFixed(1)} giờ</small>` : ''}</td><td class="num">${money(r.night)}${r.nights ? `<small class="muted" style="display:block">${r.nights} ca</small>` : ''}</td><td class="num">${money(r.paidLeave)}</td><td class="num">${money(r.bonus)}</td><td class="num">${money(r.deduct)}</td><td class="num"><b>${money(r.net)}</b></td><td><button class="btn small" data-act="pay-print1" data-u="${esc(r.user)}">In phiếu</button></td></tr>`).join('')}
+      <tr><td colspan="10"><b>Tổng</b></td><td class="num"><b>${money(tot)}</b></td><td></td></tr></tbody></table></div>
+      ${pr && pr.reopens && pr.reopens.length ? `<p class="muted" style="font-size:12.5px">Lịch sử mở chốt: ${esc(pr.reopens.map((x) => `${fmtDT(x.ts)} ${x.by}: ${x.reason}`).join('; '))}</p>` : ''}`);
+    $('#f-paym').onchange = (e) => { payMonth = e.target.value || curMonth(); renderHR(); };
+  };
+  function closeMonth(mk, auto) {
+    const all = payroll(), rows = payRows(mk);
+    all[mk] = { status: 'closed', closedAt: nowT(), by: auto ? 'Hệ thống (dữ liệu mẫu)' : me.name, rows, reopens: (all[mk] && all[mk].reopens) || [] };
+    store.set('bgx_payroll', all);
+    return rows;
+  }
+  async function payClose() {
+    if (!needAdmin()) return;
+    const mk = payMonth;
+    if (monthEnd(mk) > nowT()) { const r0 = await askConfirm({ title: 'Tháng chưa kết thúc', text: `${monthLabel(mk)} chưa hết. Vẫn chốt với số liệu đến hôm nay?`, okText: 'Vẫn chốt' }); if (!r0.ok) return; }
+    const pend = ots().filter((o) => o.status === 'pending' && monthKey(o.d0) === mk).length + leaves.filter((l) => l.status === 'pending' && monthKey(l.from) === mk).length;
+    const r = await askConfirm({ title: `Chốt lương ${monthLabel(mk)}`, html: `Chốt sẽ lưu toàn bộ số liệu lương của tháng; sau đó không sửa được công, tăng ca, thưởng phạt của tháng này.${pend ? `<br><b style="color:var(--stop)">Còn ${pend} đơn tăng ca hoặc nghỉ chờ duyệt trong tháng.</b>` : ''}`, okText: 'Chốt lương' });
+    if (!r.ok) return;
+    const rows = closeMonth(mk);
+    audit('Bảng lương', `Chốt lương ${monthLabel(mk)}`, 'Nháp', `Đã chốt ${rows.length} người, tổng ${money(rows.reduce((a, x) => a + x.net, 0))}`); renderAll();
+  }
+  async function payReopen() {
+    if (!needAdmin()) return;
+    const mk = payMonth, all = payroll(); if (!all[mk] || all[mk].status !== 'closed') return;
+    const r = await askConfirm({ title: `Mở chốt ${monthLabel(mk)}`, text: 'Mở chốt để sửa lại công, tăng ca, thưởng phạt. Số liệu sẽ được tính lại theo đơn giá hiện tại.', okText: 'Mở chốt', reason: 'required', danger: true });
+    if (!r.ok) return;
+    const tot = all[mk].rows.reduce((a, x) => a + x.net, 0);
+    all[mk].status = 'draft'; all[mk].reopens = (all[mk].reopens || []).concat([{ ts: nowT(), by: me.name, reason: r.reason }]); store.set('bgx_payroll', all);
+    audit('Bảng lương', `Mở chốt ${monthLabel(mk)}, lý do: ${r.reason}`, `Đã chốt, tổng ${money(tot)}`, 'Nháp'); renderAll();
+  }
+  function exportPay() {
+    if (!needAdmin()) return;
+    exportSheet(`bang-luong-${payMonth}`, ['Tháng', 'Mã NV', 'Nhân viên', 'Cách trả', 'Đơn giá', 'Giờ làm', 'Số ca', 'Ca đêm', 'Lương cơ bản', 'Phút tăng ca', 'Tăng ca', 'Phụ cấp ca đêm', 'Nghỉ có lương', 'Thưởng', 'Trừ', 'Thực lĩnh', 'Trạng thái'],
+      payData(payMonth).map((r) => [monthLabel(payMonth), r.code, r.name, r.payType === 'hour' ? 'Theo giờ' : 'Theo tháng', r.rate, r.hours, r.shifts, r.nights, r.base, r.otMin, r.ot, r.night, r.paidLeave, r.bonus, r.deduct, r.net, monthClosed(payMonth) ? 'Đã chốt' : 'Nháp']));
+  }
+  function slipHTML(mk, r) {
+    return `<div class="slip"><h3>Phiếu lương ${esc(monthLabel(mk))}</h3><p style="margin:0 0 6px">Bãi giữ xe máy thông minh. ${esc(r.name)} (${esc(r.code)}).${monthClosed(mk) ? '' : ' <b>Bản nháp, chưa chốt.</b>'}</p>
+      <table><tbody><tr><td>Cách trả lương</td><td>${r.payType === 'hour' ? `${esc(money(r.rate))}/giờ` : `${esc(money(r.rate))}/tháng`}</td></tr><tr><td>Giờ làm, số ca</td><td>${r.hours.toFixed(1)} giờ, ${r.shifts} ca</td></tr><tr><td>Lương cơ bản</td><td>${esc(money(r.base))}</td></tr>
+      <tr><td>Tăng ca (${(r.otMin / 60).toFixed(1)} giờ)</td><td>${esc(money(r.ot))}</td></tr><tr><td>Phụ cấp ca đêm (${r.nights} ca)</td><td>${esc(money(r.night))}</td></tr><tr><td>Nghỉ có lương (${r.paidLeaveDays} ngày)</td><td>${esc(money(r.paidLeave))}</td></tr>
+      <tr><td>Thưởng</td><td>${esc(money(r.bonus))}</td></tr><tr><td>Trừ</td><td>${esc(money(r.deduct))}</td></tr><tr><td><b>Thực lĩnh</b></td><td><b>${esc(money(r.net))}</b></td></tr></tbody></table>
+      <p style="font-size:9px;margin-top:6px">Chỉ để tham khảo, chưa tính BHXH và thuế TNCN. In lúc ${esc(fmtDTY(nowT()))}.</p></div>`;
+  }
+  function printSlips(mk, users) {
+    const rows = payData(mk).filter((r) => users.includes(r.user)); if (!rows.length) return;
+    audit('In', `In phiếu lương ${monthLabel(mk)}`, '', rows.map((r) => r.name).join(', '));
+    printHTML(rows.map((r) => slipHTML(mk, r)).join(''), 'A5');
+  }
+
+  // ---------- R11 CỦA TÔI (chỉ nhân viên, chỉ dữ liệu của mình) ----------
+  function renderMy() {
+    if (!isStaff()) { $('#myBody').innerHTML = ''; return; }
+    const u = me.user, p = profBy(u), t = nowT(), b0 = bizToday(), mk = curMonth();
+    const sched = []; for (let d = b0; d < b0 + 14 * DAY; d += DAY) rosterGet(d).forEach((x, k) => { if (x === u && shiftSpan(d, k).end > t) sched.push({ d, k }); });
+    const s = attSummary(u, monthStart(mk), Math.min(monthEnd(mk), b0 + DAY)), q = p ? leaveQuota(p) : { quota: 0, used: 0, left: 0, pending: 0 };
+    const myLv = leaves.filter((l) => l.user === u).sort((a, c) => (c.created || 0) - (a.created || 0));
+    const sw = swaps().filter((x) => x.from === u || x.to === u).sort((a, c) => c.created - a.created);
+    const rw = rewards().filter((r) => r.user === u).sort((a, c) => c.ts - a.ts), myOt = ots().filter((o) => o.user === u).sort((a, c) => c.d0 - a.d0);
+    const pr = payroll(), slips = Object.keys(pr).filter((k) => pr[k].status === 'closed').sort().reverse().map((k) => ({ mk: k, row: (pr[k].rows || []).find((r) => r.user === u) })).filter((x) => x.row);
+    $('#myBody').innerHTML = `<div class="grid g2"><div class="card"><h2>Lịch ca 2 tuần tới</h2><ul class="todo">${sched.map(({ d, k }) => { const pend = sw.find((x) => x.d0 === d && x.k === k && ['peer', 'admin'].includes(x.status)); return `<li><span class="grow">${esc(dayName(d))} ${esc(fmtDate(d))}, ${SHIFTS[k].name} (${shiftHours(k)})</span>${pend ? statusPill(pend.status) : ''}</li>`; }).join('') || '<li class="muted">Bạn không có ca nào trong 14 ngày tới.</li>'}</ul>
+        <div class="toolbar" style="margin-top:10px"><button class="btn" data-act="swap-new">Đề nghị đổi ca</button></div></div>
+      <div class="card"><h2>${esc(monthLabel(mk))}</h2><div class="sumgrid"><div><span>Số ca</span><b>${s.shifts}</b></div><div><span>Giờ làm</span><b>${s.hours.toFixed(1)}</b></div><div><span>Đi trễ</span><b>${s.late}</b></div><div><span>Ngày vắng</span><b>${s.absentDays}</b></div><div><span>Ngày nghỉ phép</span><b>${s.leaveDays}</b></div><div><span>Tăng ca đã duyệt</span><b>${(s.otMin / 60).toFixed(1)} giờ</b></div><div class="full"><span>Phép năm còn lại</span><b>${q.left} / ${q.quota} ngày${q.pending ? `, ${q.pending} ngày chờ duyệt` : ''}</b></div></div></div></div>
+      <div class="sec-head"><h2>Đơn nghỉ của tôi</h2><span class="grow"></span><button class="btn primary" data-act="leave-new">Gửi đơn nghỉ</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Loại</th><th>Thời gian</th><th>Lý do</th><th>Trạng thái</th><th></th></tr></thead><tbody>${myLv.map((l) => `<tr><td>${esc(leaveTypeOf(l.type).name)}</td><td>${esc(fmtLeaveRange(l))}</td><td style="white-space:normal">${esc(l.reason)}</td><td>${statusPill(l.status)}${l.rejectNote ? `<small class="muted" style="display:block">${esc(l.rejectNote)}</small>` : ''}</td><td>${l.status === 'pending' ? `<button class="btn small" data-act="leave-cancel" data-id="${l.id}">Hủy đơn</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Chưa có đơn nào.</td></tr>'}</tbody></table></div>
+      <div class="sec-head"><h2>Đổi ca</h2></div>
+      <div class="tablewrap"><table><thead><tr><th>Ca</th><th>Người đề nghị</th><th>Người làm thay</th><th>Trạng thái</th><th></th></tr></thead><tbody>${sw.map((x) => `<tr><td>${esc(shiftLabel(x.d0, x.k))}</td><td>${esc(nameOf(x.from))}</td><td>${esc(nameOf(x.to))}</td><td>${statusPill(x.status)}</td><td>${x.status === 'peer' && x.to === u ? `<button class="btn small" data-act="swap-accept" data-id="${x.id}">Chấp nhận</button> <button class="btn small danger" data-act="swap-decline" data-id="${x.id}">Từ chối</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Không có đơn đổi ca.</td></tr>'}</tbody></table></div>
+      <div class="grid g2" style="margin-top:14px"><div class="card"><h2>Thưởng – phạt</h2><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>Ngày</th><th>Hình thức</th><th class="num">Số tiền</th><th>Lý do</th></tr></thead><tbody>${rw.map((r) => `<tr><td>${fmtDate(r.ts)}</td><td>${esc(RW_KIND[r.kind])}</td><td class="num">${money(r.amount)}</td><td style="white-space:normal">${esc(r.reason)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Không có.</td></tr>'}</tbody></table></div></div>
+        <div class="card"><h2>Tăng ca</h2><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>Ngày</th><th class="num">Phút</th><th>Trạng thái</th></tr></thead><tbody>${myOt.slice(0, 10).map((o) => `<tr><td>${esc(o.k != null ? shiftLabel(o.d0, o.k) : fmtDate(o.d0))}</td><td class="num">${o.minutes}</td><td>${statusPill(o.status)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Không có.</td></tr>'}</tbody></table></div></div></div>
+      <div class="sec-head"><h2>Phiếu lương các tháng đã chốt</h2></div>
+      <div class="tablewrap"><table><thead><tr><th>Tháng</th><th class="num">Giờ làm</th><th class="num">Lương cơ bản</th><th class="num">Tăng ca</th><th class="num">Thưởng</th><th class="num">Trừ</th><th class="num">Thực lĩnh</th><th></th></tr></thead><tbody>${slips.map(({ mk: m, row: r }) => `<tr><td>${esc(monthLabel(m))}</td><td class="num">${r.hours.toFixed(1)}</td><td class="num">${money(r.base)}</td><td class="num">${money(r.ot)}</td><td class="num">${money(r.bonus)}</td><td class="num">${money(r.deduct)}</td><td class="num"><b>${money(r.net)}</b></td><td><button class="btn small" data-act="my-slip" data-mk="${esc(m)}">In phiếu</button></td></tr>`).join('') || '<tr><td colspan="8" class="empty">Chưa có tháng nào chốt.</td></tr>'}</tbody></table></div>
+      <p class="muted" style="font-size:12.5px">Phiếu lương chỉ để tham khảo, chưa tính BHXH và thuế TNCN.</p>
+      <div class="sec-head"><h2>Thông tin của tôi</h2><span class="grow"></span><button class="btn" data-act="my-edit">Sửa liên hệ</button><button class="btn" data-act="my-pw">Đổi mật khẩu</button></div>
+      <div class="card"><dl class="dl"><dt>Mã nhân viên</dt><dd>${esc(p ? p.code : '')}</dd><dt>Họ tên</dt><dd>${esc(me.name)}</dd><dt>Điện thoại</dt><dd>${esc(p ? p.phone : '')}</dd><dt>Email</dt><dd>${esc(p ? p.email || '–' : '')}</dd><dt>Địa chỉ</dt><dd>${esc(p ? p.address || '–' : '')}</dd><dt>Liên hệ khẩn cấp</dt><dd>${esc(p ? `${p.emName || '–'}${p.emPhone ? ', ' + p.emPhone : ''}` : '')}</dd><dt>Số CCCD</dt><dd class="masked">${esc(p ? mask4(p.cccd) : '')}</dd><dt>Số tài khoản</dt><dd class="masked">${esc(p ? mask4(p.bankAcc) : '')}</dd></dl></div>`;
+  }
+  function myEdit() {
+    if (!isStaff()) return;
+    const p = profBy(me.user); if (!p) return;
+    openForm({ title: 'Sửa thông tin liên hệ', okText: 'Lưu', fields: [{ name: 'phone', label: 'Số điện thoại', required: true, value: p.phone, type: 'tel' }, { name: 'email', label: 'Email', type: 'email', value: p.email }, { name: 'address', label: 'Địa chỉ', full: true, value: p.address }, { name: 'emName', label: 'Người liên hệ khẩn cấp', value: p.emName }, { name: 'emPhone', label: 'SĐT khẩn cấp', value: p.emPhone, type: 'tel' }],
+      onSubmit: (v) => {
+        if (!isStaff() || profBy(me.user) !== p) return null;
+        if (!PHONE_RE.test(v.phone)) return 'Số điện thoại phải có 10 số, bắt đầu bằng 0';
+        if (v.email && !EMAIL_RE.test(v.email)) return 'Email chưa đúng dạng';
+        if (v.emPhone && !PHONE_RE.test(v.emPhone)) return 'SĐT khẩn cấp phải có 10 số, bắt đầu bằng 0';
+        if (profiles.some((o) => o !== p && o.phone === v.phone)) return 'Số điện thoại đã có ở người khác';
+        const keys = ['phone', 'email', 'address', 'emName', 'emPhone'], before = keys.map((k) => `${k}: ${p[k] || ''}`).join('; ');
+        keys.forEach((k) => { p[k] = v[k]; }); saveProfiles();
+        audit('Hồ sơ nhân viên', `${me.name} sửa thông tin liên hệ của mình`, before, keys.map((k) => `${k}: ${p[k] || ''}`).join('; ')); renderAll(); return null;
+      } });
+  }
+  function myPassword() {
+    if (!needLogin()) return;
+    const a = accBy(me.user);
+    openForm({ title: 'Đổi mật khẩu', okText: 'Đổi mật khẩu', fields: [{ name: 'old', label: 'Mật khẩu hiện tại', type: 'password', required: true }, { name: 'pw', label: 'Mật khẩu mới', type: 'password', required: true, hint: 'Ít nhất 6 ký tự' }, { name: 'pw2', label: 'Nhập lại', type: 'password', required: true }],
+      onSubmit: async (v) => { if (a.pw !== await hashPw(a.user, v.old)) return 'Mật khẩu hiện tại không đúng'; if (v.pw.length < 6) return 'Mật khẩu ít nhất 6 ký tự'; if (v.pw !== v.pw2) return 'Hai lần nhập không khớp'; a.pw = await hashPw(a.user, v.pw); saveStaff(); audit('Tài khoản', `${me.name} đổi mật khẩu`, '', 'Đã đổi'); toast('Đã đổi mật khẩu'); return null; } });
+  }
+
+  // =====================================================================
   //  ĐIỀU HƯỚNG, PHÂN QUYỀN THEO TRANG, LÀM MỚI, KHỞI ĐỘNG
   // =====================================================================
   const ADMIN_VIEWS = ['thong-ke', 'nhan-dang', 'nhan-vien', 'nhat-ky', 'cai-dat'], STAFF_VIEWS = ['cua-toi'];
