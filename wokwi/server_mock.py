@@ -21,7 +21,7 @@ import paho.mqtt.client as mqtt
 
 BROKER = "broker.hivemq.com"          # phải trùng MQTT_HOST trong sketch.ino
 PORT = 1883
-ROOT = "hcmute-da2-baigiuxe"          # phải trùng TOPIC_ROOT trong sketch.ino
+ROOT = "huyduong-da2-0711"          # phải trùng TOPIC_ROOT trong sketch.ino
 CAPACITY = 3                          # sức chứa nhỏ để dễ thử tình huống bãi đầy
 FEE_BASE, FEE_STEP = 3000, 2000       # 3.000đ cho 4 giờ đầu, thêm 2.000đ mỗi 2 giờ
 MONTHLY_CARDS = {"A3:4F:19:7C"}       # thẻ tháng
