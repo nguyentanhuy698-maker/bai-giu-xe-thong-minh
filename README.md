@@ -17,3 +17,11 @@ Hệ thống bãi giữ xe máy xác thực kép **thẻ RFID + biển số**, m
 Hai trang web là HTML độc lập, mở trực tiếp bằng trình duyệt, không cần cài đặt.
 
 > Đây là mô phỏng giao diện và luồng xử lý để minh họa, chưa kết nối phần cứng thật.
+
+## Cập nhật: phương án chọn sau khi đối chiếu phần mềm bãi xe thương mại
+
+- Mỗi làn chụp 2 ảnh: biển số và người lái (ESP32-CAM thứ hai).
+- Thẻ và biển số không khớp: còi 5 V và đèn đỏ nháy cho tới khi nhân viên quyết định.
+- Phí vãng lai theo lượt, giá ngày / đêm, phụ thu mỗi đêm gửi qua; vẫn chọn được tính theo giờ trong trang quản lý.
+- Quy trình mất thẻ: tra theo biển số, đối chiếu ảnh lúc vào, khóa thẻ, thu phí, ghi nhật ký.
+- Thống kê theo ca trực, vai trò quản lý / nhân viên (nhân viên không xem doanh thu tổng và cài đặt), lọc xe gửi quá 24 giờ.
