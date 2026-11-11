@@ -192,7 +192,6 @@
   <form class="loginbox" id="loginForm" autocomplete="on">
     <div class="brand"><div class="mark">P</div><div><b>Bãi giữ xe</b><span>Trang quản lý bãi giữ xe máy</span></div></div>
     <h2>Đăng nhập</h2>
-    <div class="seg" id="loginRole" role="radiogroup" aria-label="Vai trò"><button type="button" class="on" data-v="admin">Quản lý</button><button type="button" data-v="staff">Nhân viên</button></div>
     <label>Tài khoản<input name="user" autocomplete="username" required></label>
     <label>Mật khẩu<input name="pw" type="password" autocomplete="current-password" required></label>
     <p class="err" id="loginErr" role="alert"></p>
@@ -456,7 +455,7 @@
   const money = (v) => Math.round(v).toLocaleString('vi-VN') + 'đ';
   const dur = (ms) => { const m = Math.round(ms / 60000); return `${Math.floor(m / 60)}h${pad(m % 60)}`; };
   const startOfDay = (ts) => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); };
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const plateHTML = (p) => { const [a, b] = String(p).split(' '); return `<span class="plate"><span>${esc(a)}</span><span>${esc(b || '')}</span></span>`; };
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
@@ -603,18 +602,18 @@
         const gw = series.length * inner + (series.length - 1) * gap;
         series.forEach((s, k) => { const v = s.values[i]; if (v <= 0) return; const x = cx - gw / 2 + k * (inner + gap); svg += barPath(x, y(v), inner, y(0) - y(v), 3, s.color); });
       }
-      if (i % every === 0) svg += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#8a939c">${lb}</text>`;
+      if (i % every === 0) svg += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#8a939c">${esc(lb)}</text>`;
       svg += `<rect class="hit" data-i="${i}" x="${L + bw * i}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent"/>`;
     });
     svg += `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#c9d0d6"/></svg>`;
-    const legend = series.length > 1 ? `<div class="legend">${series.map((s) => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>` : '';
+    const legend = series.length > 1 ? `<div class="legend">${series.map((s) => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
     el.innerHTML = legend + svg + '<div class="tip"></div>';
     const tip = $('.tip', el), svgEl = $('svg', el);
     $$('.hit', el).forEach((r) => {
       r.addEventListener('mouseenter', () => {
         const i = +r.dataset.i, box = svgEl.getBoundingClientRect(), sc = box.width / W, off = svgEl.offsetTop;
         r.setAttribute('fill', 'rgba(43,47,53,.05)');
-        tip.innerHTML = `<b>${labels[i]}</b>` + series.map((s) => `<div><i style="background:${s.color}"></i>${s.name}: ${fmt(s.values[i], true)}</div>`).join('') + (stacked && series.length > 1 ? `<div>Tổng: ${fmt(totals[i], true)}</div>` : '');
+        tip.innerHTML = `<b>${esc(labels[i])}</b>` + series.map((s) => `<div><i style="background:${s.color}"></i>${esc(s.name)}: ${esc(fmt(s.values[i], true))}</div>`).join('') + (stacked && series.length > 1 ? `<div>Tổng: ${fmt(totals[i], true)}</div>` : '');
         tip.style.left = (L + bw * (i + 0.5)) * sc + 'px'; tip.style.top = off + y(totals[i]) * sc - 8 + 'px'; tip.style.opacity = 1;
       });
       r.addEventListener('mouseleave', () => { r.setAttribute('fill', 'transparent'); tip.style.opacity = 0; });
@@ -733,7 +732,7 @@
     }; }
   $('#f-pay').onchange = () => { page = 0; renderHist(); }; $('#q-hist').oninput = () => { page = 0; renderHist(); };
   $('#p-prev').onclick = () => { page--; renderHist(); }; $('#p-next').onclick = () => { page++; renderHist(); };
-  $('#x-hist').onclick = () => exportSheet('lich-su-gui-xe', ['Biển số', 'Mã thẻ', 'Loại thẻ', 'Giờ vào', 'Giờ ra', 'Thời gian gửi', 'Phí (đ)', 'Thanh toán', 'Cảnh báo', 'Sửa biển số'],
+  $('#x-hist').onclick = () => isAdmin() && exportSheet('lich-su-gui-xe', ['Biển số', 'Mã thẻ', 'Loại thẻ', 'Giờ vào', 'Giờ ra', 'Thời gian gửi', 'Phí (đ)', 'Thanh toán', 'Cảnh báo', 'Sửa biển số'],
     histRows().map((s) => [s.plate, s.uid, s.monthly ? 'Thẻ tháng' : 'Vãng lai', new Date(s.tIn).toLocaleString('vi-VN'), s.tOut ? new Date(s.tOut).toLocaleString('vi-VN') : '', s.tOut ? dur(s.tOut - s.tIn) : '', s.tOut ? s.fee : '', { cash: 'Tiền mặt', qr: 'QR', monthly: 'Thẻ tháng' }[s.pay] || '', s.alert ? `Xe ra ${s.alert.plateRead}` : '', s.fix ? `Camera đọc ${s.plateRead}, đã sửa tay` : '']));
 
   // ================== THỐNG KÊ ==================
@@ -767,16 +766,17 @@
     return rows;
   }
   function renderStats() {
+    if (!isAdmin()) return;
     const rows = statRows(), n = rows.length;
     const desc = { shift: '7 ngày gần nhất, mỗi ngày 3 ca', day: '14 ngày gần nhất', week: '12 tuần gần nhất', month: 'Các tháng có dữ liệu (dữ liệu mẫu 120 ngày)', quarter: 'Các quý có dữ liệu (dữ liệu mẫu 120 ngày)' }[period];
     $('#st-sub1').textContent = desc; $('#st-sub2').textContent = desc + ', đơn vị nghìn đồng';
     const lb = (r) => period === 'shift' ? r.label.replace(/^Ca \S+ /, '') : r.label.replace('Tuần ', '');
     barChart($('#ch-flow'), { labels: rows.map(lb), series: [{ name: 'Lượt vào', color: '#2a78d6', values: rows.map((r) => r.in) }, { name: 'Lượt ra', color: '#eb6834', values: rows.map((r) => r.out) }], every: n > 14 ? 3 : n > 10 ? 2 : 1 });
     barChart($('#ch-money'), { labels: rows.map(lb), stacked: true, fmt: kFmt, every: n > 14 ? 3 : n > 10 ? 2 : 1, series: [{ name: 'Tiền mặt', color: '#2a78d6', values: rows.map((r) => r.cash) }, { name: 'QR', color: '#eb6834', values: rows.map((r) => r.qr) }] });
-    $('#t-stat').innerHTML = rows.slice().reverse().map((r) => `<tr><td>${r.label}${r.staff ? ` <span class="muted">· ${r.staff}</span>` : ''}</td><td class="num">${r.in.toLocaleString('vi-VN')}</td><td class="num">${r.out.toLocaleString('vi-VN')}</td><td class="num">${money(r.cash)}</td><td class="num">${money(r.qr)}</td><td class="num"><b>${money(r.cash + r.qr)}</b></td><td class="num">${r.alerts}</td></tr>`).join('');
+    $('#t-stat').innerHTML = rows.slice().reverse().map((r) => `<tr><td>${esc(r.label)}${r.staff ? ` <span class="muted">· ${esc(r.staff)}</span>` : ''}</td><td class="num">${r.in.toLocaleString('vi-VN')}</td><td class="num">${r.out.toLocaleString('vi-VN')}</td><td class="num">${money(r.cash)}</td><td class="num">${money(r.qr)}</td><td class="num"><b>${money(r.cash + r.qr)}</b></td><td class="num">${r.alerts}</td></tr>`).join('');
   }
   $$('#f-period button').forEach((b) => b.onclick = () => { period = b.dataset.v; $$('#f-period button').forEach((x) => x.classList.toggle('on', x === b)); renderStats(); });
-  $('#x-stat').onclick = () => exportSheet(`thong-ke-${period}`, ['Kỳ', 'Lượt vào', 'Lượt ra', 'Tiền mặt (đ)', 'QR (đ)', 'Tổng doanh thu (đ)', 'Cảnh báo'], statRows().map((r) => [r.label + (r.staff ? ` (${r.staff})` : ''), r.in, r.out, r.cash, r.qr, r.cash + r.qr, r.alerts]));
+  $('#x-stat').onclick = () => isAdmin() && exportSheet(`thong-ke-${period}`, ['Kỳ', 'Lượt vào', 'Lượt ra', 'Tiền mặt (đ)', 'QR (đ)', 'Tổng doanh thu (đ)', 'Cảnh báo'], statRows().map((r) => [r.label + (r.staff ? ` (${r.staff})` : ''), r.in, r.out, r.cash, r.qr, r.cash + r.qr, r.alerts]));
 
   // ================== THẺ THÁNG ==================
   function renderCards() {
@@ -786,11 +786,11 @@
     $('#t-card').innerHTML = rows.length ? rows.map((c) => {
       const left = Math.ceil((c.expires - today0) / DAY);
       const st = c.lost ? '<span class="pill bad">Báo mất</span>' : left < 0 ? '<span class="pill bad">Hết hạn</span>' : left <= 7 ? `<span class="pill warn">Còn ${left} ngày</span>` : '<span class="pill ok">Còn hạn</span>';
-      return `<tr><td>${esc(c.uid)}</td><td>${esc(c.owner)}</td><td>${plateHTML(c.plate)}</td><td>${fmtDate(c.expires)}/${new Date(c.expires).getFullYear()}</td><td>${st}</td><td><button class="btn small" data-renew="${esc(c.uid)}">Gia hạn 1 tháng</button> <button class="btn small" data-lostc="${esc(c.uid)}">${c.lost ? 'Bỏ báo mất' : 'Báo mất'}</button> <button class="btn small danger" data-del="${esc(c.uid)}">Xóa</button></td></tr>`;
+      return `<tr><td>${esc(c.uid)}</td><td>${esc(c.owner)}</td><td>${plateHTML(c.plate)}</td><td>${fmtDate(c.expires)}/${new Date(c.expires).getFullYear()}</td><td>${st}</td><td><button class="btn small" data-renew="${esc(c.uid)}">Gia hạn 1 tháng</button> <button class="btn small" data-lostc="${esc(c.uid)}">${c.lost ? 'Bỏ báo mất' : 'Báo mất'}</button> ${isAdmin() ? `<button class="btn small danger" data-del="${esc(c.uid)}">Xóa</button>` : ''}</td></tr>`;
     }).join('') : '<tr><td colspan="6" class="empty">Không có thẻ nào khớp tìm kiếm.</td></tr>';
     $$('[data-renew]').forEach((b) => b.onclick = () => { const c = cards.find((x) => x.uid === b.dataset.renew); c.expires = Math.max(c.expires, today0) + 30 * DAY; audit('Thẻ tháng', `Gia hạn ${c.uid} đến ${fmtDate(c.expires)}`); save(`Đã gia hạn thẻ ${c.uid} đến ${fmtDate(c.expires)}. Thu ${money(settings.monthly)}.`); });
     $$('[data-lostc]').forEach((b) => b.onclick = () => { const c = cards.find((x) => x.uid === b.dataset.lostc); c.lost = !c.lost; audit('Thẻ tháng', `${c.lost ? 'Báo mất' : 'Bỏ báo mất'} ${c.uid}`); save(c.lost ? `Đã báo mất thẻ ${c.uid}` : `Đã bỏ báo mất thẻ ${c.uid}`); });
-    $$('[data-del]').forEach((b) => b.onclick = () => { const i = cards.findIndex((x) => x.uid === b.dataset.del); const c = cards.splice(i, 1)[0]; audit('Thẻ tháng', `Xóa thẻ ${c.uid}`); save(`Đã xóa thẻ ${c.uid}`); });
+    $$('[data-del]').forEach((b) => b.onclick = () => { if (!needAdmin()) return; if (!confirm(`Xóa thẻ tháng ${b.dataset.del}? Thao tác này không hoàn tác được.`)) return; const i = cards.findIndex((x) => x.uid === b.dataset.del); const c = cards.splice(i, 1)[0]; audit('Thẻ tháng', `Xóa thẻ ${c.uid}`); save(`Đã xóa thẻ ${c.uid}`); });
   }
   function save(msg) { store.set('bgx_cards', cards); renderCards(); renderParked(); toast(msg); }
   $('#q-card').oninput = renderCards;
@@ -815,7 +815,7 @@
   Object.entries(settings).forEach(([k, v]) => { if (sf[k]) sf[k].value = v; });
   const modeVis = () => { $$('.m-turn').forEach((x) => x.classList.toggle('hidden', sf.mode.value !== 'turn')); $$('.m-hour').forEach((x) => x.classList.toggle('hidden', sf.mode.value !== 'hour')); };
   sf.mode.onchange = modeVis; modeVis();
-  sf.onsubmit = (e) => { e.preventDefault(); settings.mode = sf.mode.value; ['cap', 'day', 'night', 'overnight', 'base', 'step', 'monthly', 'lostFee'].forEach((k) => (settings[k] = Math.max(0, +sf[k].value || 0))); settings.cap = Math.max(1, settings.cap); store.set('bgx_settings', settings); audit('Cài đặt', `Sức chứa ${settings.cap}, tính phí ${settings.mode === 'turn' ? `theo lượt ${money(settings.day)} / ${money(settings.night)}, phụ thu đêm ${money(settings.overnight)}` : `theo giờ ${money(settings.base)} + ${money(settings.step)}`}, thẻ tháng ${money(settings.monthly)}, mất thẻ ${money(settings.lostFee)}`); renderAll(); toast('Đã lưu cài đặt'); };
+  sf.onsubmit = (e) => { e.preventDefault(); if (!needAdmin()) return; settings.mode = sf.mode.value; ['cap', 'day', 'night', 'overnight', 'base', 'step', 'monthly', 'lostFee'].forEach((k) => (settings[k] = Math.max(0, +sf[k].value || 0))); settings.cap = Math.max(1, settings.cap); store.set('bgx_settings', settings); audit('Cài đặt', `Sức chứa ${settings.cap}, tính phí ${settings.mode === 'turn' ? `theo lượt ${money(settings.day)} / ${money(settings.night)}, phụ thu đêm ${money(settings.overnight)}` : `theo giờ ${money(settings.base)} + ${money(settings.step)}`}, thẻ tháng ${money(settings.monthly)}, mất thẻ ${money(settings.lostFee)}`); renderAll(); toast('Đã lưu cài đặt'); };
 
   // ================== XUẤT EXCEL ==================
   function exportSheet(name, head, rows) {
@@ -936,8 +936,15 @@
       const t = started ? shiftTotals(sp.start, Math.min(sp.end, nowT)) : null;
       if (t) { sum.cash += t.cash; sum.qr += t.qr; sum.lost += t.lost; }
       const isOpen = open && open.day0 === bday && open.k === k;
-      const who = isOpen ? open.name : staffName(bday, k);
-      const st = done ? '<span class="pill ok">Đã kết ca</span>' : started ? (isOpen ? '<span class="pill warn">Đang làm</span>' : '<span class="pill bad">Chưa nhận ca</span>') : '<span class="pill g">Chưa tới giờ</span>';
+      const recs = allHandovers().filter((h) => h.day0 === bday && h.k === k).sort((a, b) => a.start - b.start);
+      const names = [...new Set(recs.map((h) => h.name).concat(isOpen ? [open.name] : []))];
+      const who = names.length ? names.join(', ') : '—';
+      const closedAll = recs.length && recs.every((h) => !h.unclosed && !h.nobody);
+      const st = isOpen ? '<span class="pill warn">Đang làm</span>'
+        : recs.some((h) => h.unclosed) ? '<span class="pill bad">Có ca chưa kết</span>'
+        : recs.length && closedAll ? '<span class="pill ok">Đã kết ca</span>'
+        : recs.length ? '<span class="pill warn">Không có người trực</span>'
+        : done ? '<span class="pill bad">Không có bản giao ca</span>' : started ? '<span class="pill bad">Chưa nhận ca</span>' : '<span class="pill g">Chưa tới giờ</span>';
       return `<tr><td>${SHIFTS[k].name}</td><td>${esc(who)}</td><td>${shiftHours(k)}</td><td class="num">${t ? t.out : ''}</td><td class="num">${t ? money(t.cash) : ''}</td><td class="num">${t ? money(t.qr) : ''}</td><td class="num">${t ? money(t.lost) : ''}</td><td class="num"><b>${t ? money(t.total) : ''}</b></td><td>${st}</td></tr>`;
     }).join('') + `<tr><td colspan="4"><b>Cả ngày</b></td><td class="num"><b>${money(sum.cash)}</b></td><td class="num"><b>${money(sum.qr)}</b></td><td class="num"><b>${money(sum.lost)}</b></td><td class="num"><b>${money(sum.cash + sum.qr + sum.lost)}</b></td><td></td></tr>`;
     $('#k-rev').textContent = money(sum.cash + sum.qr + sum.lost);
@@ -965,21 +972,32 @@
   }
 
   // ---------- đăng nhập ----------
-  let loginRole = 'admin';
-  $$('#loginRole button').forEach((b) => b.onclick = () => { loginRole = b.dataset.v; $$('#loginRole button').forEach((x) => x.classList.toggle('on', x === b)); });
   $('#loginForm').onsubmit = async (e) => {
     e.preventDefault(); await staffReady;
     const f = e.target, user = f.user.value.trim().toLowerCase(), acc = staffBy(user), err = $('#loginErr');
     if (!acc || acc.pw !== await hashPw(user, f.pw.value)) { err.textContent = 'Sai tài khoản hoặc mật khẩu.'; return; }
     if (!acc.active) { err.textContent = 'Tài khoản đang bị khóa. Liên hệ quản lý bãi.'; return; }
-    if (acc.role !== loginRole) { err.textContent = acc.role === 'admin' ? 'Đây là tài khoản quản lý, hãy chọn mục Quản lý.' : 'Đây là tài khoản nhân viên, hãy chọn mục Nhân viên.'; return; }
     err.textContent = ''; f.pw.value = '';
     if (acc.role === 'staff') { const o = getOpen(); if (!o || o.user !== acc.user) { askOpenShift(acc); return; } }
-    auditLogin(acc); enter(acc);
+    auditLogin(acc); enter(acc, true);
   };
-  function enter(acc) {
+  // phiên: token ngẫu nhiên lưu ở sessionStorage và localStorage bgx_sessions[user], hết hạn sau 12 giờ
+  const SESSION_MS = 12 * 3600000;
+  const newToken = () => { const a = new Uint8Array(24); crypto.getRandomValues(a); return [...a].map((x) => x.toString(16).padStart(2, '0')).join(''); };
+  function startSession(acc) {
+    const token = newToken(), all = store.get('bgx_sessions', {});
+    all[acc.user] = { token, exp: Date.now() + SESSION_MS }; store.set('bgx_sessions', all);
+    try { sessionStorage.setItem('bgx_session', JSON.stringify({ user: acc.user, token })); } catch (e) { /* bỏ qua */ }
+  }
+  function endSession(user) {
+    const all = store.get('bgx_sessions', {}); if (user && all[user]) { delete all[user]; store.set('bgx_sessions', all); }
+    try { sessionStorage.removeItem('bgx_session'); } catch (e) { /* bỏ qua */ }
+  }
+  const isAdmin = () => !!(me && me.role === 'admin' && me.active);
+  function needAdmin() { if (isAdmin()) return true; toast('Chỉ quản lý được làm thao tác này'); return false; }
+  function enter(acc, fresh) {
     me = acc; role = acc.role;
-    try { sessionStorage.setItem('bgx_session', acc.user); } catch (e) { /* bỏ qua */ }
+    if (fresh) startSession(acc);
     document.body.classList.remove('locked'); document.body.classList.toggle('staff', role === 'staff');
     $('#meName').textContent = acc.name; $('#meRole').textContent = role === 'admin' ? `Quản lý · ${acc.user}` : `Nhân viên · ${acc.user}`;
     handCache = null; renderAll(); route();
@@ -987,15 +1005,18 @@
   function auditLogin(acc) { me = acc; audit('Đăng nhập', acc.role === 'admin' ? 'Vào trang với vai trò quản lý' : 'Vào trang với vai trò nhân viên'); }
   function logout(msg) {
     if (me) audit('Đăng xuất', msg || '');
+    endSession(me && me.user);
     me = null; role = 'admin';
-    try { sessionStorage.removeItem('bgx_session'); } catch (e) { /* bỏ qua */ }
+    $$('main [id^="t-"], #recentAlerts, #mySum, #closeSum').forEach((el) => { el.innerHTML = ''; });   // xóa dữ liệu đã vẽ
     document.body.classList.add('locked'); document.body.classList.remove('staff');
     $('#loginForm').reset(); if (msg) toast(msg);
   }
   function restoreSession() {
-    let u = null; try { u = sessionStorage.getItem('bgx_session'); } catch (e) { /* bỏ qua */ }
-    const acc = u && staffBy(u);
-    if (acc && acc.active && (acc.role === 'admin' || (getOpen() || {}).user === acc.user)) enter(acc);
+    let ss = null; try { ss = JSON.parse(sessionStorage.getItem('bgx_session') || 'null'); } catch (e) { ss = null; }
+    if (!ss || typeof ss !== 'object' || !ss.user || !ss.token) return;
+    const rec = store.get('bgx_sessions', {})[ss.user], acc = staffBy(ss.user);
+    if (!rec || rec.token !== ss.token || rec.exp < Date.now()) { endSession(); return; }
+    if (acc && acc.active && (acc.role === 'admin' || (getOpen() || {}).user === acc.user)) enter(acc, false);
   }
   $('#btnOut').onclick = () => logout(role === 'staff' ? 'Đã đăng xuất. Ca của bạn vẫn đang mở.' : 'Đã đăng xuất');
 
@@ -1021,13 +1042,21 @@
     const nowT = Date.now(), cur = shiftAt(nowT), old = getOpen();
     if (old && old.user !== acc.user) {   // ca trước bỏ dở, không kết ca
       const t = shiftTotals(old.start, nowT);
+      old.closedAt = nowT;
       handovers.push({ day0: old.day0, k: old.k, user: old.user, name: old.name, start: old.openedAt, end: nowT, ...t, openCash: old.openCash, counted: null, diff: null, to: acc.user, toName: acc.name, note: 'Không kết ca, ca sau nhận thay', unclosed: true });
       store.set('bgx_handovers', handovers); handCache = null;
     }
-    const start = openStart(cur.day0, cur.k);
+    // khoảng từ đầu ca (hoặc lúc người trước kết ca) đến lúc nhận ca: không ai trực, ghi bản ghi riêng
+    const gapFrom = openStart(cur.day0, cur.k);
+    if (nowT - gapFrom > 60000) {
+      const g = shiftTotals(gapFrom, nowT);
+      handovers.push({ day0: cur.day0, k: cur.k, user: '', name: 'Không có người trực', start: gapFrom, end: nowT, ...g, openCash: 0, counted: null, diff: null, to: acc.user, toName: acc.name, note: 'Khoảng thời gian chưa có ai nhận ca', nobody: true });
+      store.set('bgx_handovers', handovers); handCache = null;
+    }
+    const start = nowT;
     store.set('bgx_shift_open', { user: acc.user, name: acc.name, day0: cur.day0, k: cur.k, start, openedAt: nowT, openCash: +$('#openForm').openCash.value || 0, planned: rosterGet(cur.day0)[cur.k] });
     auditLogin(acc); audit('Nhận ca', `${shiftLabel(cur.day0, cur.k)}, tiền đầu ca ${money(+$('#openForm').openCash.value || 0)}`);
-    enter(acc); toast(`Đã nhận ${shiftLabel(cur.day0, cur.k)}`);
+    enter(acc, true); toast(`Đã nhận ${shiftLabel(cur.day0, cur.k)}`);
   });
 
   // ---------- kết ca, bàn giao ----------
@@ -1068,7 +1097,7 @@
   const weekStart = (ts) => { const d0 = startOfDay(ts), wd = (new Date(d0).getDay() + 6) % 7; return d0 - wd * DAY; };
   let wk0 = weekStart(Date.now());
 
-  function renderStaffAll() { if (role !== 'admin') return; renderStaffList(); renderRoster(); renderHand(); renderPerf(); }
+  function renderStaffAll() { if (!isAdmin()) return; renderStaffList(); renderRoster(); renderHand(); renderPerf(); }
   function renderStaffList() {
     const q = $('#q-staff').value.trim().toLowerCase(), w = weekStart(Date.now());
     const cnt = {}; for (let d = 0; d < 7; d++) rosterGet(w + d * DAY).forEach((u) => (cnt[u] = (cnt[u] || 0) + 1));
@@ -1078,7 +1107,17 @@
       <td><button class="btn small" data-edit="${esc(x.user)}">Sửa, đổi mật khẩu</button> ${me && x.user === me.user ? '' : `<button class="btn small ${x.active ? 'danger' : ''}" data-lock="${esc(x.user)}">${x.active ? 'Khóa tài khoản' : 'Mở khóa'}</button>`}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Không có nhân viên nào khớp.</td></tr>';
     $$('[data-edit]').forEach((b) => b.onclick = () => openStaffDlg(staffBy(b.dataset.edit)));
     $$('[data-lock]').forEach((b) => b.onclick = () => {
+      if (!needAdmin()) return;
       const x = staffBy(b.dataset.lock);
+      if (me && x.user === me.user) { toast('Không thể tự khóa tài khoản đang đăng nhập'); return; }
+      const op = getOpen();
+      if (x.active && op && op.user === x.user) {
+        if (!confirm(`${x.name} đang mở ${shiftLabel(op.day0, op.k)}. Ghi ca đó là "Chưa kết ca" rồi khóa tài khoản?`)) return;
+        const t = shiftTotals(op.openedAt, Date.now());
+        handovers.push({ day0: op.day0, k: op.k, user: op.user, name: op.name, start: op.openedAt, end: Date.now(), ...t, openCash: op.openCash, counted: null, diff: null, to: '', toName: '', note: 'Chưa kết ca, quản lý khóa tài khoản', unclosed: true });
+        store.set('bgx_handovers', handovers); store.set('bgx_shift_open', null); handCache = null;
+        audit('Giao ca', `Ghi ${shiftLabel(op.day0, op.k)} của ${x.name} là chưa kết ca trước khi khóa tài khoản`);
+      }
       if (x.active && x.role === 'admin' && staffList.filter((y) => y.role === 'admin' && y.active).length < 2) { toast('Cần giữ ít nhất một tài khoản quản lý đang hoạt động'); return; }
       x.active = !x.active; saveStaff(); audit('Nhân viên', `${x.active ? 'Mở khóa' : 'Khóa'} tài khoản ${x.user}`); toast(x.active ? `Đã mở khóa ${x.name}` : `Đã khóa ${x.name}. Ca của người này trong lịch cần phân lại.`); renderStaffAll();
     });
@@ -1095,10 +1134,11 @@
   }
   $('#addStaff').onclick = () => openStaffDlg(null);
   $('#staffDlg').addEventListener('close', async () => {
-    if ($('#staffDlg').returnValue !== 'ok') return;
+    if ($('#staffDlg').returnValue !== 'ok' || !needAdmin()) return;
     const f = $('#staffForm'), user = f.user.value.trim().toLowerCase();
     if (!editing && staffBy(user)) { toast(`Tài khoản ${user} đã có, chọn tên khác`); return; }
     const x = editing || { user, active: true };
+    if (editing && me && x.user === me.user && (f.role.value !== x.role)) { toast('Không thể tự đổi vai trò của tài khoản đang đăng nhập'); return; }
     if (editing && x.role === 'admin' && f.role.value !== 'admin' && staffList.filter((y) => y.role === 'admin' && y.active).length < 2) { toast('Cần giữ ít nhất một tài khoản quản lý'); return; }
     x.name = f.name.value.trim(); x.phone = f.phone.value.trim(); x.role = f.role.value;
     if (f.pw.value) x.pw = await hashPw(x.user, f.pw.value);
@@ -1123,6 +1163,7 @@
       return `<td><select data-d="${d}" data-k="${k}" class="${clash(d, k) ? 'clash' : ''}" ${past ? 'disabled title="Ca đã qua"' : ''} aria-label="${SHIFTS[k].name} ${fmtDate(d)}">${list.map((o) => `<option value="${o.user}"${o.user === u ? ' selected' : ''}>${esc(o.name)}</option>`).join('')}</select></td>`;
     }).join('')}</tr>`).join('');
     $$('#rosterBody select').forEach((sel) => sel.onchange = () => {
+      if (!needAdmin()) { renderRoster(); return; }
       const d = +sel.dataset.d, k = +sel.dataset.k, r = rosterGet(d).slice(); r[k] = sel.value; roster[d] = r;
       store.set('bgx_roster', roster); handCache = null; audit('Lịch phân ca', `${SHIFTS[k].name} ${fmtDate(d)}: ${nameOf(sel.value)}`); renderRoster(); renderStaffList(); toast(`${SHIFTS[k].name} ${fmtDate(d)}: ${nameOf(sel.value)}`);
     });
@@ -1147,7 +1188,7 @@
       <td class="num">${h.in} / ${h.out}</td><td class="num">${money((h.openCash || 0) + h.cashAll)}</td><td class="num">${h.counted == null ? '' : money(h.counted)}</td><td class="num">${diffTxt(h)}</td><td class="num">${money(h.qr)}</td>
       <td>${esc(h.toName || '')}</td><td class="muted" style="white-space:normal;min-width:180px">${esc(h.note || '')}</td></tr>`).join('') : '<tr><td colspan="11" class="empty">Không có ca nào đã kết thúc trong ngày này. Ca đang làm hiện ở trang Tổng quan.</td></tr>';
   }
-  $('#x-hand').onclick = () => exportSheet('giao-ca', ['Ca', 'Ngày', 'Nhân viên', 'Nhận ca', 'Kết ca', 'Đi trễ (phút)', 'Lượt vào', 'Lượt ra', 'Tiền mặt hệ thống (đ)', 'Tiền mặt thực đếm (đ)', 'Chênh lệch (đ)', 'QR (đ)', 'Phí mất thẻ (đ)', 'Bàn giao cho', 'Ghi chú'],
+  $('#x-hand').onclick = () => isAdmin() && exportSheet('giao-ca', ['Ca', 'Ngày', 'Nhân viên', 'Nhận ca', 'Kết ca', 'Đi trễ (phút)', 'Lượt vào', 'Lượt ra', 'Tiền mặt hệ thống (đ)', 'Tiền mặt thực đếm (đ)', 'Chênh lệch (đ)', 'QR (đ)', 'Phí mất thẻ (đ)', 'Bàn giao cho', 'Ghi chú'],
     handRows().map((h) => [SHIFTS[h.k].name, fmtDate(h.day0), h.name, new Date(h.start).toLocaleString('vi-VN'), new Date(h.end).toLocaleString('vi-VN'), h.late || 0, h.in, h.out, (h.openCash || 0) + h.cashAll, h.counted == null ? '' : h.counted, h.diff == null ? '' : h.diff, h.qr, h.lost, h.toName || '', h.note || '']));
 
   // hiệu suất
@@ -1216,10 +1257,10 @@
       const inLot = parkedNow().find((s) => normPlate(s.plate) === normPlate(w.plate));
       return `<tr><td>${plateHTML(w.plate)}</td><td><span class="pill ${w.reason === 'stolen' || w.reason === 'banned' ? 'bad' : 'warn'}">${WATCH_REASON[w.reason]}</span></td><td class="muted" style="white-space:normal">${esc(w.note || '')}</td><td>${inLot ? `<span class="pill bad">Đang trong bãi từ ${fmtDT(inLot.tIn)}</span>` : '<span class="muted">Không có trong bãi</span>'}</td><td>${esc(w.by)}, ${fmtDT(w.ts)}</td><td class="admin-only"><button class="btn small danger" data-unwatch="${i}">Bỏ khỏi danh sách</button></td></tr>`;
     }).join('') : '<tr><td colspan="6" class="empty">Danh sách trống.</td></tr>';
-    $$('[data-unwatch]').forEach((b) => b.onclick = () => { const w = watch.splice(+b.dataset.unwatch, 1)[0]; saveWatch(); audit('Xe cần chú ý', `Bỏ ${w.plate} khỏi danh sách`); renderWatch(); renderBanners(); renderParked(); toast(`Đã bỏ ${w.plate} khỏi danh sách`); });
+    $$('[data-unwatch]').forEach((b) => b.onclick = () => { if (!needAdmin()) return; const w = watch.splice(+b.dataset.unwatch, 1)[0]; saveWatch(); audit('Xe cần chú ý', `Bỏ ${w.plate} khỏi danh sách`); renderWatch(); renderBanners(); renderParked(); toast(`Đã bỏ ${w.plate} khỏi danh sách`); });
   }
   $('#watchForm').onsubmit = (e) => {
-    e.preventDefault(); const f = e.target, plate = f.plate.value.trim().toUpperCase();
+    e.preventDefault(); if (!needAdmin()) return; const f = e.target, plate = f.plate.value.trim().toUpperCase();
     if (watchOf(plate)) { toast(`${plate} đã có trong danh sách`); return; }
     watch.unshift({ plate, reason: f.reason.value, note: f.note.value.trim(), by: me ? me.name : '', ts: Date.now() }); saveWatch();
     audit('Xe cần chú ý', `Thêm ${plate} (${WATCH_REASON[f.reason.value]})`); f.reset(); renderWatch(); renderBanners(); renderParked(); toast(`Đã thêm ${plate}. Xe này vào bãi sẽ có cảnh báo.`);
@@ -1258,6 +1299,7 @@
         <td class="admin-only"><button class="btn small" data-dev="${d.id}">${off ? 'Khôi phục' : 'Thử ngắt'}</button></td></tr>`;
     }).join('');
     $$('[data-dev]').forEach((b) => b.onclick = () => {
+      if (!needAdmin()) return;
       const id = b.dataset.dev, wasOff = !!devDown[id];
       if (wasOff) delete devDown[id]; else devDown[id] = Date.now();
       devLog.unshift({ ts: Date.now(), id, ev: wasOff ? 'up' : 'down' }); while (devLog.length > 300) devLog.pop();
@@ -1362,6 +1404,7 @@
   }
   const pct = (a, b) => (b ? (a / b * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + '%' : '–');
   function renderOcr() {
+    if (!isAdmin()) return;
     const rows = ocrRows(), all = rows.reduce((a, r) => ({ n: a.n + r.n, bad: a.bad + r.bad, alerts: a.alerts + r.alerts, ms: a.ms.concat(r.ms) }), { n: 0, bad: 0, alerts: 0, ms: [] });
     all.ms.sort((a, b) => a - b);
     const avg = all.ms.length ? Math.round(all.ms.reduce((a, b) => a + b, 0) / all.ms.length) : 0, p95 = all.ms.length ? all.ms[Math.floor(all.ms.length * 0.95)] : 0;
@@ -1375,11 +1418,12 @@
     barChart($('#ch-ocrms'), { labels: bins.map((b) => b[2]), series: [{ name: 'Số lần chụp', color: '#2a78d6', values: bins.map(([a, b]) => all.ms.filter((m) => m >= a && m < b).length) }] });
     $('#t-ocr').innerHTML = rows.slice().reverse().map((r) => `<tr><td>${fmtDate(r.d0)}</td><td class="num">${r.n}</td><td class="num">${r.ok}</td><td class="num">${r.bad}</td><td class="num">${pct(r.ok, r.n)}</td><td class="num">${r.avg} ms</td><td class="num">${r.p95} ms</td><td class="num">${r.alerts}</td></tr>`).join('');
   }
-  $('#x-ocr').onclick = () => exportSheet('nhan-dang-bien-so', ['Ngày', 'Lần chụp', 'Đọc đúng', 'Phải nhập tay', 'Tỉ lệ đúng (%)', 'Độ trễ TB (ms)', 'Độ trễ p95 (ms)', 'Cảnh báo không khớp'],
+  $('#x-ocr').onclick = () => isAdmin() && exportSheet('nhan-dang-bien-so', ['Ngày', 'Lần chụp', 'Đọc đúng', 'Phải nhập tay', 'Tỉ lệ đúng (%)', 'Độ trễ TB (ms)', 'Độ trễ p95 (ms)', 'Cảnh báo không khớp'],
     ocrRows().map((r) => [fmtDate(r.d0), r.n, r.ok, r.bad, r.n ? +(r.ok / r.n * 100).toFixed(2) : '', r.avg, r.p95, r.alerts]));
 
   // ================== NHẬT KÝ THAO TÁC (giao diện) ==================
   function renderAudit() {
+    if (!isAdmin()) return;
     const sel = $('#f-auser'), cur = sel.value;
     sel.innerHTML = '<option value="">Mọi người</option>' + staffList.map((x) => `<option value="${x.user}">${esc(x.name)}</option>`).join(''); sel.value = cur;
     const q = $('#q-audit').value.trim().toLowerCase();
@@ -1387,16 +1431,18 @@
     $('#t-audit').innerHTML = rows.length ? rows.slice(0, 300).map((a) => `<tr><td>${fmtDT(a.ts)}</td><td>${esc(a.name || a.user)}</td><td>${esc(a.action)}</td><td style="white-space:normal">${esc(a.detail)}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">Không có thao tác nào khớp.</td></tr>';
   }
   $('#f-auser').onchange = renderAudit; $('#q-audit').oninput = renderAudit;
-  $('#x-audit').onclick = () => exportSheet('nhat-ky-thao-tac', ['Thời điểm', 'Người thao tác', 'Tài khoản', 'Thao tác', 'Chi tiết'], auditLog.map((a) => [new Date(a.ts).toLocaleString('vi-VN'), a.name, a.user, a.action, a.detail]));
+  $('#x-audit').onclick = () => isAdmin() && exportSheet('nhat-ky-thao-tac', ['Thời điểm', 'Người thao tác', 'Tài khoản', 'Thao tác', 'Chi tiết'], auditLog.map((a) => [new Date(a.ts).toLocaleString('vi-VN'), a.name, a.user, a.action, a.detail]));
 
   // làm mới định kỳ: thiết bị, thanh cảnh báo
   setInterval(() => { if (document.body.classList.contains('locked')) return; renderBanners(); if (!$('[data-view="thiet-bi"]').classList.contains('hidden')) renderDevices(); }, 2000);
 
   // ================== điều hướng ==================
-  function renderAll() { renderOverview(); renderParked(); renderHist(); renderStats(); renderCards(); renderAlerts(); renderStaffAll(); renderBanners(); renderManual(); renderAlerts2(); renderDevices(); if (role === 'admin') { renderOcr(); renderAudit(); } }
+  function renderAll() {
+    if (!me) return; renderOverview(); renderParked(); renderHist(); renderStats(); renderCards(); renderAlerts(); renderStaffAll(); renderBanners(); renderManual(); renderAlerts2(); renderDevices(); if (role === 'admin') { renderOcr(); renderAudit(); } }
   function route() {
     let tab0 = (location.hash || '#tong-quan').slice(1);
-    if (role === 'staff' && ['thong-ke', 'cai-dat', 'nhan-vien', 'nhan-dang'].includes(tab0)) tab0 = 'tong-quan';
+    if (!me) return;
+    if (!isAdmin() && ['thong-ke', 'cai-dat', 'nhan-vien', 'nhan-dang'].includes(tab0)) tab0 = 'tong-quan';
     const tab = tab0, ok = $$('[data-view]').some((s) => s.dataset.view === tab) ? tab : 'tong-quan';
     $$('[data-view]').forEach((s) => s.classList.toggle('hidden', s.dataset.view !== ok));
     $$('nav a.tab').forEach((a) => a.classList.toggle('on', a.dataset.tab === ok));
@@ -1404,7 +1450,6 @@
   }
   window.addEventListener('hashchange', route);
   let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => $$('.chart').forEach((c) => c._args && c.offsetParent && barChart(c, c._args)), 150); });
-  renderAll(); route();
   staffReady.then(restoreSession);
   window.__ready = true;
 })();
