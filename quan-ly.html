@@ -365,6 +365,8 @@
   @media (max-width: 640px) { .gate-top { grid-template-columns:1fr 1fr; } .lane .info { grid-template-columns:1fr; } .price { text-align:left; } }
   @media (max-width: 1100px) { #gateBody .grid.g2 { grid-template-columns:minmax(0,1fr); } }
   #gateBody .card { min-width:0; }
+  .gate-alerts { display:grid; gap:6px; } .gate-alerts > div { display:flex; flex-wrap:wrap; gap:6px; align-items:center; background:#fbe7e7; border:1px solid #efb3b3; color:#7a1f1f; border-radius:8px; padding:6px 10px; font-size:13px; }
+  .gate-alerts .btn { margin-left:auto; }
 </style>
 </head>
 <body class="locked">
@@ -1048,7 +1050,9 @@
     try { sessionStorage.setItem('bgx_session', JSON.stringify({ user: acc.user, token })); } catch (e) { /* bỏ qua */ }
   }
   function endSession(user) {
-    const all = store.get('bgx_sessions', {}); if (user && all[user]) { delete all[user]; store.set('bgx_sessions', all); }
+    // chỉ xóa phiên của chính thẻ này; nếu tài khoản đã đăng nhập ở thẻ khác (mã phiên khác) thì giữ nguyên phiên kia
+    let mine = null; try { mine = JSON.parse(sessionStorage.getItem('bgx_session') || 'null'); } catch (e) { mine = null; }
+    const all = store.get('bgx_sessions', {}); if (user && all[user] && mine && all[user].token === mine.token) { delete all[user]; store.set('bgx_sessions', all); }
     try { sessionStorage.removeItem('bgx_session'); } catch (e) { /* bỏ qua */ }
   }
   // hủy phiên của một tài khoản khác (khi đổi mật khẩu), không đụng phiên của người đang dùng máy này
@@ -1330,15 +1334,21 @@
     $$('main tbody, #recentAlerts, #mySum, #opsTodo, #hrBody, #myBody, #hrTabs, #finBody, #finTabs, #gateBody, .chart').forEach((el) => { el.innerHTML = ''; });
     $$('main .stat .v, main .stat .d').forEach((el) => { el.textContent = ''; });
   }
+  let loggingOut = false;
   function logout(msg) {
+    if (loggingOut) return;   // tránh gọi lồng (ví dụ ngắt kết nối phần cứng lại vẽ lại màn hình)
+    loggingOut = true;
+    try {
     if (me) audit('Đăng xuất', msg || '');
-    gateDisconnect(); document.body.classList.remove('kiosk');
-    endSession(me && me.user);
+    const who = me && me.user;
     me = null;
+    gateDisconnect(); document.body.classList.remove('kiosk');
+    endSession(who);
     clearRendered();
     document.body.classList.add('locked'); document.body.classList.remove('staff', 'drawer');
     $('#loginForm').reset(); $$('dialog[open]').forEach((d) => d.close()); $('#boothQ').value = '';
     if (msg) toast(msg);
+    } finally { loggingOut = false; }
   }
   function restoreSession() {
     let ss = null; try { ss = JSON.parse(sessionStorage.getItem('bgx_session') || 'null'); } catch (e) { ss = null; }
@@ -4373,7 +4383,7 @@
   // ---------- trạng thái kết nối và hai làn ----------
   const gate = { client: null, status: 'off', err: '', lastMsg: 0, pillar: null, lane: { in: { state: 'idle' }, out: { state: 'idle' } }, log: [] };
   const LANE_TXT = { in: 'Làn vào', out: 'Làn ra' };
-  const gateRender = () => { if (me && curView === 'may-giu-xe' && !$$('dialog[open]').length) renderGate(); };
+  const gateRender = () => { if (me && sessionValid() && curView === 'may-giu-xe' && !$$('dialog[open]').length) renderGate(); };
   function gateConnect() {
     if (gate.client) gate.client.close();
     gate.status = 'connecting'; gate.err = ''; gateRender();
@@ -4470,8 +4480,14 @@
       <div class="cams">${camHTML(`cam-${lane}-p`, `Camera biển số ${LANE_TXT[lane].toLowerCase()}`, true)}${camHTML(`cam-${lane}-f`, 'Camera người lái', true)}</div>
       <div class="snaps">${lane === 'in' ? camHTML('snap-in-p', 'Ảnh biển số lúc quẹt thẻ') + camHTML('snap-in-f', 'Ảnh người lái lúc quẹt thẻ') : camHTML('snap-out-pi', 'Biển số lúc vào') + camHTML('snap-out-po', 'Biển số lúc ra') + camHTML('snap-out-fi', 'Người lái lúc vào') + camHTML('snap-out-fo', 'Người lái lúc ra')}</div>
       <div class="info"><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><div class="price"><span>${lane === 'out' ? 'Giá vé' : 'Loại'}</span><b>${fee}</b>${x && x.msg ? `<small>${esc(x.msg)}</small>` : ''}</div></div>
+      ${lane === 'out' ? gatePendingAlerts() : ''}
       <div class="lane-acts"><button class="btn primary" data-act="manual" data-lane="${lane}">Mở barie ${lane === 'in' ? 'vào (F1)' : 'ra (F2)'}</button>${lane === 'out' && x && x.code === 'mismatch' && x.key ? `<button class="btn danger" data-act="alert-do" data-key="${esc(x.key)}">Xử lý cảnh báo</button>` : ''}
         ${gate.status !== 'on' && !simAlive() ? `<button class="btn" data-act="gate-try" data-lane="${lane}">Thử nhanh: một xe ${lane === 'in' ? 'vào' : 'ra'}</button>` : ''}</div></section>`;
+  }
+  // cảnh báo đánh tráo chưa có người xử lý: ghim ở làn ra cho đến khi xử lý, không để xe sau đè mất
+  function gatePendingAlerts() {
+    const list = alertsList().filter((x) => x.alert.status === 'pending' && (x.tOut || x.tIn) >= nowT() - 12 * H).slice(0, 3);
+    return list.length ? `<div class="gate-alerts">${list.map((x) => `<div><b>Chưa xử lý</b> ${fmtDT(x.tOut || x.tIn)}: thẻ ${esc(x.uid)}, lúc vào ${plateHTML(x.plate)} nhưng lúc ra ${plateHTML(x.alert.plateRead)}<button class="btn small danger" data-act="alert-do" data-key="${esc(keyOf(x))}">Xử lý</button></div>`).join('')}</div>` : '';
   }
   function renderGate() {
     if (!needLogin()) return;
@@ -4649,7 +4665,9 @@
   setInterval(() => { if (me && curView === 'thiet-bi' && !$$('dialog[open]').length) renderDevices(); }, 2000);
   window.addEventListener('storage', (e) => {
     if (!me) return;
-    if (['bgx_events', 'bgx_parked', 'bgx_ircount'].includes(e.key)) { rebuildSessions(); if (!$$('dialog[open]').length) renderView(curView); }
+    if (['bgx_events', 'bgx_parked'].includes(e.key)) { rebuildSessions(); if (!$$('dialog[open]').length) renderView(curView); }
+    // số đếm IR đổi mỗi 2 giây khi trang mô phỏng chạy: chỉ vẽ lại trang có hiển thị số này, để nút bấm ở trang khác không bị thay liên tục
+    if (e.key === 'bgx_ircount' && ['tong-quan', 'thiet-bi'].includes(curView) && !$$('dialog[open]').length) renderView(curView);
     if (e.key === 'bgx_shift_open' && !$$('dialog[open]').length) renderView(curView);
     if (e.key === 'bgx_sessions' && !sessionValid()) logout('Phiên đăng nhập đã kết thúc ở thẻ khác');
   });
