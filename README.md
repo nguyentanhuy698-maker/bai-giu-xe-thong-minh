@@ -32,3 +32,12 @@ Hai trang web là HTML độc lập, mở trực tiếp bằng trình duyệt, k
 - Quản lý: mục Nhân viên gồm danh sách tài khoản (thêm, sửa, đổi mật khẩu, khóa), lịch phân ca theo tuần, nhật ký giao ca và chấm công, hiệu suất từng người. Tổng quan có doanh thu hôm nay và doanh thu từng ca.
 - Lịch sử gửi xe chọn được đúng một ngày.
 - Nhân viên: nhận ca khi đăng nhập, chỉ thấy doanh thu ca đang làm, kết ca bằng cách đếm tiền mặt, hệ thống tính chênh lệch, chọn người nhận bàn giao và ghi chú.
+
+## Cập nhật: thiết bị, nhận dạng, mở barie tay, xe cần chú ý, nhật ký
+
+- Thiết bị: trạng thái máy chủ, broker, ESP32, đầu đọc, camera, barie, cảm biến; cảnh báo đầu trang khi mất kết nối; nhật ký sự cố.
+- Lịch sử gửi xe: bấm vào lượt gửi để xem ảnh biển số và người lái lúc vào, lúc ra; sửa biển số khi camera đọc sai (giữ lại biển gốc).
+- Nhận dạng: tỉ lệ đọc đúng, số lần phải nhập tay, độ trễ trung bình và p95, phân bố độ trễ, xuất Excel cho Chương 4.
+- Mở barie bằng tay có chọn lý do và ghi tên người mở; trang mô phỏng nhận lệnh và mở barie.
+- Danh sách xe cần chú ý (báo mất cắp, cấm gửi, nợ phí): xe trong danh sách ở trong bãi hoặc vừa vào là có cảnh báo.
+- Nhật ký thao tác: đăng nhập, nhận ca, kết ca, đổi giá, sửa lịch ca, khóa thẻ, mở barie, sửa biển số.

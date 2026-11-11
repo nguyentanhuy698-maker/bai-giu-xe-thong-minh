@@ -155,6 +155,18 @@
   .note { background:#f6f7f8; border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.55; }
   .note.warn { background:#fff7e0; color:#6b4b00; }
 
+  a.btn { text-decoration:none; color:var(--ink); display:inline-block; }
+  .banner.bad { background:#fdeceb; border-color:#f1b9b5; color:#8c1f1f; }
+  .banner .ico { font:700 15px/1 var(--cond); background:var(--stop); color:#fff; border-radius:5px; padding:3px 6px; }
+  .gates { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .photos { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+  .photos canvas { width:100%; border-radius:8px; display:block; }
+  .photos .cap { font-size:12px; color:var(--muted); margin:0 0 4px; }
+  #t-hist tr { cursor:pointer; }
+  .inline-form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .inline-form input[type=text] { width:180px; }
+  h2.sec { font:700 21px/1.1 var(--cond); margin:22px 0 10px; }
+
   /* lịch phân ca */
   table.roster td, table.roster th { text-align:center; }
   table.roster td:first-child, table.roster th:first-child { text-align:left; }
@@ -195,9 +207,11 @@
     <a class="tab" href="#trong-bai" data-tab="trong-bai"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="14" r="2.5"/><circle cx="15" cy="14" r="2.5"/><path d="M7.5 14h5M10 7l2 7M6 7h5l3 4"/></svg>Xe trong bãi</a>
     <a class="tab" href="#lich-su" data-tab="lich-su"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg>Lịch sử gửi xe</a>
     <a class="tab admin-only" href="#thong-ke" data-tab="thong-ke"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16V9M10 16V4M16 16v-5"/></svg>Thống kê</a>
+    <a class="tab admin-only" href="#nhan-dang" data-tab="nhan-dang"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7V4h3M14 4h3v3M17 13v3h-3M6 16H3v-3"/><rect x="6" y="8" width="8" height="4" rx="1"/></svg>Nhận dạng</a>
     <a class="tab admin-only" href="#nhan-vien" data-tab="nhan-vien"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7.5" cy="7" r="3"/><path d="M2 17c.6-3 2.8-4.5 5.5-4.5S12.4 14 13 17"/><circle cx="14.5" cy="7.5" r="2.3"/><path d="M14 12.5c2 .2 3.5 1.6 4 4"/></svg>Nhân viên</a>
     <a class="tab" href="#the-thang" data-tab="the-thang"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="15" height="10" rx="2"/><path d="M2.5 9h15"/></svg>Thẻ tháng</a>
     <a class="tab" href="#canh-bao" data-tab="canh-bao"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3l8 14H2z"/><path d="M10 8v4M10 14.5v.5"/></svg>Cảnh báo</a>
+    <a class="tab" href="#thiet-bi" data-tab="thiet-bi"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="10" height="10" rx="1.5"/><path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3"/></svg>Thiết bị</a>
     <a class="tab admin-only" href="#cai-dat" data-tab="cai-dat"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="2.5"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"/></svg>Cài đặt</a>
     <div class="sp"></div>
     <div class="me"><b id="meName"></b><span id="meRole"></span><div class="acts"><button class="end staff-only" id="btnEnd">Kết ca</button><button id="btnOut">Đăng xuất</button></div></div>
@@ -205,6 +219,8 @@
   </nav>
 
   <main>
+    <div class="banner bad hidden" id="devBanner"><span class="ico">!</span><span id="devBannerText"></span><a class="btn small" href="#thiet-bi">Xem thiết bị</a></div>
+    <div class="banner bad hidden" id="watchBanner"><span class="ico">!</span><span id="watchBannerText"></span><a class="btn small" href="#canh-bao">Xem danh sách</a></div>
     <div class="banner hidden" id="simBanner"><span id="simBannerText"></span><button class="btn small" id="clearSim">Xóa dữ liệu mô phỏng</button></div>
 
     <!-- TỔNG QUAN -->
@@ -217,6 +233,8 @@
         <div class="card stat staff-only"><div class="k">Doanh thu ca của bạn</div><div class="v" id="k-my"></div><div class="d" id="k-my-d"></div></div>
         <div class="card stat"><div class="k">Cảnh báo hôm nay</div><div class="v" id="k-alert"></div><div class="d">Thẻ và biển số không khớp</div></div>
       </div>
+      <div class="card" style="margin-top:14px"><div class="gates"><div style="flex:1;min-width:240px"><h2>Mở barie bằng tay</h2><p class="sub" style="margin:0" id="manualLast"></p></div>
+        <button class="btn" id="openIn">Mở barie làn vào</button><button class="btn" id="openOut">Mở barie làn ra</button></div></div>
       <div class="card admin-only" style="margin-top:14px"><h2>Doanh thu theo ca hôm nay</h2><p class="sub">Ngày làm việc tính từ 6:00 sáng nay đến 6:00 sáng mai. Phí mất thẻ thu bằng tiền mặt.</p>
         <div class="tablewrap"><table><thead><tr><th>Ca</th><th>Nhân viên</th><th>Giờ</th><th class="num">Lượt ra</th><th class="num">Tiền mặt</th><th class="num">QR</th><th class="num">Phí mất thẻ</th><th class="num">Tổng</th><th>Trạng thái</th></tr></thead><tbody id="t-shiftToday"></tbody></table></div></div>
       <div class="card staff-only" style="margin-top:14px"><h2>Chi tiết ca của bạn</h2><p class="sub" id="my-sub"></p><div class="sumgrid" id="mySum"></div></div>
@@ -227,10 +245,37 @@
       <div class="card admin-only" style="margin-top:14px"><h2>Doanh thu 30 ngày</h2><p class="sub">Chia theo hình thức thanh toán, đơn vị nghìn đồng</p><div class="chart" id="ch-rev30"></div></div>
     </section>
 
+    <!-- NHẬN DẠNG -->
+    <section data-view="nhan-dang" class="hidden">
+      <div class="head"><div><h1>Nhận dạng biển số</h1><p>Độ chính xác và độ trễ của camera và máy chủ nhận dạng, dùng làm số liệu đánh giá hệ thống</p></div><span class="grow"></span>
+        <div class="seg" id="f-ocr"><button class="on" data-v="7">7 ngày</button><button data-v="30">30 ngày</button></div><button class="btn accent" id="x-ocr">Xuất Excel</button></div>
+      <div class="grid g4">
+        <div class="card stat"><div class="k">Đọc đúng biển số</div><div class="v" id="o-acc"></div><div class="d" id="o-acc-d"></div></div>
+        <div class="card stat"><div class="k">Phải nhập tay</div><div class="v" id="o-man"></div><div class="d" id="o-man-d"></div></div>
+        <div class="card stat"><div class="k">Độ trễ trung bình</div><div class="v" id="o-ms"></div><div class="d" id="o-ms-d"></div></div>
+        <div class="card stat"><div class="k">Cảnh báo không khớp</div><div class="v" id="o-al"></div><div class="d" id="o-al-d"></div></div>
+      </div>
+      <div class="grid g2" style="margin-top:14px">
+        <div class="card"><h2>Số lần phải xử lý tay theo ngày</h2><p class="sub">Đọc sai phải nhập lại, và thẻ không khớp biển số</p><div class="chart" id="ch-ocrbad"></div></div>
+        <div class="card"><h2>Phân bố độ trễ</h2><p class="sub">Từ lúc quẹt thẻ đến khi có kết quả, mục tiêu dưới 1,5 giây</p><div class="chart" id="ch-ocrms"></div></div>
+      </div>
+      <div class="tablewrap" style="margin-top:14px"><table><thead><tr><th>Ngày</th><th class="num">Lần chụp</th><th class="num">Đọc đúng</th><th class="num">Phải nhập tay</th><th class="num">Tỉ lệ đúng</th><th class="num">Độ trễ TB</th><th class="num">Độ trễ p95</th><th class="num">Cảnh báo</th></tr></thead><tbody id="t-ocr"></tbody></table></div>
+      <p class="muted" style="font-size:12.5px;line-height:1.6;max-width:820px">Số liệu ở đây là dữ liệu mẫu. Khi chạy thật, máy chủ ghi lại kết quả và thời gian của từng lần nhận dạng. Tỉ lệ phải nhập tay tương ứng với từ chối nhầm (FRR). Tỉ lệ chấp nhận nhầm (FAR) không suy ra được từ vận hành bình thường, mà phải đo bằng các lượt thử cố ý dùng thẻ của xe khác theo bảng testcase.</p>
+    </section>
+
+    <!-- THIẾT BỊ -->
+    <section data-view="thiet-bi" class="hidden">
+      <div class="head"><div><h1>Thiết bị</h1><p id="dev-sum"></p></div></div>
+      <div class="tablewrap"><table><thead><tr><th>Thiết bị</th><th>Trạng thái</th><th>Tín hiệu gần nhất</th><th>Thông số</th><th class="admin-only"></th></tr></thead><tbody id="t-dev"></tbody></table></div>
+      <p class="muted admin-only" style="font-size:12.5px">Nút "Thử ngắt" giả lập một thiết bị mất kết nối để kiểm tra cảnh báo.</p>
+      <h2 class="sec">Nhật ký sự cố</h2>
+      <div class="tablewrap"><table><thead><tr><th>Thời điểm</th><th>Thiết bị</th><th>Sự kiện</th></tr></thead><tbody id="t-devlog"></tbody></table></div>
+    </section>
+
     <!-- NHÂN VIÊN -->
     <section data-view="nhan-vien" class="hidden">
       <div class="head"><div><h1>Nhân viên</h1><p>Tài khoản, lịch phân ca, giao ca và hiệu suất làm việc</p></div><span class="grow"></span>
-        <div class="seg" id="nvTabs"><button class="on" data-v="list">Danh sách</button><button data-v="roster">Lịch phân ca</button><button data-v="hand">Giao ca và chấm công</button><button data-v="perf">Hiệu suất</button></div></div>
+        <div class="seg" id="nvTabs"><button class="on" data-v="list">Danh sách</button><button data-v="roster">Lịch phân ca</button><button data-v="hand">Giao ca và chấm công</button><button data-v="perf">Hiệu suất</button><button data-v="audit">Nhật ký thao tác</button></div></div>
       <div data-nv="list">
         <div class="toolbar"><input type="search" id="q-staff" placeholder="Tìm tên, tài khoản hoặc số điện thoại"><span class="grow"></span><button class="btn primary" id="addStaff">Thêm nhân viên</button></div>
         <div class="tablewrap"><table><thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Số điện thoại</th><th>Vai trò</th><th class="num">Ca tuần này</th><th>Trạng thái</th><th></th></tr></thead><tbody id="t-staff"></tbody></table></div>
@@ -242,6 +287,10 @@
       <div data-nv="hand" class="hidden">
         <div class="toolbar"><label class="muted" style="display:flex;gap:6px;align-items:center;font-size:12.5px">Ngày<input type="date" id="f-hday"></label><select id="f-hstaff"><option value="">Mọi nhân viên</option></select><span class="grow"></span><button class="btn accent" id="x-hand">Xuất Excel</button></div>
         <div class="tablewrap" style="max-height:64vh"><table><thead><tr><th>Ca</th><th>Nhân viên</th><th>Nhận ca</th><th>Kết ca</th><th class="num">Vào / ra</th><th class="num">Tiền mặt hệ thống</th><th class="num">Thực đếm</th><th class="num">Chênh lệch</th><th class="num">QR</th><th>Bàn giao cho</th><th>Ghi chú</th></tr></thead><tbody id="t-hand"></tbody></table></div>
+      </div>
+      <div data-nv="audit" class="hidden">
+        <div class="toolbar"><select id="f-auser"><option value="">Mọi người</option></select><input type="search" id="q-audit" placeholder="Tìm thao tác, biển số, mã thẻ"><span class="grow"></span><button class="btn accent" id="x-audit">Xuất Excel</button></div>
+        <div class="tablewrap" style="max-height:64vh"><table><thead><tr><th>Thời điểm</th><th>Người thao tác</th><th>Thao tác</th><th>Chi tiết</th></tr></thead><tbody id="t-audit"></tbody></table></div>
       </div>
       <div data-nv="perf" class="hidden">
         <div class="toolbar"><div class="seg" id="f-perf"><button class="on" data-v="7">7 ngày</button><button data-v="30">30 ngày</button></div><span class="grow"></span><span class="muted" style="font-size:12.5px">Tính từ các ca đã kết thúc</span></div>
@@ -262,7 +311,7 @@
 
     <!-- LỊCH SỬ -->
     <section data-view="lich-su" class="hidden">
-      <div class="head"><div><h1>Lịch sử gửi xe</h1><p>Mỗi dòng là một lượt gửi, từ lúc vào đến lúc ra</p></div></div>
+      <div class="head"><div><h1>Lịch sử gửi xe</h1><p>Mỗi dòng là một lượt gửi. Bấm vào dòng để xem ảnh chụp và sửa biển số nếu camera đọc sai.</p></div></div>
       <div class="toolbar">
         <div class="seg" id="f-range"><button class="on" data-v="1">Hôm nay</button><button data-v="7">7 ngày</button><button data-v="30">30 ngày</button></div>
         <label class="muted" style="display:flex;gap:6px;align-items:center;font-size:12.5px">Hoặc chọn ngày<input type="date" id="f-day"></label>
@@ -296,10 +345,16 @@
 
     <!-- CẢNH BÁO -->
     <section data-view="canh-bao" class="hidden">
-      <div class="head"><div><h1>Cảnh báo</h1><p>Các lượt ra có biển số không khớp với biển số đã ghép với thẻ lúc vào</p></div></div>
+      <div class="head"><div><h1>Cảnh báo</h1><p>Xe cần chú ý, thẻ và biển số không khớp, mất thẻ, mở barie bằng tay</p></div></div>
+      <h2 class="sec" style="margin-top:0">Xe cần chú ý</h2>
+      <form class="inline-form admin-only" id="watchForm"><input type="text" name="plate" required placeholder="Biển số, VD 59-X1 123.45"><select name="reason"><option value="stolen">Báo mất cắp</option><option value="banned">Cấm gửi</option><option value="debt">Nợ phí</option><option value="other">Khác</option></select><input type="text" name="note" placeholder="Ghi chú" style="width:240px"><button class="btn primary">Thêm vào danh sách</button></form>
+      <div class="tablewrap"><table><thead><tr><th>Biển số</th><th>Lý do</th><th>Ghi chú</th><th>Trong bãi</th><th>Người thêm</th><th class="admin-only"></th></tr></thead><tbody id="t-watch"></tbody></table></div>
+      <h2 class="sec">Thẻ và biển số không khớp</h2>
       <div class="tablewrap"><table><thead><tr><th>Thời điểm</th><th>Mã thẻ</th><th>Biển số lúc vào</th><th>Biển số lúc ra</th><th>Xử lý</th></tr></thead><tbody id="t-alert"></tbody></table></div>
-      <h2 style="font:700 21px/1.1 var(--cond);margin:22px 0 10px">Nhật ký mất thẻ</h2>
+      <h2 class="sec">Nhật ký mất thẻ</h2>
       <div class="tablewrap"><table><thead><tr><th>Thời điểm</th><th>Mã thẻ đã khóa</th><th>Biển số</th><th class="num">Đã thu</th><th>Nhân viên</th></tr></thead><tbody id="t-lost"></tbody></table></div>
+      <h2 class="sec">Mở barie bằng tay</h2>
+      <div class="tablewrap"><table><thead><tr><th>Thời điểm</th><th>Làn</th><th>Lý do</th><th>Ghi chú</th><th>Nhân viên</th></tr></thead><tbody id="t-manual"></tbody></table></div>
     </section>
 
     <!-- CÀI ĐẶT -->
@@ -365,6 +420,26 @@
   <label>Ghi chú bàn giao<textarea name="note" placeholder="VD: xe gửi quá 24 giờ, sự cố thiết bị, thẻ khách để quên"></textarea></label>
   <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" required> Đã kiểm đếm số xe trong bãi khớp với hệ thống</label>
   <div class="row"><button class="btn" value="cancel" formnovalidate>Để sau</button><button class="btn primary" value="ok">Kết ca và đăng xuất</button></div>
+</form></dialog>
+<dialog id="manualDlg"><form method="dialog" id="manualForm">
+  <h3 id="manualTitle">Mở barie bằng tay</h3>
+  <div class="note warn hidden" id="manualWarn">Barie này đang mất kết nối. Lệnh có thể không tới được, cần mở bằng tay tại chỗ.</div>
+  <label>Lý do<select name="reason"><option value="rfid">Đầu đọc thẻ không nhận</option><option value="camera">Camera hoặc nhận dạng lỗi</option><option value="priority">Xe ưu tiên, cấp cứu</option><option value="verified">Khách quên thẻ, đã xác minh giấy tờ</option><option value="other">Khác</option></select></label>
+  <label>Ghi chú<textarea name="note" placeholder="Bắt buộc khi chọn Khác"></textarea></label>
+  <p class="muted" style="margin:0;font-size:12.5px">Mỗi lần mở được ghi lại kèm tên người mở và thời điểm.</p>
+  <div class="row"><button class="btn" value="cancel" formnovalidate>Hủy</button><button class="btn primary" value="ok">Mở barie</button></div>
+</form></dialog>
+<dialog id="photoDlg" class="wide"><form method="dialog">
+  <h3>Ảnh chụp lượt gửi</h3>
+  <div id="phInfo" style="font-size:13px"></div>
+  <div class="photos"><div><p class="cap">Lúc vào: biển số</p><canvas id="phInPlate" width="200" height="160"></canvas></div><div><p class="cap">Lúc vào: người lái</p><canvas id="phInFace" width="200" height="160"></canvas></div></div>
+  <div class="photos" id="phOut"><div><p class="cap">Lúc ra: biển số</p><canvas id="phOutPlate" width="200" height="160"></canvas></div><div><p class="cap">Lúc ra: người lái</p><canvas id="phOutFace" width="200" height="160"></canvas></div></div>
+  <div class="note" id="phOcr"></div>
+</form>
+<form id="fixForm" style="padding:0 18px 18px;display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+  <label style="display:grid;gap:5px;font-size:12.5px;color:var(--muted);flex:1">Sửa biển số nếu camera đọc sai<input type="text" name="plate" required style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"></label>
+  <button class="btn primary">Lưu biển số đã sửa</button>
+  <button class="btn" type="button" id="phClose">Đóng</button>
 </form></dialog>
 <div class="toast" id="toast"></div>
 
@@ -587,7 +662,7 @@
     $('#c-park').textContent = `${rows.length} xe`;
     $('#t-park').innerHTML = rows.length ? rows.map((s) => {
       const card = cards.find((c) => c.uid === s.uid), lost = (card && card.lost) || locked.some((l) => l.uid === s.uid), long = now - s.tIn > DAY;
-      return `<tr><td>${plateHTML(s.plate)}</td><td>${esc(s.uid)}</td><td>${s.monthly ? '<span class="pill m">Thẻ tháng</span>' : '<span class="pill g">Vãng lai</span>'}${lost ? ' <span class="pill bad">Thẻ đã khóa</span>' : ''}${long ? ' <span class="pill warn">Quá 24 giờ</span>' : ''}</td><td>${fmtDT(s.tIn)}</td><td class="num">${dur(now - s.tIn)}</td><td class="num">${s.monthly ? '0đ' : money(feeFor(s.tIn, now, false))}</td><td>${lost ? '' : `<button class="btn small" data-lost="${esc(s.uid)}">Khách báo mất thẻ</button>`}</td></tr>`;
+      return `<tr><td>${plateHTML(s.plate)}</td><td>${esc(s.uid)}</td><td>${s.monthly ? '<span class="pill m">Thẻ tháng</span>' : '<span class="pill g">Vãng lai</span>'}${lost ? ' <span class="pill bad">Thẻ đã khóa</span>' : ''}${long ? ' <span class="pill warn">Quá 24 giờ</span>' : ''}${watchOf(s.plate) ? ` <span class="pill bad">${WATCH_REASON[watchOf(s.plate).reason]}</span>` : ''}</td><td>${fmtDT(s.tIn)}</td><td class="num">${dur(now - s.tIn)}</td><td class="num">${s.monthly ? '0đ' : money(feeFor(s.tIn, now, false))}</td><td>${lost ? '' : `<button class="btn small" data-lost="${esc(s.uid)}">Khách báo mất thẻ</button>`}</td></tr>`;
     }).join('') : `<tr><td colspan="7" class="empty">${q ? 'Không tìm thấy xe khớp với "' + esc(q) + '". Kiểm tra lại biển số.' : 'Bãi đang trống.'}</td></tr>`;
     $$('[data-lost]').forEach((b) => b.onclick = () => openLost(parkedNow().find((x) => x.uid === b.dataset.lost)));
   }
@@ -597,22 +672,22 @@
   // ---------- quy trình mất thẻ: đối chiếu ảnh lúc vào, khóa thẻ, thu phí, ghi nhật ký ----------
   const locked = store.get('bgx_locked', []);
   let lostTarget = null;
-  function drawEntryPhoto(cv, s, kind) {
-    const g = cv.getContext('2d'), w = cv.width, h = cv.height; let r = [...s.uid].reduce((a, c) => a + c.charCodeAt(0), 0);
+  function drawEntryPhoto(cv, s, kind, o = {}) {
+    const g = cv.getContext('2d'), w = cv.width, h = cv.height; let r = o.seed != null ? o.seed : [...s.uid].reduce((a, c) => a + c.charCodeAt(0), 0);
     const col = ['#a8202a', '#2b5c8f', '#e0e0dc', '#2f3338', '#1f6f4a', '#c9a227'][r % 6];
     g.fillStyle = '#2a3038'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a3d41'; g.fillRect(0, h * 0.72, w, h);
     if (kind === 'plate') {
       g.fillStyle = col; g.beginPath(); g.roundRect(w / 2 - 70, 26, 140, 92, 26); g.fill();
       g.fillStyle = '#f7f7f2'; g.beginPath(); g.roundRect(w / 2 - 44, 80, 88, 60, 6); g.fill();
       g.fillStyle = '#16181b'; g.font = '700 22px "Barlow Condensed", Arial'; g.textAlign = 'center';
-      const [a, b2] = s.plate.split(' '); g.fillText(a, w / 2, 106); g.fillText(b2 || '', w / 2, 131);
+      const [a, b2] = String(o.plate || s.plate).split(' '); g.fillText(a, w / 2, 106); g.fillText(b2 || '', w / 2, 131);
     } else {
       g.fillStyle = col; g.beginPath(); g.roundRect(w / 2 - 60, 110, 120, 60, 20); g.fill();
       g.fillStyle = ['#4a6fa5', '#7a3b3b', '#3d6b4f', '#6b6b6b'][r % 4]; g.beginPath(); g.roundRect(w / 2 - 34, 62, 68, 70, 16); g.fill();
       g.fillStyle = '#d9a77c'; g.beginPath(); g.arc(w / 2, 46, 20, 0, 7); g.fill();
       g.fillStyle = ['#f2f2ee', '#1c1c1e', '#c0262d', '#2b5c8f'][r % 4]; g.beginPath(); g.arc(w / 2, 42, 23, Math.PI, 0); g.fill();
     }
-    g.fillStyle = '#e5e9ee'; g.font = '600 12px Arial'; g.textAlign = 'left'; g.fillText(`${kind === 'plate' ? 'Biển số' : 'Người lái'} · ${fmtDT(s.tIn)}`, 8, h - 8);
+    g.fillStyle = '#e5e9ee'; g.font = '600 12px Arial'; g.textAlign = 'left'; g.fillText(`${kind === 'plate' ? 'Biển số' : 'Người lái'}, ${fmtDT(o.ts || s.tIn)}`, 8, h - 8);
   }
   function openLost(s) {
     lostTarget = s;
@@ -626,7 +701,7 @@
     if ($('#lostDlg').returnValue !== 'ok' || !lostTarget) return;
     const s = lostTarget, parkFee = feeFor(s.tIn, now, s.monthly);
     locked.unshift({ uid: s.uid, plate: s.plate, ts: Date.now(), fee: parkFee + settings.lostFee, staff: me ? me.name : '' });
-    store.set('bgx_locked', locked);
+    store.set('bgx_locked', locked); audit('Mất thẻ', `Khóa thẻ ${s.uid} của ${s.plate}, thu ${money(parkFee + settings.lostFee)}`);
     const card = cards.find((c) => c.uid === s.uid); if (card) { card.lost = true; store.set('bgx_cards', cards); }
     toast(`Đã khóa thẻ ${s.uid}. Thẻ này sẽ bị từ chối ở cả 2 làn.`);
     renderParked(); renderCards(); renderAlerts();
@@ -643,8 +718,9 @@
   function renderHist() {
     const rows = histRows(), pages = Math.max(1, Math.ceil(rows.length / PER)); page = Math.min(page, pages - 1);
     const slice = rows.slice(page * PER, page * PER + PER);
-    $('#t-hist').innerHTML = slice.length ? slice.map((s) => `<tr><td>${plateHTML(s.plate)}</td><td>${esc(s.uid)}</td><td>${s.monthly ? 'Tháng' : 'Vãng lai'}</td><td>${fmtDT(s.tIn)}</td><td>${s.tOut ? fmtDT(s.tOut) : '<span class="muted">Đang trong bãi</span>'}</td><td class="num">${s.tOut ? dur(s.tOut - s.tIn) : ''}</td><td class="num">${s.tOut ? money(s.fee) : ''}</td><td>${payTxt(s.pay)}${s.alert ? ' <span class="pill bad">Cảnh báo</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="8" class="empty">Không có lượt gửi nào khớp bộ lọc.</td></tr>';
+    $('#t-hist').innerHTML = slice.length ? slice.map((s, i) => `<tr data-hrow="${page * PER + i}"><td>${plateHTML(s.plate)}${s.fix ? ' <span class="pill warn" title="Camera đọc ' + esc(s.plateRead || '') + '">Sửa tay</span>' : ''}${watchOf(s.plate) ? ' <span class="pill bad">Cần chú ý</span>' : ''}</td><td>${esc(s.uid)}</td><td>${s.monthly ? 'Tháng' : 'Vãng lai'}</td><td>${fmtDT(s.tIn)}</td><td>${s.tOut ? fmtDT(s.tOut) : '<span class="muted">Đang trong bãi</span>'}</td><td class="num">${s.tOut ? dur(s.tOut - s.tIn) : ''}</td><td class="num">${s.tOut ? money(s.fee) : ''}</td><td>${payTxt(s.pay)}${s.alert ? ' <span class="pill bad">Cảnh báo</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="8" class="empty">Không có lượt gửi nào khớp bộ lọc.</td></tr>';
     $('#p-info').textContent = `${rows.length.toLocaleString('vi-VN')} lượt · trang ${page + 1}/${pages}`;
+    $$('[data-hrow]').forEach((tr) => tr.onclick = () => openPhotos(rows[+tr.dataset.hrow]));
     $('#p-prev').disabled = page === 0; $('#p-next').disabled = page >= pages - 1;
   }
   $$('#f-range button').forEach((b) => b.onclick = () => { range = +b.dataset.v; dayPick = null; $('#f-day').value = ''; page = 0; $$('#f-range button').forEach((x) => x.classList.toggle('on', x === b)); renderHist(); });
@@ -657,8 +733,8 @@
     }; }
   $('#f-pay').onchange = () => { page = 0; renderHist(); }; $('#q-hist').oninput = () => { page = 0; renderHist(); };
   $('#p-prev').onclick = () => { page--; renderHist(); }; $('#p-next').onclick = () => { page++; renderHist(); };
-  $('#x-hist').onclick = () => exportSheet('lich-su-gui-xe', ['Biển số', 'Mã thẻ', 'Loại thẻ', 'Giờ vào', 'Giờ ra', 'Thời gian gửi', 'Phí (đ)', 'Thanh toán', 'Cảnh báo'],
-    histRows().map((s) => [s.plate, s.uid, s.monthly ? 'Thẻ tháng' : 'Vãng lai', new Date(s.tIn).toLocaleString('vi-VN'), s.tOut ? new Date(s.tOut).toLocaleString('vi-VN') : '', s.tOut ? dur(s.tOut - s.tIn) : '', s.tOut ? s.fee : '', { cash: 'Tiền mặt', qr: 'QR', monthly: 'Thẻ tháng' }[s.pay] || '', s.alert ? `Xe ra ${s.alert.plateRead}` : '']));
+  $('#x-hist').onclick = () => exportSheet('lich-su-gui-xe', ['Biển số', 'Mã thẻ', 'Loại thẻ', 'Giờ vào', 'Giờ ra', 'Thời gian gửi', 'Phí (đ)', 'Thanh toán', 'Cảnh báo', 'Sửa biển số'],
+    histRows().map((s) => [s.plate, s.uid, s.monthly ? 'Thẻ tháng' : 'Vãng lai', new Date(s.tIn).toLocaleString('vi-VN'), s.tOut ? new Date(s.tOut).toLocaleString('vi-VN') : '', s.tOut ? dur(s.tOut - s.tIn) : '', s.tOut ? s.fee : '', { cash: 'Tiền mặt', qr: 'QR', monthly: 'Thẻ tháng' }[s.pay] || '', s.alert ? `Xe ra ${s.alert.plateRead}` : '', s.fix ? `Camera đọc ${s.plateRead}, đã sửa tay` : '']));
 
   // ================== THỐNG KÊ ==================
   let period = 'day';
@@ -712,9 +788,9 @@
       const st = c.lost ? '<span class="pill bad">Báo mất</span>' : left < 0 ? '<span class="pill bad">Hết hạn</span>' : left <= 7 ? `<span class="pill warn">Còn ${left} ngày</span>` : '<span class="pill ok">Còn hạn</span>';
       return `<tr><td>${esc(c.uid)}</td><td>${esc(c.owner)}</td><td>${plateHTML(c.plate)}</td><td>${fmtDate(c.expires)}/${new Date(c.expires).getFullYear()}</td><td>${st}</td><td><button class="btn small" data-renew="${esc(c.uid)}">Gia hạn 1 tháng</button> <button class="btn small" data-lostc="${esc(c.uid)}">${c.lost ? 'Bỏ báo mất' : 'Báo mất'}</button> <button class="btn small danger" data-del="${esc(c.uid)}">Xóa</button></td></tr>`;
     }).join('') : '<tr><td colspan="6" class="empty">Không có thẻ nào khớp tìm kiếm.</td></tr>';
-    $$('[data-renew]').forEach((b) => b.onclick = () => { const c = cards.find((x) => x.uid === b.dataset.renew); c.expires = Math.max(c.expires, today0) + 30 * DAY; save(`Đã gia hạn thẻ ${c.uid} đến ${fmtDate(c.expires)}. Thu ${money(settings.monthly)}.`); });
-    $$('[data-lostc]').forEach((b) => b.onclick = () => { const c = cards.find((x) => x.uid === b.dataset.lostc); c.lost = !c.lost; save(c.lost ? `Đã báo mất thẻ ${c.uid}` : `Đã bỏ báo mất thẻ ${c.uid}`); });
-    $$('[data-del]').forEach((b) => b.onclick = () => { const i = cards.findIndex((x) => x.uid === b.dataset.del); const c = cards.splice(i, 1)[0]; save(`Đã xóa thẻ ${c.uid}`); });
+    $$('[data-renew]').forEach((b) => b.onclick = () => { const c = cards.find((x) => x.uid === b.dataset.renew); c.expires = Math.max(c.expires, today0) + 30 * DAY; audit('Thẻ tháng', `Gia hạn ${c.uid} đến ${fmtDate(c.expires)}`); save(`Đã gia hạn thẻ ${c.uid} đến ${fmtDate(c.expires)}. Thu ${money(settings.monthly)}.`); });
+    $$('[data-lostc]').forEach((b) => b.onclick = () => { const c = cards.find((x) => x.uid === b.dataset.lostc); c.lost = !c.lost; audit('Thẻ tháng', `${c.lost ? 'Báo mất' : 'Bỏ báo mất'} ${c.uid}`); save(c.lost ? `Đã báo mất thẻ ${c.uid}` : `Đã bỏ báo mất thẻ ${c.uid}`); });
+    $$('[data-del]').forEach((b) => b.onclick = () => { const i = cards.findIndex((x) => x.uid === b.dataset.del); const c = cards.splice(i, 1)[0]; audit('Thẻ tháng', `Xóa thẻ ${c.uid}`); save(`Đã xóa thẻ ${c.uid}`); });
   }
   function save(msg) { store.set('bgx_cards', cards); renderCards(); renderParked(); toast(msg); }
   $('#q-card').oninput = renderCards;
@@ -724,7 +800,7 @@
     const f = new FormData($('#cardForm')), uid = f.get('uid').trim().toUpperCase();
     if (cards.some((c) => c.uid === uid)) { toast(`Mã thẻ ${uid} đã có trong danh sách`); return; }
     cards.push({ uid, owner: f.get('owner').trim(), plate: f.get('plate').trim().toUpperCase(), expires: today0 + (+f.get('months') || 1) * 30 * DAY, lost: false });
-    save(`Đã thêm thẻ tháng ${uid}`);
+    audit('Thẻ tháng', `Thêm thẻ ${uid}`); save(`Đã thêm thẻ tháng ${uid}`);
   });
 
   // ================== CẢNH BÁO ==================
@@ -739,7 +815,7 @@
   Object.entries(settings).forEach(([k, v]) => { if (sf[k]) sf[k].value = v; });
   const modeVis = () => { $$('.m-turn').forEach((x) => x.classList.toggle('hidden', sf.mode.value !== 'turn')); $$('.m-hour').forEach((x) => x.classList.toggle('hidden', sf.mode.value !== 'hour')); };
   sf.mode.onchange = modeVis; modeVis();
-  sf.onsubmit = (e) => { e.preventDefault(); settings.mode = sf.mode.value; ['cap', 'day', 'night', 'overnight', 'base', 'step', 'monthly', 'lostFee'].forEach((k) => (settings[k] = Math.max(0, +sf[k].value || 0))); settings.cap = Math.max(1, settings.cap); store.set('bgx_settings', settings); renderAll(); toast('Đã lưu cài đặt'); };
+  sf.onsubmit = (e) => { e.preventDefault(); settings.mode = sf.mode.value; ['cap', 'day', 'night', 'overnight', 'base', 'step', 'monthly', 'lostFee'].forEach((k) => (settings[k] = Math.max(0, +sf[k].value || 0))); settings.cap = Math.max(1, settings.cap); store.set('bgx_settings', settings); audit('Cài đặt', `Sức chứa ${settings.cap}, tính phí ${settings.mode === 'turn' ? `theo lượt ${money(settings.day)} / ${money(settings.night)}, phụ thu đêm ${money(settings.overnight)}` : `theo giờ ${money(settings.base)} + ${money(settings.step)}`}, thẻ tháng ${money(settings.monthly)}, mất thẻ ${money(settings.lostFee)}`); renderAll(); toast('Đã lưu cài đặt'); };
 
   // ================== XUẤT EXCEL ==================
   function exportSheet(name, head, rows) {
@@ -811,6 +887,7 @@
     });
     locked.forEach((l) => { if (l.ts >= start && l.ts < end) t.lost += l.fee; });
     t.cashAll = t.cash + t.lost; t.total = t.cashAll + t.qr;
+    t.manual = manualLog.filter((m) => m.ts >= start && m.ts < end).length;
     t.parked = realSessions().filter((s) => s.tIn < end && (!s.tOut || s.tOut >= end)).length;
     return t;
   }
@@ -881,6 +958,7 @@
     const must = (open.openCash || 0) + t.cashAll;
     return `<div><span>Lượt vào</span><b>${t.in}</b></div><div><span>Lượt ra</span><b>${t.out}</b></div>
       <div><span>Xe trong bãi lúc này</span><b>${t.parked}</b></div><div><span>Cảnh báo không khớp</span><b>${t.alerts}</b></div>
+      <div><span>Mở barie bằng tay</span><b>${t.manual}</b></div><div><span>Phải sửa biển số</span><b>${realSessions().filter((s) => s.fix && s.tIn >= open.start).length}</b></div>
       <div><span>Tiền mặt nhận đầu ca</span><b>${money(open.openCash || 0)}</b></div><div><span>Tiền mặt thu phí gửi</span><b>${money(t.cash)}</b></div>
       <div><span>Phí mất thẻ (tiền mặt)</span><b>${money(t.lost)}</b></div><div><span>QR (vào tài khoản bãi)</span><b>${money(t.qr)}</b></div>
       <div class="full"><span>Tiền mặt phải có trong két</span><b>${money(must)}</b></div>`;
@@ -897,7 +975,7 @@
     if (acc.role !== loginRole) { err.textContent = acc.role === 'admin' ? 'Đây là tài khoản quản lý, hãy chọn mục Quản lý.' : 'Đây là tài khoản nhân viên, hãy chọn mục Nhân viên.'; return; }
     err.textContent = ''; f.pw.value = '';
     if (acc.role === 'staff') { const o = getOpen(); if (!o || o.user !== acc.user) { askOpenShift(acc); return; } }
-    enter(acc);
+    auditLogin(acc); enter(acc);
   };
   function enter(acc) {
     me = acc; role = acc.role;
@@ -906,7 +984,9 @@
     $('#meName').textContent = acc.name; $('#meRole').textContent = role === 'admin' ? `Quản lý · ${acc.user}` : `Nhân viên · ${acc.user}`;
     handCache = null; renderAll(); route();
   }
+  function auditLogin(acc) { me = acc; audit('Đăng nhập', acc.role === 'admin' ? 'Vào trang với vai trò quản lý' : 'Vào trang với vai trò nhân viên'); }
   function logout(msg) {
+    if (me) audit('Đăng xuất', msg || '');
     me = null; role = 'admin';
     try { sessionStorage.removeItem('bgx_session'); } catch (e) { /* bỏ qua */ }
     document.body.classList.add('locked'); document.body.classList.remove('staff');
@@ -946,6 +1026,7 @@
     }
     const start = openStart(cur.day0, cur.k);
     store.set('bgx_shift_open', { user: acc.user, name: acc.name, day0: cur.day0, k: cur.k, start, openedAt: nowT, openCash: +$('#openForm').openCash.value || 0, planned: rosterGet(cur.day0)[cur.k] });
+    auditLogin(acc); audit('Nhận ca', `${shiftLabel(cur.day0, cur.k)}, tiền đầu ca ${money(+$('#openForm').openCash.value || 0)}`);
     enter(acc); toast(`Đã nhận ${shiftLabel(cur.day0, cur.k)}`);
   });
 
@@ -976,13 +1057,14 @@
     handovers.push({ day0: open.day0, k: open.k, user: open.user, name: open.name, start: open.openedAt, end: nowT, late: late > 5 && open.planned === open.user ? late : 0, ...t,
       openCash: open.openCash || 0, counted, diff: counted - must, to: f.to.value, toName: nameOf(f.to.value), note: f.note.value.trim() });
     store.set('bgx_handovers', handovers); handCache = null;
+    audit('Kết ca', `${shiftLabel(open.day0, open.k)}, đếm ${money(counted)}, chênh lệch ${money(counted - must)}, bàn giao cho ${nameOf(f.to.value)}`);
     store.set('bgx_shift_open', null);
     logout(`Đã kết ca và bàn giao cho ${nameOf(f.to.value)}`);
   });
 
   // ================== QUẢN LÝ NHÂN VIÊN ==================
   let nvTab = 'list';
-  $$('#nvTabs button').forEach((b) => b.onclick = () => { nvTab = b.dataset.v; $$('#nvTabs button').forEach((x) => x.classList.toggle('on', x === b)); $$('[data-nv]').forEach((x) => x.classList.toggle('hidden', x.dataset.nv !== nvTab)); renderStaffAll(); });
+  $$('#nvTabs button').forEach((b) => b.onclick = () => { nvTab = b.dataset.v; $$('#nvTabs button').forEach((x) => x.classList.toggle('on', x === b)); $$('[data-nv]').forEach((x) => x.classList.toggle('hidden', x.dataset.nv !== nvTab)); renderStaffAll(); renderAudit(); });
   const weekStart = (ts) => { const d0 = startOfDay(ts), wd = (new Date(d0).getDay() + 6) % 7; return d0 - wd * DAY; };
   let wk0 = weekStart(Date.now());
 
@@ -998,7 +1080,7 @@
     $$('[data-lock]').forEach((b) => b.onclick = () => {
       const x = staffBy(b.dataset.lock);
       if (x.active && x.role === 'admin' && staffList.filter((y) => y.role === 'admin' && y.active).length < 2) { toast('Cần giữ ít nhất một tài khoản quản lý đang hoạt động'); return; }
-      x.active = !x.active; saveStaff(); toast(x.active ? `Đã mở khóa ${x.name}` : `Đã khóa ${x.name}. Ca của người này trong lịch cần phân lại.`); renderStaffAll();
+      x.active = !x.active; saveStaff(); audit('Nhân viên', `${x.active ? 'Mở khóa' : 'Khóa'} tài khoản ${x.user}`); toast(x.active ? `Đã mở khóa ${x.name}` : `Đã khóa ${x.name}. Ca của người này trong lịch cần phân lại.`); renderStaffAll();
     });
   }
   $('#q-staff').oninput = renderStaffList;
@@ -1021,7 +1103,7 @@
     x.name = f.name.value.trim(); x.phone = f.phone.value.trim(); x.role = f.role.value;
     if (f.pw.value) x.pw = await hashPw(x.user, f.pw.value);
     if (!editing) staffList.push(x);
-    saveStaff(); toast(editing ? `Đã lưu ${x.name}${f.pw.value ? ', mật khẩu đã đổi' : ''}` : `Đã thêm ${x.name}`);
+    saveStaff(); audit('Nhân viên', `${editing ? 'Sửa' : 'Thêm'} ${x.user} (${x.name})${f.pw.value ? ', đặt mật khẩu mới' : ''}`); toast(editing ? `Đã lưu ${x.name}${f.pw.value ? ', mật khẩu đã đổi' : ''}` : `Đã thêm ${x.name}`);
     if (me && me.user === x.user) $('#meName').textContent = x.name;
     renderStaffAll();
   });
@@ -1042,7 +1124,7 @@
     }).join('')}</tr>`).join('');
     $$('#rosterBody select').forEach((sel) => sel.onchange = () => {
       const d = +sel.dataset.d, k = +sel.dataset.k, r = rosterGet(d).slice(); r[k] = sel.value; roster[d] = r;
-      store.set('bgx_roster', roster); handCache = null; renderRoster(); renderStaffList(); toast(`${SHIFTS[k].name} ${fmtDate(d)}: ${nameOf(sel.value)}`);
+      store.set('bgx_roster', roster); handCache = null; audit('Lịch phân ca', `${SHIFTS[k].name} ${fmtDate(d)}: ${nameOf(sel.value)}`); renderRoster(); renderStaffList(); toast(`${SHIFTS[k].name} ${fmtDate(d)}: ${nameOf(sel.value)}`);
     });
   }
   $('#wkPrev').onclick = () => { wk0 -= 7 * DAY; renderRoster(); };
@@ -1082,16 +1164,243 @@
     $('#t-perf').innerHTML = rows.map((a) => `<tr><td>${esc(a.name)}</td><td class="num">${a.n}</td><td class="num">${Math.round(a.ms / H)}</td><td class="num">${a.late}</td><td class="num">${a.cars.toLocaleString('vi-VN')}</td>
       <td><i class="bar-in" style="width:${Math.round(a.rev / max * 120)}px"></i>${money(a.rev)}</td><td class="num">${a.bad}</td><td class="num">${a.diff ? `<span class="pill ${a.diff < 0 ? 'bad' : 'warn'}">${a.diff < 0 ? '−' : '+'}${money(Math.abs(a.diff))}</span>` : '<span class="pill ok">0đ</span>'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">Chưa có ca nào kết thúc.</td></tr>';
   }
+  // ================== NHẬT KÝ THAO TÁC ==================
+  const auditLog = store.get('bgx_audit', null) || (() => {
+    const t = Date.now(), seedA = [
+      [26, 'quanly', 'Phạm Minh Quân', 'Cài đặt', 'Đổi biểu giá sang tính theo lượt, ngày 3.000đ, đêm 5.000đ'],
+      [20, 'quanly', 'Phạm Minh Quân', 'Lịch phân ca', 'Ca đêm 07/11: Lê Quốc Dũng thay Huỳnh Ngọc Vy'],
+      [9, 'nv01', 'Nguyễn Văn An', 'Thẻ tháng', 'Gia hạn thẻ 6D:41:3E:C8 thêm 1 tháng'],
+      [3, 'nv03', 'Lê Quốc Dũng', 'Mở barie bằng tay', 'Làn ra, lý do: đầu đọc thẻ không nhận'],
+    ];
+    return seedA.map(([h, user, name, action, detail]) => ({ ts: t - h * 3600000, user, name, action, detail })).sort((a, b) => b.ts - a.ts);
+  })();
+  function audit(action, detail) {
+    auditLog.unshift({ ts: Date.now(), user: me ? me.user : '', name: me ? me.name : '', action, detail });
+    while (auditLog.length > 2000) auditLog.pop();
+    store.set('bgx_audit', auditLog);
+  }
+
+  // ================== THÔNG TIN NHẬN DẠNG CỦA TỪNG LƯỢT ==================
+  // Bản mẫu: sinh cố định theo mã thẻ. Hệ thống thật lấy từ log của máy chủ nhận dạng.
+  const normPlate = (p) => String(p).toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const keyOf = (s) => `${s.uid}|${s.tIn}`;
+  const prand = (str, salt) => { let h = 2166136261 ^ salt; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return (h % 100000) / 100000; };
+  const garble = (p, r) => { const sw = { '8': 'B', '0': 'D', '5': 'S', '1': '7', '6': 'G', '2': 'Z' }; const a = [...p]; for (let i = a.length - 1; i >= 0; i--) if (sw[a[i]]) { a[i] = sw[a[i]]; break; } if (a.join('') === p) a[a.length - 1] = String((+a[a.length - 1] + 1 + Math.floor(r * 8)) % 10); return a.join(''); };
+  function makeOcr(s, salt) {
+    const k = keyOf(s), r1 = prand(k, salt), r2 = prand(k, salt + 11), r3 = prand(k, salt + 23);
+    const ok = r1 > 0.045, ms = Math.round(560 + r2 * 420 + (r3 < 0.06 ? 500 + r3 * 4000 : 0));
+    return { ok, conf: ok ? 0.86 + r2 * 0.13 : 0.42 + r2 * 0.3, ms };
+  }
+  const plateFix = store.get('bgx_platefix', {});
+  sessions.forEach((s) => {
+    if (s.alertOnly) return;
+    s.ocr = makeOcr(s, 1); if (s.tOut) s.ocrOut = makeOcr(s, 2);
+    if (!s.ocr.ok) { s.plateRead = garble(s.plate, prand(keyOf(s), 5)); s.fix = { by: 'Nhân viên trực', ts: s.tIn + 20000, seed: true }; }
+    const f = plateFix[keyOf(s)];
+    if (f) { s.plateRead = s.plateRead || f.from; s.plate = f.to; s.fix = { by: f.by, ts: f.ts }; }
+  });
+
+  // ================== DANH SÁCH XE CẦN CHÚ Ý ==================
+  const watch = store.get('bgx_watch', null) || (() => {
+    const p = parkedNow().filter((s) => !s.monthly)[1];
+    return [
+      ...(p ? [{ plate: p.plate, reason: 'stolen', note: 'Công an phường báo xe mất cắp', by: 'Phạm Minh Quân', ts: Date.now() - 5 * 3600000 }] : []),
+      { plate: '59-K2 888.88', reason: 'debt', note: 'Nợ phí gửi 3 lượt', by: 'Phạm Minh Quân', ts: Date.now() - 4 * DAY },
+    ];
+  })();
+  const WATCH_REASON = { stolen: 'Báo mất cắp', banned: 'Cấm gửi', debt: 'Nợ phí', other: 'Khác' };
+  const watchOf = (plate) => watch.find((w) => normPlate(w.plate) === normPlate(plate));
+  const saveWatch = () => store.set('bgx_watch', watch);
+  function renderWatch() {
+    $('#t-watch').innerHTML = watch.length ? watch.map((w, i) => {
+      const inLot = parkedNow().find((s) => normPlate(s.plate) === normPlate(w.plate));
+      return `<tr><td>${plateHTML(w.plate)}</td><td><span class="pill ${w.reason === 'stolen' || w.reason === 'banned' ? 'bad' : 'warn'}">${WATCH_REASON[w.reason]}</span></td><td class="muted" style="white-space:normal">${esc(w.note || '')}</td><td>${inLot ? `<span class="pill bad">Đang trong bãi từ ${fmtDT(inLot.tIn)}</span>` : '<span class="muted">Không có trong bãi</span>'}</td><td>${esc(w.by)}, ${fmtDT(w.ts)}</td><td class="admin-only"><button class="btn small danger" data-unwatch="${i}">Bỏ khỏi danh sách</button></td></tr>`;
+    }).join('') : '<tr><td colspan="6" class="empty">Danh sách trống.</td></tr>';
+    $$('[data-unwatch]').forEach((b) => b.onclick = () => { const w = watch.splice(+b.dataset.unwatch, 1)[0]; saveWatch(); audit('Xe cần chú ý', `Bỏ ${w.plate} khỏi danh sách`); renderWatch(); renderBanners(); renderParked(); toast(`Đã bỏ ${w.plate} khỏi danh sách`); });
+  }
+  $('#watchForm').onsubmit = (e) => {
+    e.preventDefault(); const f = e.target, plate = f.plate.value.trim().toUpperCase();
+    if (watchOf(plate)) { toast(`${plate} đã có trong danh sách`); return; }
+    watch.unshift({ plate, reason: f.reason.value, note: f.note.value.trim(), by: me ? me.name : '', ts: Date.now() }); saveWatch();
+    audit('Xe cần chú ý', `Thêm ${plate} (${WATCH_REASON[f.reason.value]})`); f.reset(); renderWatch(); renderBanners(); renderParked(); toast(`Đã thêm ${plate}. Xe này vào bãi sẽ có cảnh báo.`);
+  };
+  try { localStorage.setItem('bgx_watch', JSON.stringify(watch)); } catch (e) { /* bỏ qua */ }
+
+  // ================== THIẾT BỊ ==================
+  const DEVICES = [
+    { id: 'server', name: 'Máy chủ nhận dạng (FastAPI + YOLOv8)', group: 'Máy chủ', spec: () => `CPU ${30 + Math.round(Math.random() * 25)}%, hàng đợi ${Math.round(Math.random() * 2)} ảnh` },
+    { id: 'broker', name: 'MQTT broker (Mosquitto)', group: 'Máy chủ', spec: () => '3 thiết bị đang kết nối' },
+    { id: 'esp32', name: 'ESP32 điều khiển chốt', group: 'Chốt giữa', spec: () => `Wi-Fi ${-52 - Math.round(Math.random() * 8)} dBm, chạy liên tục ${Math.floor((Date.now() - today0) / 3600000) + 31} giờ` },
+    { id: 'rfid-in', name: 'Đầu đọc thẻ RC522 làn vào', group: 'Làn vào', spec: () => 'SPI, SS GPIO5' },
+    { id: 'cam-in', name: 'Camera biển số làn vào', group: 'Làn vào', spec: () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây` },
+    { id: 'face-in', name: 'Camera người lái làn vào', group: 'Làn vào', spec: () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây` },
+    { id: 'gate-in', name: 'Barie làn vào', group: 'Làn vào', spec: () => 'Servo GPIO25, đang đóng' },
+    { id: 'ir-in', name: 'Cảm biến IR làn vào (2)', group: 'Làn vào', spec: () => 'GPIO34, GPIO35' },
+    { id: 'rfid-out', name: 'Đầu đọc thẻ RC522 làn ra', group: 'Làn ra', spec: () => 'SPI, SS GPIO4' },
+    { id: 'cam-out', name: 'Camera biển số làn ra', group: 'Làn ra', spec: () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây` },
+    { id: 'face-out', name: 'Camera người lái làn ra', group: 'Làn ra', spec: () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây` },
+    { id: 'gate-out', name: 'Barie làn ra', group: 'Làn ra', spec: () => 'Servo GPIO26, đang đóng' },
+    { id: 'ir-out', name: 'Cảm biến IR làn ra (2)', group: 'Làn ra', spec: () => 'GPIO36, GPIO39' },
+    { id: 'audio', name: 'Loa DFPlayer và còi báo', group: 'Chốt giữa', spec: () => 'UART2, còi GPIO14' },
+  ];
+  const devDown = store.get('bgx_devdown', {});   // id -> thời điểm mất kết nối (giả lập để thử)
+  const devLog = store.get('bgx_devlog', []);
+  const devName = (id) => (DEVICES.find((d) => d.id === id) || {}).name || id;
+  const simAlive = () => { try { return Date.now() - (+localStorage.getItem('bgx_hb') || 0) < 6000; } catch (e) { return false; } };
+  function renderDevices() {
+    const nowT = Date.now(), down = DEVICES.filter((d) => devDown[d.id]);
+    $('#dev-sum').innerHTML = `<b>${DEVICES.length - down.length}/${DEVICES.length}</b> thiết bị đang hoạt động. ${simAlive() ? 'Đang nhận tín hiệu từ trang mô phỏng.' : 'Tín hiệu giả lập; khi chạy thật, mỗi thiết bị gửi trạng thái lên MQTT mỗi 5 giây.'}`;
+    let grp = '';
+    $('#t-dev').innerHTML = DEVICES.map((d) => {
+      const off = devDown[d.id], head = d.group !== grp ? `<tr><th colspan="5" style="position:static;background:#fff;color:var(--ink);font-size:12.5px;padding-top:14px">${d.group}</th></tr>` : ''; grp = d.group;
+      const seen = off ? `${fmtTime(off)}, cách đây ${Math.max(1, Math.round((nowT - off) / 60000))} phút` : `${1 + Math.floor(Math.random() * 4)} giây trước`;
+      return head + `<tr><td>${esc(d.name)}</td><td>${off ? '<span class="pill bad">Mất kết nối</span>' : '<span class="pill ok">Hoạt động</span>'}</td><td>${seen}</td><td class="muted">${off ? '' : esc(d.spec())}</td>
+        <td class="admin-only"><button class="btn small" data-dev="${d.id}">${off ? 'Khôi phục' : 'Thử ngắt'}</button></td></tr>`;
+    }).join('');
+    $$('[data-dev]').forEach((b) => b.onclick = () => {
+      const id = b.dataset.dev, wasOff = !!devDown[id];
+      if (wasOff) delete devDown[id]; else devDown[id] = Date.now();
+      devLog.unshift({ ts: Date.now(), id, ev: wasOff ? 'up' : 'down' }); while (devLog.length > 300) devLog.pop();
+      store.set('bgx_devdown', devDown); store.set('bgx_devlog', devLog);
+      audit('Thiết bị', `${wasOff ? 'Khôi phục' : 'Thử ngắt'} ${devName(id)}`);
+      renderDevices(); renderBanners();
+    });
+    $('#t-devlog').innerHTML = devLog.length ? devLog.slice(0, 30).map((l) => `<tr><td>${fmtDT(l.ts)}</td><td>${esc(devName(l.id))}</td><td>${l.ev === 'down' ? '<span class="pill bad">Mất kết nối</span>' : '<span class="pill ok">Kết nối lại</span>'}</td></tr>`).join('') : '<tr><td colspan="3" class="empty">Chưa có sự cố nào.</td></tr>';
+  }
+
+  // ---------- thanh cảnh báo đầu trang: thiết bị mất kết nối, xe cần chú ý trong bãi ----------
+  function renderBanners() {
+    const down = DEVICES.filter((d) => devDown[d.id]);
+    $('#devBanner').classList.toggle('hidden', !down.length);
+    if (down.length) $('#devBannerText').textContent = `Mất kết nối: ${down.map((d) => `${d.name} (từ ${fmtTime(devDown[d.id])})`).join(', ')}.`;
+    const hits = parkedNow().map((s) => ({ s, w: watchOf(s.plate) })).filter((x) => x.w);
+    $('#watchBanner').classList.toggle('hidden', !hits.length);
+    if (hits.length) $('#watchBannerText').innerHTML = hits.map(({ s, w }) => `Xe <b>${esc(s.plate)}</b> (${WATCH_REASON[w.reason].toLowerCase()}) đang trong bãi, vào lúc ${fmtDT(s.tIn)}, thẻ ${esc(s.uid)}.`).join(' ');
+  }
+
+  // ================== MỞ BARIE BẰNG TAY ==================
+  const manualLog = store.get('bgx_manual', null) || [
+    { ts: Date.now() - 3 * 3600000, lane: 'out', reason: 'rfid', note: '', by: 'Lê Quốc Dũng' },
+    { ts: Date.now() - 27 * 3600000, lane: 'in', reason: 'priority', note: 'Xe cấp cứu của phòng y tế', by: 'Nguyễn Văn An' },
+  ];
+  const MANUAL_REASON = { rfid: 'Đầu đọc thẻ không nhận', camera: 'Camera hoặc nhận dạng lỗi', priority: 'Xe ưu tiên, cấp cứu', verified: 'Khách quên thẻ, đã xác minh giấy tờ', other: 'Khác' };
+  const laneName = (l) => (l === 'in' ? 'làn vào' : 'làn ra');
+  let manualLane = 'in';
+  function openManual(lane) {
+    manualLane = lane; const f = $('#manualForm'); f.reset();
+    $('#manualTitle').textContent = `Mở barie ${laneName(lane)} bằng tay`;
+    const gateDown = devDown[`gate-${lane}`];
+    $('#manualWarn').classList.toggle('hidden', !gateDown);
+    $('#manualDlg').showModal();
+  }
+  $('#openIn').onclick = () => openManual('in'); $('#openOut').onclick = () => openManual('out');
+  $('#manualForm').reason.onchange = (e) => { $('#manualForm').note.required = e.target.value === 'other'; };
+  $('#manualDlg').addEventListener('close', () => {
+    if ($('#manualDlg').returnValue !== 'ok') return;
+    const f = $('#manualForm'), rec = { ts: Date.now(), lane: manualLane, reason: f.reason.value, note: f.note.value.trim(), by: me ? me.name : '' };
+    manualLog.unshift(rec); store.set('bgx_manual', manualLog);
+    store.set('bgx_cmd', { lane: manualLane, ts: rec.ts, by: rec.by });   // trang mô phỏng nghe lệnh này và mở barie
+    audit('Mở barie bằng tay', `${manualLane === 'in' ? 'Làn vào' : 'Làn ra'}, lý do: ${MANUAL_REASON[rec.reason]}${rec.note ? `, ${rec.note}` : ''}`);
+    renderManual(); renderAlerts2(); toast(`Đã gửi lệnh mở barie ${laneName(manualLane)}. Barie tự đóng khi xe qua.`);
+  });
+  function renderManual() {
+    const l = manualLog[0];
+    $('#manualLast').textContent = l ? `Lần gần nhất: ${laneName(l.lane)}, ${fmtDT(l.ts)}, ${l.by}, ${MANUAL_REASON[l.reason].toLowerCase()}.` : 'Chưa mở bằng tay lần nào.';
+  }
+  function renderAlerts2() {
+    $('#t-manual').innerHTML = manualLog.length ? manualLog.slice(0, 50).map((l) => `<tr><td>${fmtDT(l.ts)}</td><td>${l.lane === 'in' ? 'Làn vào' : 'Làn ra'}</td><td>${MANUAL_REASON[l.reason]}</td><td class="muted" style="white-space:normal">${esc(l.note || '')}</td><td>${esc(l.by)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Chưa có lần mở bằng tay nào.</td></tr>';
+    renderWatch();
+  }
+
+  // ================== ẢNH VÀ SỬA BIỂN SỐ TRONG LỊCH SỬ ==================
+  let photoTarget = null;
+  function openPhotos(s) {
+    photoTarget = s;
+    const seed = [...s.uid].reduce((a, c) => a + c.charCodeAt(0), 0), exitSeed = s.alert ? seed + 3 : seed;
+    drawEntryPhoto($('#phInPlate'), s, 'plate', { ts: s.tIn, plate: s.plateRead || s.plate });
+    drawEntryPhoto($('#phInFace'), s, 'face', { ts: s.tIn });
+    const out = !!s.tOut;
+    $('#phOut').classList.toggle('hidden', !out);
+    if (out) { drawEntryPhoto($('#phOutPlate'), s, 'plate', { ts: s.tOut, plate: s.alert ? s.alert.plateRead : s.plate, seed: exitSeed }); drawEntryPhoto($('#phOutFace'), s, 'face', { ts: s.tOut, seed: exitSeed }); }
+    const o = s.ocr || {};
+    $('#phInfo').innerHTML = `${plateHTML(s.plate)} &nbsp; Thẻ <b>${esc(s.uid)}</b>, ${s.monthly ? 'thẻ tháng' : 'vãng lai'}. Vào ${fmtDT(s.tIn)}${out ? `, ra ${fmtDT(s.tOut)}` : ', đang trong bãi'}.`;
+    $('#phOcr').innerHTML = `Lúc vào camera đọc được <b>${esc(s.plateRead || s.plate)}</b>, độ tin cậy ${Math.round((o.conf || 0.95) * 100)}%, xử lý ${o.ms || '–'} ms.` +
+      (s.fix ? `<br>Đã sửa tay thành <b>${esc(s.plate)}</b> (${esc(s.fix.by)}${s.fix.seed ? '' : `, ${fmtDT(s.fix.ts)}`}).` : '') +
+      (s.alert ? `<br><span style="color:var(--stop)">Lúc ra camera đọc <b>${esc(s.alert.plateRead)}</b>, không khớp với thẻ.</span>` : '');
+    $('#fixForm').plate.value = s.plate;
+    $('#photoDlg').showModal();
+  }
+  $('#phClose').onclick = () => $('#photoDlg').close();
+  $('#fixForm').onsubmit = (e) => {
+    e.preventDefault(); const s = photoTarget; if (!s) return;
+    const to = e.target.plate.value.trim().toUpperCase().replace(/\s+/g, ' ');
+    if (!/^\d{2}-[A-Z]{1,2}\d{0,2} \d{3}\.?\d{2}$/.test(to)) { toast('Biển số chưa đúng dạng, ví dụ 59-X1 123.45'); return; }
+    if (to === s.plate) { toast('Biển số không đổi'); return; }
+    const from = s.plateRead || s.plate;
+    plateFix[keyOf(s)] = { from, to, by: me ? me.name : '', ts: Date.now() }; store.set('bgx_platefix', plateFix);
+    s.plateRead = from; s.plate = to; s.fix = { by: me ? me.name : '', ts: Date.now() };
+    audit('Sửa biển số', `Thẻ ${s.uid}: ${from} thành ${to}`);
+    $('#photoDlg').close(); renderHist(); renderParked(); renderBanners(); toast(`Đã sửa biển số thành ${to}. Biển gốc camera đọc vẫn được giữ lại.`);
+  };
+
+  // ================== THỐNG KÊ NHẬN DẠNG ==================
+  let ocrDays = 7;
+  $$('#f-ocr button').forEach((b) => b.onclick = () => { ocrDays = +b.dataset.v; $$('#f-ocr button').forEach((x) => x.classList.toggle('on', x === b)); renderOcr(); });
+  function ocrRows() {
+    const days = Array.from({ length: ocrDays }, (_, i) => today0 - (ocrDays - 1 - i) * DAY);
+    return days.map((d0) => {
+      const caps = [];
+      realSessions().forEach((s) => {
+        if (s.ocr && s.tIn >= d0 && s.tIn < d0 + DAY) caps.push({ ...s.ocr, ok: s.ocr.ok && !(s.fix && !s.fix.seed) });
+        if (s.ocrOut && s.tOut >= d0 && s.tOut < d0 + DAY) caps.push(s.ocrOut);
+      });
+      const alerts = realSessions().filter((s) => s.alert && (s.tOut || s.tIn) >= d0 && (s.tOut || s.tIn) < d0 + DAY).length;
+      const ms = caps.map((c) => c.ms).sort((a, b) => a - b);
+      const bad = caps.filter((c) => !c.ok).length;
+      return { d0, n: caps.length, ok: caps.length - bad, bad, alerts, avg: ms.length ? Math.round(ms.reduce((a, b) => a + b, 0) / ms.length) : 0, p95: ms.length ? ms[Math.min(ms.length - 1, Math.floor(ms.length * 0.95))] : 0, ms };
+    });
+  }
+  const pct = (a, b) => (b ? (a / b * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + '%' : '–');
+  function renderOcr() {
+    const rows = ocrRows(), all = rows.reduce((a, r) => ({ n: a.n + r.n, bad: a.bad + r.bad, alerts: a.alerts + r.alerts, ms: a.ms.concat(r.ms) }), { n: 0, bad: 0, alerts: 0, ms: [] });
+    all.ms.sort((a, b) => a - b);
+    const avg = all.ms.length ? Math.round(all.ms.reduce((a, b) => a + b, 0) / all.ms.length) : 0, p95 = all.ms.length ? all.ms[Math.floor(all.ms.length * 0.95)] : 0;
+    const over = all.ms.filter((m) => m > 1500).length;
+    $('#o-acc').textContent = pct(all.n - all.bad, all.n); $('#o-acc-d').textContent = `${(all.n - all.bad).toLocaleString('vi-VN')} trên ${all.n.toLocaleString('vi-VN')} lần chụp đọc đúng`;
+    $('#o-man').textContent = all.bad; $('#o-man-d').textContent = `${pct(all.bad, all.n)} số lần chụp phải nhập tay`;
+    $('#o-ms').textContent = `${avg} ms`; $('#o-ms-d').textContent = `95% số lượt dưới ${p95} ms. ${over} lượt vượt mục tiêu 1,5 giây`;
+    $('#o-al').textContent = all.alerts; $('#o-al-d').textContent = `${pct(all.alerts, all.n)} số lần chụp`;
+    barChart($('#ch-ocrbad'), { labels: rows.map((r) => fmtDate(r.d0)), every: ocrDays > 10 ? 3 : 1, series: [{ name: 'Phải nhập tay', color: '#2a78d6', values: rows.map((r) => r.bad) }, { name: 'Cảnh báo không khớp', color: '#eb6834', values: rows.map((r) => r.alerts) }] });
+    const bins = [[0, 700, 'dưới 0,7 s'], [700, 900, '0,7–0,9 s'], [900, 1100, '0,9–1,1 s'], [1100, 1500, '1,1–1,5 s'], [1500, 1e9, 'trên 1,5 s']];
+    barChart($('#ch-ocrms'), { labels: bins.map((b) => b[2]), series: [{ name: 'Số lần chụp', color: '#2a78d6', values: bins.map(([a, b]) => all.ms.filter((m) => m >= a && m < b).length) }] });
+    $('#t-ocr').innerHTML = rows.slice().reverse().map((r) => `<tr><td>${fmtDate(r.d0)}</td><td class="num">${r.n}</td><td class="num">${r.ok}</td><td class="num">${r.bad}</td><td class="num">${pct(r.ok, r.n)}</td><td class="num">${r.avg} ms</td><td class="num">${r.p95} ms</td><td class="num">${r.alerts}</td></tr>`).join('');
+  }
+  $('#x-ocr').onclick = () => exportSheet('nhan-dang-bien-so', ['Ngày', 'Lần chụp', 'Đọc đúng', 'Phải nhập tay', 'Tỉ lệ đúng (%)', 'Độ trễ TB (ms)', 'Độ trễ p95 (ms)', 'Cảnh báo không khớp'],
+    ocrRows().map((r) => [fmtDate(r.d0), r.n, r.ok, r.bad, r.n ? +(r.ok / r.n * 100).toFixed(2) : '', r.avg, r.p95, r.alerts]));
+
+  // ================== NHẬT KÝ THAO TÁC (giao diện) ==================
+  function renderAudit() {
+    const sel = $('#f-auser'), cur = sel.value;
+    sel.innerHTML = '<option value="">Mọi người</option>' + staffList.map((x) => `<option value="${x.user}">${esc(x.name)}</option>`).join(''); sel.value = cur;
+    const q = $('#q-audit').value.trim().toLowerCase();
+    const rows = auditLog.slice().sort((a, b) => b.ts - a.ts).filter((a) => (!cur || a.user === cur) && (!q || `${a.action} ${a.detail}`.toLowerCase().includes(q)));
+    $('#t-audit').innerHTML = rows.length ? rows.slice(0, 300).map((a) => `<tr><td>${fmtDT(a.ts)}</td><td>${esc(a.name || a.user)}</td><td>${esc(a.action)}</td><td style="white-space:normal">${esc(a.detail)}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">Không có thao tác nào khớp.</td></tr>';
+  }
+  $('#f-auser').onchange = renderAudit; $('#q-audit').oninput = renderAudit;
+  $('#x-audit').onclick = () => exportSheet('nhat-ky-thao-tac', ['Thời điểm', 'Người thao tác', 'Tài khoản', 'Thao tác', 'Chi tiết'], auditLog.map((a) => [new Date(a.ts).toLocaleString('vi-VN'), a.name, a.user, a.action, a.detail]));
+
+  // làm mới định kỳ: thiết bị, thanh cảnh báo
+  setInterval(() => { if (document.body.classList.contains('locked')) return; renderBanners(); if (!$('[data-view="thiet-bi"]').classList.contains('hidden')) renderDevices(); }, 2000);
 
   // ================== điều hướng ==================
-  function renderAll() { renderOverview(); renderParked(); renderHist(); renderStats(); renderCards(); renderAlerts(); renderStaffAll(); }
+  function renderAll() { renderOverview(); renderParked(); renderHist(); renderStats(); renderCards(); renderAlerts(); renderStaffAll(); renderBanners(); renderManual(); renderAlerts2(); renderDevices(); if (role === 'admin') { renderOcr(); renderAudit(); } }
   function route() {
     let tab0 = (location.hash || '#tong-quan').slice(1);
-    if (role === 'staff' && ['thong-ke', 'cai-dat', 'nhan-vien'].includes(tab0)) tab0 = 'tong-quan';
+    if (role === 'staff' && ['thong-ke', 'cai-dat', 'nhan-vien', 'nhan-dang'].includes(tab0)) tab0 = 'tong-quan';
     const tab = tab0, ok = $$('[data-view]').some((s) => s.dataset.view === tab) ? tab : 'tong-quan';
     $$('[data-view]').forEach((s) => s.classList.toggle('hidden', s.dataset.view !== ok));
     $$('nav a.tab').forEach((a) => a.classList.toggle('on', a.dataset.tab === ok));
-    if (ok === 'tong-quan') renderOverview(); if (ok === 'thong-ke') renderStats();   // vẽ lại biểu đồ khi hiện ra
+    if (ok === 'tong-quan') renderOverview(); if (ok === 'thong-ke') renderStats(); if (ok === 'nhan-dang') renderOcr(); if (ok === 'thiet-bi') renderDevices(); if (ok === 'canh-bao') renderAlerts2();   // vẽ lại biểu đồ khi hiện ra
   }
   window.addEventListener('hashchange', route);
   let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => $$('.chart').forEach((c) => c._args && c.offsetParent && barChart(c, c._args)), 150); });
