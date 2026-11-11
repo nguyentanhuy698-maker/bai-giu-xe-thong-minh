@@ -71,3 +71,7 @@ Vẫn là một tệp HTML, JavaScript thuần, dữ liệu lưu trong trình du
 Tổng quan nhân sự, Hồ sơ (8 nhân sự theo bảng thông tin nhân sự), Lịch phân ca (tự phân ca, sao chép tuần trước, in), Chấm công tháng (chỉnh tay có lý do, in A4 ngang), Giao ca (tạo khoản trừ khi thiếu tiền), Nghỉ phép và đổi ca, Tăng ca (tự đề xuất khi kết ca trễ quá 15 phút hoặc làm ca ngoài lịch), Thưởng – phạt, Bảng lương (chốt và mở chốt, in phiếu A5), Hiệu suất. Nhân viên có mục "Của tôi" và chỉ xem được dữ liệu của mình.
 
 Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và thuế thu nhập cá nhân.
+
+## Báo cáo kiểm thử
+
+[docs/bao-cao-kiem-thu.pdf](docs/bao-cao-kiem-thu.pdf): 29 tình huống kiểm thử trang quản lý (đăng nhập, ca trực, vận hành bãi xe, nhân sự, đồng bộ và giao diện điện thoại), mỗi tình huống có các bước, kết quả mong đợi, kết quả thực tế và ảnh chụp màn hình. Kết quả: đạt 29/29, chạy trên bản commit 8d2f273. Cuối báo cáo có bảng các lỗi đã tìm ra và cách sửa.
