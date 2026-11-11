@@ -14,7 +14,7 @@ Firmware ESP32 cho trụ điều khiển giữa 2 làn (vào / ra), chạy thử
 1. Vào wokwi.com → **New Project** → **ESP32**.
 2. Dán nội dung `sketch.ino` vào tab `sketch.ino`, dán `diagram.json` vào tab `diagram.json`.
 3. Bấm dấu **+** cạnh các tab → **New file…** → đặt tên `libraries.txt`, dán nội dung file `libraries.txt`.
-4. Mở `sketch.ino`, đổi `TOPIC_ROOT` thành một chuỗi riêng của nhóm (để không trùng người khác dùng chung broker công cộng). Đổi y hệt trong `server_mock.py`.
+4. Mở `sketch.ino`, đổi `TOPIC_ROOT` thành một chuỗi riêng của nhóm (để không trùng người khác dùng chung broker công cộng). Đổi y hệt trong `server_mock.py` (hoặc chạy `TOPIC_ROOT=ten-rieng python server_mock.py`) và trong trang quản lý (Máy giữ xe → Cài đặt kết nối). Mặc định cả ba đều là `hcmute-da2-baigiuxe`.
 5. Trên laptop: `pip install paho-mqtt` rồi `python server_mock.py`.
 6. Bấm ▶ trên Wokwi, chờ Serial Monitor báo `Ket noi MQTT ... OK`.
 
@@ -50,3 +50,14 @@ Trong cửa sổ `server_mock.py`, gõ `s` + Enter để lượt ra kế tiếp 
 | In câu loa ra Serial | DFPlayer Mini UART2 (GPIO16 / 17) + loa 3 W |
 | Broker công cộng `broker.hivemq.com` | Mosquitto chạy trên laptop, IP tĩnh |
 | Server giả lập | Server thật gọi ESP32-CAM lấy ảnh → YOLOv8n → OCR |
+
+## Xem trên trang quản lý (mục "Máy giữ xe")
+
+1. Mở `quan-ly.html` (trên GitHub Pages cũng được), đăng nhập, vào **Máy giữ xe**, bấm **Kết nối phần cứng**. Trang nối thẳng broker qua WebSocket `wss://broker.hivemq.com:8884/mqtt`, không cần cài gì thêm.
+2. Bấm nút quẹt thẻ trên Wokwi: màn hình hiện "Đang nhận dạng…", sau đó hiện biển số, loại vé, giá vé, kết quả mời qua hoặc từ chối. Làn ra hiện biển số lúc vào cạnh biển số lúc ra; không khớp thì tô đỏ và ghi cảnh báo.
+3. Nút **Mở barie** trên trang (hoặc phím F1, F2) gửi `{"action":"open","manual":true}` xuống ESP32; firmware nhận lệnh mở tay cả khi làn đang rảnh.
+4. Lượt xe từ phần cứng được ghi vào dữ liệu của trang, nên Xe trong bãi, Lịch sử, Thống kê và doanh thu ca tính theo xe thật.
+
+`server_mock.py` gửi kèm trong lệnh trả về các trường `uid, code, plate, plate_in, monthly, t_in, fee` để trang hiển thị; ESP32 chỉ đọc `action, sound, msg` nên không bị ảnh hưởng.
+
+**Lưu ý:** broker công cộng thì ai biết tên topic cũng gửi được lệnh mở barie. Chỉ dùng để trình diễn; khi làm thật dùng Mosquitto trên laptop có mật khẩu và TLS.

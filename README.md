@@ -155,3 +155,21 @@ Bảng lương chỉ để tham khảo, chưa tính bảo hiểm xã hội và t
   - 4 nút lớn: Mở barie vào, Mở barie ra, Cảnh báo chờ (đỏ khi có cảnh báo), Chi từ két.
   - Nút "Kết ca, bàn giao" chỉ hiện ở đầu trang khi còn 30 phút là hết ca. Cần kết ca sớm thì có liên kết nhỏ phía dưới.
 - **Điện thoại:** trang Xe trong bãi hiển thị mỗi xe một thẻ, nút "Khách báo mất thẻ" luôn nhìn thấy.
+
+## Máy giữ xe (`#may-giu-xe`, nhân viên và quản lý)
+
+- **Màn hình làm việc ở chốt,** bố cục theo phần mềm bãi xe thương mại, gồm 4 vùng:
+  - thống kê (doanh thu, lượt vào/ra, xe trong bãi, người trực, đồng hồ);
+  - camera biển số và camera người lái của từng làn;
+  - ảnh chụp lúc quẹt thẻ (làn ra đặt ảnh lúc vào cạnh ảnh lúc ra);
+  - thông tin lượt xe (mã thẻ, loại vé, biển số, giờ vào/ra, thời gian gửi, giá vé, kết quả).
+- **Thao tác:** nút Mở barie, phím tắt F1/F2, nút Xử lý cảnh báo khi biển số không khớp. Có chế độ toàn màn hình cho máy tính đặt ở chốt.
+- **Nguồn dữ liệu:**
+  - Phần cứng thật qua MQTT: trang tự cài một trình khách MQTT nhỏ chạy trên WebSocket, không cần thư viện ngoài. Trang nghe đúng các topic mà `wokwi/sketch.ino` và `server_mock.py` đang dùng.
+  - Hoặc trang mô phỏng.
+  - Hoặc nút "Thử nhanh".
+  - Lượt xe từ phần cứng được ghi như lượt của trang mô phỏng, nên mọi trang khác dùng chung dữ liệu.
+- **Ảnh:** ảnh camera hiện là ảnh minh họa. Khi máy chủ gửi kèm đường dẫn ảnh từ ESP32-CAM thì thay vào các ô này.
+- **Sửa kèm:**
+  - `server_mock.py` dùng cùng topic với firmware (trước đây hai bên khác nhau) và gửi thêm thông tin lượt xe.
+  - `sketch.ino` nhận lệnh mở tay từ trang quản lý.

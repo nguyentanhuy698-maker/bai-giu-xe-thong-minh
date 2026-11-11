@@ -107,8 +107,9 @@ void publishJson(const String& t, JsonDocument& doc) {
 }
 
 // ===================== QUYẾT ĐỊNH TỪ SERVER =====================
-void applyDecision(Lane& L, bool open, const char* sound, const char* msg) {
-  if (L.state != WAIT_SERVER) return;   // lệnh đến muộn hoặc sai làn: bỏ qua
+void applyDecision(Lane& L, bool open, const char* sound, const char* msg, bool manual) {
+  // lệnh đến muộn hoặc sai làn: bỏ qua. Lệnh mở tay từ trang quản lý (manual) được nhận cả khi làn đang rảnh.
+  if (!(L.state == WAIT_SERVER || (manual && open && L.state == IDLE))) return;
   Serial.printf("[%s] Quyet dinh sau %lu ms: %s %s\n", L.name, (unsigned long)(millis() - L.tCard), open ? "MO" : "TU CHOI", msg ? msg : "");
   speak(L, sound);
   if (open) { pixelOk(L); L.target = ANGLE_OPEN; setState(L, OPEN_WAIT_CAR); }
@@ -121,7 +122,7 @@ void onMqtt(char* t, byte* payload, unsigned int len) {
   for (int i = 0; i < 2; i++) {
     if (String(t) == topic(lanes[i], "cmd")) {
       const char* action = doc["action"] | "deny";
-      applyDecision(lanes[i], !strcmp(action, "open"), doc["sound"] | "gap_bao_ve", doc["msg"] | "");
+      applyDecision(lanes[i], !strcmp(action, "open"), doc["sound"] | "gap_bao_ve", doc["msg"] | "", doc["manual"] | false);
     }
   }
 }
@@ -129,9 +130,9 @@ void onMqtt(char* t, byte* payload, unsigned int len) {
 #if OFFLINE_DEMO
 void localDecide(Lane& L) {   // chỉ để thử khi chưa có server
   bool isIn = !strcmp(L.key, "in");
-  if (isIn && demoCount >= DEMO_CAP)      applyDecision(L, false, "bai_day", "(demo) bai day");
-  else if (!isIn && demoCount <= 0)       applyDecision(L, false, "gap_bao_ve", "(demo) khong co xe trong bai");
-  else { demoCount += isIn ? 1 : -1;      applyDecision(L, true, "moi_qua", "(demo)"); }
+  if (isIn && demoCount >= DEMO_CAP)      applyDecision(L, false, "bai_day", "(demo) bai day", false);
+  else if (!isIn && demoCount <= 0)       applyDecision(L, false, "gap_bao_ve", "(demo) khong co xe trong bai", false);
+  else { demoCount += isIn ? 1 : -1;      applyDecision(L, true, "moi_qua", "(demo)", false); }
 }
 #endif
 
@@ -178,7 +179,7 @@ void updateLane(Lane& L) {
     case WAIT_SERVER:
       if (now - L.tState > SERVER_TIMEOUT_MS) {
         Serial.printf("[%s] Server khong tra loi -> giu barie dong\n", L.name);
-        applyDecision(L, false, "loi_ket_noi", "timeout");
+        applyDecision(L, false, "loi_ket_noi", "timeout", false);
       }
       break;
     case OPEN_WAIT_CAR:

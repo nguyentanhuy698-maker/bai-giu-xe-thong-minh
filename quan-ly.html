@@ -330,6 +330,41 @@
     section[data-view="trong-bai"] td.act { grid-column:1/-1; } section[data-view="trong-bai"] td.act .btn { width:100%; padding:10px; font-size:14px; }
     section[data-view="trong-bai"] td.empty { grid-column:1/-1; }
   }
+
+  /* MÁY GIỮ XE */
+  .gate-top { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; }
+  .gstat { background:var(--asphalt); color:#fff; border-radius:12px; padding:10px 14px; display:grid; gap:2px; }
+  .gstat span { font-size:12px; color:#b9c1c9; } .gstat b { font:700 26px/1.1 var(--cond); font-variant-numeric:tabular-nums; }
+  .gstat.clock { background:var(--paint); color:var(--paint-ink); } .gstat.clock span { color:var(--paint-ink); }
+  .gate-src { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0; padding:8px 12px; border-radius:10px; background:#f6f7f8; font-size:13px; }
+  .gate-src > i { width:10px; height:10px; border-radius:50%; background:#9aa3ab; flex:none; }
+  .gate-src.on > i { background:var(--go); box-shadow:0 0 0 4px #e3f4ea; } .gate-src.sim > i { background:var(--s1); } .gate-src.wait > i { background:var(--caution); } .gate-src.bad { background:#fbe7e7; } .gate-src.bad > i { background:var(--stop); }
+  .lanes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .lane { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; display:grid; gap:10px; align-content:start; }
+  .lane header { display:flex; gap:10px; align-items:center; }
+  .lane h2 { margin:0; font:700 22px/1 var(--cond); }
+  .lst { padding:5px 12px; border-radius:999px; font-weight:700; font-size:14px; background:#f1f2f3; color:#4a535c; }
+  .lst.ok { background:#e3f4ea; color:#156b41; } .lst.bad { background:#fbe7e7; color:#a12828; } .lst.wait { background:#fff3d6; color:#8a5a00; }
+  .cams, .snaps { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .cam { margin:0; position:relative; background:#16181b; border-radius:8px; overflow:hidden; }
+  .cam canvas { display:block; width:100%; height:auto; aspect-ratio:16/10; }
+  .cam figcaption { position:absolute; left:6px; top:6px; display:flex; gap:5px; align-items:center; font-size:11px; color:#fff; background:rgba(0,0,0,.55); padding:2px 7px; border-radius:6px; }
+  .cam .rec { width:7px; height:7px; border-radius:50%; background:#e5484d; animation:recblink 1.2s infinite; }
+  @keyframes recblink { 50% { opacity:.25; } }
+  @media (prefers-reduced-motion: reduce) { .cam .rec { animation:none; } }
+  .snaps .cam canvas { aspect-ratio:16/10; }
+  .lane.out .snaps { grid-template-columns:1fr 1fr; }
+  .lane .info { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:start; }
+  .lane dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:13.5px; } .lane dt { color:var(--muted); } .lane dd { margin:0; font-weight:600; }
+  .price { background:var(--asphalt); color:#fff; border-radius:10px; padding:10px 14px; text-align:right; min-width:150px; display:grid; gap:2px; }
+  .price span { font-size:12px; color:#b9c1c9; } .price b { font:700 30px/1.1 var(--cond); color:var(--paint); } .price small { font-size:11px; color:#d4d9de; max-width:180px; }
+  .lane-acts { display:flex; gap:8px; flex-wrap:wrap; } .lane-acts .btn { padding:10px 14px; }
+  body.kiosk nav, body.kiosk .bottombar, body.kiosk .banner, body.kiosk section[data-view="may-giu-xe"] > .head { display:none !important; }
+  body.kiosk .app { grid-template-columns:1fr; } body.kiosk main { padding:10px 12px !important; }
+  @media (max-width: 1100px) { .gate-top { grid-template-columns:repeat(3, minmax(0,1fr)); } .lanes { grid-template-columns:1fr; } }
+  @media (max-width: 640px) { .gate-top { grid-template-columns:1fr 1fr; } .lane .info { grid-template-columns:1fr; } .price { text-align:left; } }
+  @media (max-width: 1100px) { #gateBody .grid.g2 { grid-template-columns:minmax(0,1fr); } }
+  #gateBody .card { min-width:0; }
 </style>
 </head>
 <body class="locked">
@@ -350,6 +385,7 @@
   <nav id="nav" aria-label="Điều hướng">
     <div class="brand"><div class="mark">P</div><div><b>Bãi giữ xe</b><span>Trang quản lý</span></div></div>
     <a class="tab" href="#tong-quan" data-tab="tong-quan"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg>Tổng quan</a>
+    <a class="tab" href="#may-giu-xe" data-tab="may-giu-xe"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="3.5" width="15" height="10" rx="1.5"/><path d="M7 17h6M10 13.5V17"/><path d="M6 9.5l2.5-2.5L11 9l3-3"/></svg>Máy giữ xe</a>
     <a class="tab" href="#trong-bai" data-tab="trong-bai"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="14" r="2.5"/><circle cx="15" cy="14" r="2.5"/><path d="M7.5 14h5M10 7l2 7M6 7h5l3 4"/></svg>Xe trong bãi</a>
     <a class="tab" href="#lich-su" data-tab="lich-su"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg>Lịch sử gửi xe</a>
     <a class="tab" href="#the-thang" data-tab="the-thang"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="15" height="10" rx="2"/><path d="M2.5 9h15"/></svg>Thẻ tháng</a>
@@ -411,6 +447,12 @@
         <div class="card alerts"><h2>Cảnh báo gần đây</h2><p class="sub">Thẻ và biển số không khớp</p><ul id="recentAlerts"></ul></div>
       </div>
       <div class="card admin-only" style="margin-top:14px"><h2>Doanh thu 30 ngày</h2><p class="sub">Theo ngày làm việc, chia theo hình thức thanh toán, trục tính bằng nghìn đồng</p><div class="chart" id="ch-rev30"></div></div>
+    </section>
+
+    <!-- MÁY GIỮ XE -->
+    <section data-view="may-giu-xe" class="hidden">
+      <div class="head"><div><h1>Máy giữ xe</h1><p>Màn hình làm việc ở chốt: camera, ảnh chụp lúc quẹt thẻ, thông tin lượt xe ở hai làn</p></div></div>
+      <div id="gateBody"></div>
     </section>
 
     <!-- XE TRONG BÃI -->
@@ -1285,11 +1327,12 @@
     renderAll(); route();
   }
   function clearRendered() {
-    $$('main tbody, #recentAlerts, #mySum, #opsTodo, #hrBody, #myBody, #hrTabs, #finBody, #finTabs, .chart').forEach((el) => { el.innerHTML = ''; });
+    $$('main tbody, #recentAlerts, #mySum, #opsTodo, #hrBody, #myBody, #hrTabs, #finBody, #finTabs, #gateBody, .chart').forEach((el) => { el.innerHTML = ''; });
     $$('main .stat .v, main .stat .d').forEach((el) => { el.textContent = ''; });
   }
   function logout(msg) {
     if (me) audit('Đăng xuất', msg || '');
+    gateDisconnect(); document.body.classList.remove('kiosk');
     endSession(me && me.user);
     me = null;
     clearRendered();
@@ -1965,6 +2008,7 @@
         }
         const ml = store.get('bgx_manual', []); ml.unshift(rec); store.set('bgx_manual', ml);
         store.set('bgx_cmd', { lane, ts: rec.ts, by: rec.by });   // trang mô phỏng nghe lệnh này
+        gateSend(lane, 'open', { msg: `mo tay: ${rec.reason || ''}` });   // phần cứng thật (nếu đang nối MQTT)
         audit('Mở barie bằng tay', `${lane === 'in' ? 'Làn vào' : 'Làn ra'}, lý do: ${MANUAL_REASON[v.reason]}${v.note ? ', ' + v.note : ''}`, '', rec.plate ? `${rec.plate}${rec.fee ? `, thu ${money(rec.fee)} ${PAY_TXT[rec.pay] || ''}` : ''}` : 'Không gắn lượt gửi');
         rebuildSessions(); renderAll(); toast(`Đã gửi lệnh mở barie ${lane === 'in' ? 'làn vào' : 'làn ra'}`); return null;
       } });
@@ -2004,7 +2048,7 @@
     $('#watchBanner').classList.toggle('hidden', !hits.length);
     if (hits.length) $('#watchBannerText').innerHTML = hits.map(({ s, w }) => `Xe <b>${esc(s.plate)}</b> (${esc(WATCH_REASON[w.reason].toLowerCase())}) đang trong bãi, vào lúc ${fmtDT(s.tIn)}, thẻ ${esc(s.uid)}.`).join(' ');
     $('#simBanner').classList.toggle('hidden', !useSim);
-    if (useSim) $('#simBannerText').textContent = `Số liệu hôm nay lấy từ trang mô phỏng (${simEventCount} sự kiện). Các ngày trước là dữ liệu mẫu.`;
+    if (useSim) { const fromGate = store.get('bgx_events', []).some((e) => e.src === 'gate' && e.ts >= startOfDay(nowT())); $('#simBannerText').textContent = `Số liệu từ 0:00 hôm nay lấy từ ${fromGate ? 'máy giữ xe (phần cứng hoặc thử nhanh)' : 'trang mô phỏng'} (${simEventCount} sự kiện). Các ngày trước là dữ liệu mẫu.`; }
     sendHoldCommands();
   }
 
@@ -4279,6 +4323,241 @@
   const UX_ACTS = { 'dec-more': () => { decAll = !decAll; renderDecisions(); } };
 
   // =====================================================================
+  //  MÁY GIỮ XE: màn hình làm việc ở chốt (theo bố cục phần mềm bãi xe thương mại)
+  //  4 vùng: thống kê, camera, hình chụp lúc quẹt thẻ, thông tin lượt xe.
+  //  Nguồn dữ liệu: phần cứng thật qua MQTT (ESP32 + máy chủ), hoặc trang mô phỏng, hoặc thử nhanh.
+  //  Lượt xe từ phần cứng được ghi như lượt của trang mô phỏng (bgx_events, bgx_parked),
+  //  nên Xe trong bãi, Lịch sử, Thống kê, doanh thu ca đều tính theo xe thật.
+  // =====================================================================
+  const GATE_DEFAULT = { gateUrl: 'wss://broker.hivemq.com:8884/mqtt', gateRoot: 'hcmute-da2-baigiuxe', gateAuto: false };
+  Object.keys(GATE_DEFAULT).forEach((k) => { if (settings[k] == null) settings[k] = GATE_DEFAULT[k]; });
+  const TAB_ID = uid8();
+
+  // ---------- trình khách MQTT 3.1.1 tối giản qua WebSocket (không cần thư viện ngoài) ----------
+  function mqttConnect(url, clientId, on) {
+    const enc = new TextEncoder(), dec = new TextDecoder();
+    const str = (s) => { const b = enc.encode(s); return [b.length >> 8, b.length & 255, ...b]; };
+    const rem = (n) => { const o = []; do { let d = n % 128; n = Math.floor(n / 128); if (n > 0) d |= 128; o.push(d); } while (n > 0); return o; };
+    const pkt = (h, body) => new Uint8Array([h, ...rem(body.length), ...body]);
+    let ws, buf = new Uint8Array(0), pid = 1, ping = null, closed = false;
+    try { ws = new WebSocket(url, ['mqtt']); } catch (e) { setTimeout(() => on.error && on.error(e.message), 0); return { close() {}, publish() {}, subscribe() {} }; }
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = () => ws.send(pkt(0x10, [...str('MQTT'), 4, 0x02, 0, 30, ...str(clientId)]));
+    ws.onerror = () => on.error && on.error('Không mở được WebSocket tới broker');
+    ws.onclose = () => { clearInterval(ping); if (!closed && on.close) on.close(); };
+    ws.onmessage = (ev) => {
+      const add = new Uint8Array(ev.data), nb = new Uint8Array(buf.length + add.length); nb.set(buf); nb.set(add, buf.length); buf = nb;
+      for (;;) {
+        if (buf.length < 2) return;
+        let mul = 1, len = 0, i = 1, b;
+        do { if (i >= buf.length) return; b = buf[i++]; len += (b & 127) * mul; mul *= 128; } while (b & 128);
+        if (buf.length < i + len) return;
+        const h = buf[0], body = buf.slice(i, i + len); buf = buf.slice(i + len);
+        const type = h >> 4;
+        if (type === 2) { if (body[1] === 0) { ping = setInterval(() => { try { ws.send(new Uint8Array([0xC0, 0])); } catch (e) { /* bỏ qua */ } }, 20000); on.connect && on.connect(); } else on.error && on.error(`Broker từ chối kết nối (mã ${body[1]})`); }
+        else if (type === 3) {
+          const qos = (h >> 1) & 3, tl = (body[0] << 8) | body[1], topic = dec.decode(body.slice(2, 2 + tl)); let off = 2 + tl;
+          if (qos > 0) { const id = [body[off], body[off + 1]]; off += 2; if (qos === 1) ws.send(new Uint8Array([0x40, 2, ...id])); }
+          on.message && on.message(topic, dec.decode(body.slice(off)));
+        }
+      }
+    };
+    return {
+      subscribe(t) { if (ws.readyState === 1) { ws.send(pkt(0x82, [pid >> 8, pid & 255, ...str(t), 0])); pid = (pid % 65535) + 1; } },
+      publish(t, payload) { if (ws.readyState === 1) ws.send(pkt(0x30, [...str(t), ...enc.encode(payload)])); },
+      close() { closed = true; clearInterval(ping); try { ws.send(new Uint8Array([0xE0, 0])); ws.close(); } catch (e) { /* bỏ qua */ } },
+      get open() { return ws.readyState === 1; },
+    };
+  }
+
+  // ---------- trạng thái kết nối và hai làn ----------
+  const gate = { client: null, status: 'off', err: '', lastMsg: 0, pillar: null, lane: { in: { state: 'idle' }, out: { state: 'idle' } }, log: [] };
+  const LANE_TXT = { in: 'Làn vào', out: 'Làn ra' };
+  const gateRender = () => { if (me && curView === 'may-giu-xe' && !$$('dialog[open]').length) renderGate(); };
+  function gateConnect() {
+    if (gate.client) gate.client.close();
+    gate.status = 'connecting'; gate.err = ''; gateRender();
+    const root = settings.gateRoot;
+    gate.client = mqttConnect(settings.gateUrl, `web-${me ? me.user : 'x'}-${TAB_ID}`, {
+      connect: () => { gate.status = 'on'; gate.client.subscribe(`${root}/#`); store.set('bgx_gate_owner', { tab: TAB_ID, ts: nowT() }); audit('Máy giữ xe', `Kết nối phần cứng qua MQTT`, '', `${settings.gateUrl}, topic ${root}/#`); gateRender(); },
+      message: (t, p) => gateOnMessage(t, p),
+      error: (m) => { gate.status = 'error'; gate.err = m; gateRender(); },
+      close: () => { if (gate.status === 'on') { gate.status = 'error'; gate.err = 'Mất kết nối broker'; gateRender(); } },
+    });
+  }
+  function gateDisconnect() { if (gate.client) gate.client.close(); gate.client = null; gate.status = 'off'; gateRender(); }
+  // chỉ một thẻ trình duyệt ghi dữ liệu, để không ghi trùng lượt xe
+  const gateOwner = () => { const o = store.get('bgx_gate_owner', null); if (!o || o.tab === TAB_ID || nowT() - o.ts > 15000) { store.set('bgx_gate_owner', { tab: TAB_ID, ts: nowT() }); return true; } return false; };
+
+  function gateOnMessage(topic, payload) {
+    const root = settings.gateRoot; if (!topic.startsWith(root + '/')) return;
+    gate.lastMsg = nowT();
+    let d = {}; try { d = JSON.parse(payload); } catch (e) { return; }
+    const parts = topic.slice(root.length + 1).split('/');
+    if (parts[0] === 'pillar' && parts[1] === 'status') { gate.pillar = { ...d, ts: nowT() }; gateRender(); return; }
+    if (parts[0] !== 'lane' || !LANE_TXT[parts[1]]) return;
+    const lane = parts[1], L = gate.lane[lane], leaf = parts[2];
+    if (leaf === 'card') { gate.lane[lane] = { state: 'wait', uid: d.uid, ts: nowT() }; gateLog(lane, `Quẹt thẻ ${d.uid}, chờ máy chủ nhận dạng`); }
+    else if (leaf === 'ir') { gateLog(lane, d.passed ? 'Cảm biến IR: xe đã qua barie' : 'Barie mở nhưng không có xe qua, đã tự hạ'); if (d.passed) L.passed = true; }
+    else if (leaf === 'cmd') {
+      if (d.manual) { gateLog(lane, `Lệnh mở tay từ ${d.by || 'trang quản lý'}`); return; }
+      const ok = d.action === 'open', code = d.code || (ok ? lane : 'deny');
+      gate.lane[lane] = { state: ok ? 'open' : 'deny', uid: d.uid || L.uid, ts: nowT(), plate: d.plate || '', plateIn: d.plate_in || '', monthly: !!d.monthly, tIn: d.t_in || null, fee: d.fee, code, msg: d.msg || '' };
+      gateLog(lane, `${ok ? 'MỞ' : 'TỪ CHỐI'}: ${d.msg || code}`);
+      if (gateOwner()) gateRecord(lane, gate.lane[lane]);
+    }
+    gateRender();
+  }
+  function gateLog(lane, txt) { gate.log.unshift({ ts: nowT(), lane, txt }); gate.log.length = Math.min(gate.log.length, 30); }
+  // ghi lượt xe theo đúng định dạng của trang mô phỏng
+  function gateRecord(lane, x) {
+    const ev = store.get('bgx_events', []), parked = store.get('bgx_parked', null) || [], ts = nowT();
+    const monthly = x.monthly || cards.some((c) => c.uid === x.uid && cardValidAt(c, ts));
+    if (x.code === 'in') { ev.push({ type: 'in', uid: x.uid, plate: x.plate, monthly, ts, src: 'gate' }); if (!parked.some((p) => p.uid === x.uid)) parked.push({ uid: x.uid, plate: x.plate, monthly, tIn: x.tIn || ts }); }
+    else if (x.code === 'out') {
+      const p = parked.find((q) => q.uid === x.uid), tIn = x.tIn || (p && p.tIn) || ts, fee = x.fee != null ? x.fee : feeFor(tIn, ts, monthly);
+      ev.push({ type: 'out', uid: x.uid, plate: x.plate || (p && p.plate), monthly, tIn, ts, fee, pay: monthly ? 'monthly' : 'cash', src: 'gate' });
+      const i = parked.findIndex((q) => q.uid === x.uid); if (i >= 0) parked.splice(i, 1);
+    } else if (x.code === 'mismatch') { ev.push({ type: 'alert', uid: x.uid, plateCard: x.plateIn, plateRead: x.plate, result: 'hold', ts, src: 'gate' }); x.key = `${x.uid}|${ts}`; }
+    else if (x.code === 'full') ev.push({ type: 'deny_full', ts, src: 'gate' });
+    else if (x.code === 'ocr_fail') ev.push({ type: 'ocr_fail', uid: x.uid, ts, src: 'gate' });
+    else ev.push({ type: 'deny', lane, uid: x.uid, code: x.code, msg: x.msg, ts, src: 'gate' });
+    while (ev.length > 3000) ev.shift();
+    store.set('bgx_events', ev); store.set('bgx_parked', parked);
+    rebuildSessions();
+  }
+  // lệnh từ trang (mở tay, giữ xe) gửi xuống ESP32
+  function gateSend(lane, action, extra = {}) {
+    if (!gate.client || gate.status !== 'on') return false;
+    gate.client.publish(`${settings.gateRoot}/lane/${lane}/cmd`, JSON.stringify({ action, manual: action === 'open', sound: action === 'open' ? 'moi_qua' : 'gap_bao_ve', msg: extra.msg || (action === 'open' ? 'mo tay tu trang quan ly' : 'giu xe'), by: me ? me.name : '' }));
+    gateLog(lane, `Gửi lệnh ${action === 'open' ? 'mở barie' : 'giữ xe'} xuống ESP32`); return true;
+  }
+
+  // ---------- lượt gần nhất của mỗi làn (từ phần cứng, mô phỏng, hoặc thử nhanh) ----------
+  const LANE_OF = { in: 'in', deny_full: 'in', ocr_fail: 'in', out: 'out', alert: 'out' };
+  function lastOfLane(lane) {
+    const live = gate.lane[lane]; if (live && live.state !== 'idle' && nowT() - live.ts < 20000) return { live: true, ...live };
+    const ev = store.get('bgx_events', []).filter((e) => (LANE_OF[e.type] || e.lane) === lane && e.ts >= startOfDay(nowT()));
+    const e = ev[ev.length - 1]; if (!e) return null;
+    if (e.type === 'in') return { state: 'open', code: 'in', uid: e.uid, plate: e.plate, monthly: e.monthly, ts: e.ts, tIn: e.ts };
+    if (e.type === 'out') return { state: 'open', code: 'out', uid: e.uid, plate: e.plate, plateIn: e.plate, monthly: e.monthly, ts: e.ts, tIn: e.tIn, fee: e.fee, pay: e.pay };
+    if (e.type === 'alert') return { state: 'deny', code: 'mismatch', uid: e.uid, plate: e.plateRead, plateIn: e.plateCard, ts: e.ts, key: `${e.uid}|${e.ts}` };
+    if (e.type === 'deny_full') return { state: 'deny', code: 'full', ts: e.ts };
+    if (e.type === 'ocr_fail') return { state: 'deny', code: 'ocr_fail', uid: e.uid, plate: e.plate, ts: e.ts };
+    return { state: 'deny', code: e.code || 'deny', uid: e.uid, ts: e.ts, msg: e.msg };
+  }
+  const CODE_TXT = { in: 'Mời xe vào', out: 'Mời xe ra', full: 'Bãi đầy, từ chối', ocr_fail: 'Không đọc được biển số', mismatch: 'Biển số không khớp thẻ, giữ xe', dup: 'Thẻ đang có xe trong bãi', no_entry: 'Thẻ không có lượt vào', deny: 'Từ chối' };
+
+  // ---------- giao diện ----------
+  function gateSource() {
+    if (gate.status === 'on') return ['on', `Phần cứng: đã nối broker${gate.lastMsg ? `, tin gần nhất ${Math.round((nowT() - gate.lastMsg) / 1000)} giây trước` : ', chưa nhận tin nào'}`];
+    if (gate.status === 'connecting') return ['wait', 'Đang kết nối broker…'];
+    if (gate.status === 'error') return ['bad', `Lỗi kết nối: ${gate.err}`];
+    if (simAlive()) return ['sim', 'Trang mô phỏng đang chạy'];
+    return ['off', 'Chưa nối phần cứng. Bấm "Kết nối phần cứng", mở trang mô phỏng, hoặc dùng nút thử nhanh'];
+  }
+  function camHTML(id, label, live) { return `<figure class="cam"><canvas id="${id}" width="320" height="200"></canvas><figcaption>${live ? '<i class="rec"></i>' : ''}${esc(label)}</figcaption></figure>`; }
+  function lanePanel(lane) {
+    const x = lastOfLane(lane), t = nowT();
+    const st = !x ? ['idle', 'Sẵn sàng'] : x.state === 'wait' ? ['wait', 'Đang nhận dạng…'] : x.state === 'open' ? ['ok', CODE_TXT[x.code] || 'Mời qua'] : ['bad', CODE_TXT[x.code] || 'Từ chối'];
+    const fee = x && x.code === 'out' ? (x.monthly ? 'Thẻ tháng' : money(x.fee || 0)) : x && x.code === 'in' ? (x.monthly ? 'Thẻ tháng' : 'Vãng lai') : '–';
+    const match = x && x.plateIn && x.plate ? normPlate(x.plateIn) === normPlate(x.plate) : null;
+    const rows = [['Mã thẻ', x && x.uid ? esc(x.uid) : '–'], ['Loại vé', x && x.uid ? (x.monthly ? '<span class="pill m">Thẻ tháng</span>' : '<span class="pill g">Vãng lai</span>') : '–'],
+      [lane === 'out' ? 'Biển số lúc ra' : 'Biển số đọc được', x && x.plate ? plateHTML(x.plate) : x && x.code === 'ocr_fail' ? '<b style="color:var(--stop)">Không đọc được</b>' : '–'],
+      ...(lane === 'out' ? [['Biển số lúc vào', x && x.plateIn ? `${plateHTML(x.plateIn)} ${match === false ? '<span class="pill bad">Không khớp</span>' : match ? '<span class="pill ok">Khớp</span>' : ''}` : '–']] : []),
+      ['Giờ vào', x && x.tIn ? fmtDT(x.tIn) : '–'], ...(lane === 'out' ? [['Giờ ra', x && x.code === 'out' ? fmtDT(x.ts) : '–'], ['Thời gian gửi', x && x.code === 'out' && x.tIn ? dur(x.ts - x.tIn) : '–']] : [])];
+    return `<section class="lane ${lane}"><header><h2>${LANE_TXT[lane]}</h2><span class="lst ${st[0]}">${esc(st[1])}</span><span class="grow"></span><span class="muted" style="font-size:12px">${x ? `${x.live ? 'Phần cứng' : ''} ${fmtTime(x.ts)}` : ''}</span></header>
+      <div class="cams">${camHTML(`cam-${lane}-p`, `Camera biển số ${LANE_TXT[lane].toLowerCase()}`, true)}${camHTML(`cam-${lane}-f`, 'Camera người lái', true)}</div>
+      <div class="snaps">${lane === 'in' ? camHTML('snap-in-p', 'Ảnh biển số lúc quẹt thẻ') + camHTML('snap-in-f', 'Ảnh người lái lúc quẹt thẻ') : camHTML('snap-out-pi', 'Biển số lúc vào') + camHTML('snap-out-po', 'Biển số lúc ra') + camHTML('snap-out-fi', 'Người lái lúc vào') + camHTML('snap-out-fo', 'Người lái lúc ra')}</div>
+      <div class="info"><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><div class="price"><span>${lane === 'out' ? 'Giá vé' : 'Loại'}</span><b>${fee}</b>${x && x.msg ? `<small>${esc(x.msg)}</small>` : ''}</div></div>
+      <div class="lane-acts"><button class="btn primary" data-act="manual" data-lane="${lane}">Mở barie ${lane === 'in' ? 'vào (F1)' : 'ra (F2)'}</button>${lane === 'out' && x && x.code === 'mismatch' && x.key ? `<button class="btn danger" data-act="alert-do" data-key="${esc(x.key)}">Xử lý cảnh báo</button>` : ''}
+        ${gate.status !== 'on' && !simAlive() ? `<button class="btn" data-act="gate-try" data-lane="${lane}">Thử nhanh: một xe ${lane === 'in' ? 'vào' : 'ra'}</button>` : ''}</div></section>`;
+  }
+  function renderGate() {
+    if (!needLogin()) return;
+    const t = nowT(), b0 = bizToday(), f = flowOfDay(b0), n = parkedNow().length, open = getOpen(), [sc, stxt] = gateSource();
+    const rev = isAdmin() ? moneyBetween(b0, b0 + DAY).total : open && open.user === me.user ? shiftTotals(open.openedAt, t + 1).total : 0;
+    const p = gate.pillar, pAge = p ? Math.round((t - p.ts) / 1000) : null;
+    $('#gateBody').innerHTML = `<div class="gate-top">
+        <div class="gstat"><span>${isAdmin() ? 'Doanh thu hôm nay' : 'Doanh thu ca của bạn'}</span><b>${money(rev)}</b></div>
+        <div class="gstat"><span>Lượt vào / ra</span><b>${f.in} / ${f.out}</b></div>
+        <div class="gstat"><span>Xe trong bãi</span><b>${n}/${settings.cap}</b></div>
+        <div class="gstat"><span>Người trực</span><b style="font-size:17px">${open ? esc(open.name) : '<span style="color:var(--stop)">Chưa nhận ca</span>'}</b></div>
+        <div class="gstat clock"><span id="gateDate">${esc(dayName(t))} ${fmtDateY(t)}</span><b id="gateClock">${fmtTime(t)}</b></div></div>
+      <div class="gate-src ${sc}"><i></i><span class="grow">${esc(stxt)}${p ? `. Chốt ESP32: Wi-Fi ${esc(p.rssi)} dBm, chạy ${esc(p.uptime)} giây, làn vào ${esc(p.in)}, làn ra ${esc(p.out)}${pAge > 15 ? ` <b style="color:var(--stop)">(mất tín hiệu ${pAge} giây)</b>` : ''}` : ''}</span>
+        ${gate.status === 'on' || gate.status === 'connecting' ? '<button class="btn small" data-act="gate-off">Ngắt kết nối</button>' : '<button class="btn small primary" data-act="gate-on">Kết nối phần cứng</button>'}${isAdmin() ? '<button class="btn small" data-act="gate-cfg">Cài đặt kết nối</button>' : ''}<button class="btn small" data-act="gate-kiosk">${document.body.classList.contains('kiosk') ? 'Thoát toàn màn hình' : 'Toàn màn hình'}</button></div>
+      <div class="lanes">${lanePanel('in')}${lanePanel('out')}</div>
+      <div class="grid g2" style="margin-top:12px;align-items:start"><div class="card"><h2>Lượt xe gần đây</h2><div class="tablewrap" style="margin-top:6px"><table><thead><tr><th>Giờ</th><th>Làn</th><th>Biển số</th><th>Thẻ</th><th class="num">Phí</th><th>Kết quả</th></tr></thead><tbody>${gateRecent()}</tbody></table></div></div>
+        <div class="card"><h2>Nhật ký phần cứng</h2><p class="sub">Tin nhận từ ESP32 và máy chủ trong phiên này</p><ul class="todo">${gate.log.slice(0, 10).map((l) => `<li><span class="muted" style="width:62px">${fmtTime(l.ts)}</span><span class="grow"><b>${LANE_TXT[l.lane]}</b>: ${esc(l.txt)}</span></li>`).join('') || '<li class="muted">Chưa có tin nào. Khi nối phần cứng, mỗi lần quẹt thẻ sẽ hiện ở đây.</li>'}</ul></div></div>
+      <p class="muted" style="font-size:12px">Ảnh camera và ảnh chụp là ảnh minh họa vẽ từ dữ liệu lượt xe; khi máy chủ gửi kèm đường dẫn ảnh từ ESP32-CAM, ảnh thật sẽ hiện ở các ô này. Phím tắt: F1 mở barie làn vào, F2 mở barie làn ra.</p>`;
+    gateDrawAll();
+  }
+  function gateRecent() {
+    const ev = store.get('bgx_events', []).filter((e) => e.ts >= startOfDay(nowT()) && ['in', 'out', 'alert', 'deny_full', 'ocr_fail', 'deny'].includes(e.type)).slice(-10).reverse();
+    if (ev.length) return ev.map((e) => `<tr><td>${fmtTime(e.ts)}</td><td>${LANE_TXT[LANE_OF[e.type] || e.lane] || ''}</td><td>${e.plate || e.plateRead ? plateHTML(e.plate || e.plateRead) : '–'}</td><td>${esc(e.uid || '')}</td><td class="num">${e.type === 'out' ? (e.monthly ? 'Thẻ tháng' : money(e.fee)) : ''}</td><td>${e.type === 'in' || e.type === 'out' ? '<span class="pill ok">Mời qua</span>' : `<span class="pill bad">${esc(CODE_TXT[{ alert: 'mismatch', deny_full: 'full', ocr_fail: 'ocr_fail' }[e.type] || e.code] || 'Từ chối')}</span>`}</td></tr>`).join('');
+    const ss = realSessions().slice(0, 10);
+    return ss.map((s) => `<tr><td>${fmtTime(s.tOut || s.tIn)}</td><td>${s.tOut ? 'Làn ra' : 'Làn vào'}</td><td>${plateHTML(s.plate)}</td><td>${esc(s.uid)}</td><td class="num">${s.tOut ? (s.monthly ? 'Thẻ tháng' : money(s.fee)) : ''}</td><td>${s.alert ? '<span class="pill bad">Cảnh báo</span>' : '<span class="pill ok">Mời qua</span>'}</td></tr>`).join('');
+  }
+  // ảnh camera minh họa: làn trống thì vẽ mặt đường, có lượt xe thì vẽ xe của lượt đó
+  function gateDrawAll() {
+    const draw = (id, x, kind, plate, ts) => {
+      const cv = $('#' + id); if (!cv) return; const g = cv.getContext('2d');
+      if (!x) { g.fillStyle = '#23272d'; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = '#34383d'; g.fillRect(0, cv.height * 0.7, cv.width, cv.height); g.strokeStyle = '#c9a227'; g.setLineDash([14, 10]); g.beginPath(); g.moveTo(0, cv.height * 0.85); g.lineTo(cv.width, cv.height * 0.85); g.stroke(); g.setLineDash([]); g.fillStyle = '#9aa3ab'; g.font = '600 13px Arial'; g.fillText('Làn trống', 10, 22); return; }
+      drawEntryPhoto(cv, { uid: x.uid || 'XX', plate: plate || x.plate || '' , tIn: ts }, kind, { plate: plate || x.plate || '—', ts });
+    };
+    ['in', 'out'].forEach((lane) => {
+      const x = lastOfLane(lane), recent = x && nowT() - x.ts < 60000 && x.uid;
+      draw(`cam-${lane}-p`, recent ? x : null, 'plate', x && x.plate, nowT()); draw(`cam-${lane}-f`, recent ? x : null, 'face', '', nowT());
+      if (lane === 'in') { draw('snap-in-p', x && x.uid ? x : null, 'plate', x && x.plate, x && x.ts); draw('snap-in-f', x && x.uid ? x : null, 'face', '', x && x.ts); }
+      else { draw('snap-out-pi', x && x.uid ? x : null, 'plate', x && x.plateIn, x && x.tIn); draw('snap-out-po', x && x.uid ? x : null, 'plate', x && x.plate, x && x.ts); draw('snap-out-fi', x && x.uid ? x : null, 'face', '', x && x.tIn); draw('snap-out-fo', x && x.uid ? { ...x, uid: x.code === 'mismatch' ? x.uid + 'x' : x.uid } : null, 'face', '', x && x.ts); }
+    });
+  }
+  // thử nhanh khi chưa có phần cứng và trang mô phỏng: tạo một lượt vào hoặc ra theo cùng đường ghi dữ liệu
+  function gateTry(lane) {
+    if (!needLogin()) return;
+    const parked = store.get('bgx_parked', null) || [];
+    if (lane === 'in') {
+      if (parkedNow().length >= settings.cap) { gate.lane.in = { state: 'deny', code: 'full', ts: nowT() }; gateRecord('in', gate.lane.in); renderGate(); return; }
+      const c = Math.random() < 0.3 ? cards.find((k) => cardValidAt(k, nowT()) && !parked.some((p) => p.uid === k.uid)) : null;
+      const x = { state: 'open', code: 'in', uid: c ? c.uid : mkUid(), plate: c ? c.plate : mkPlate(), monthly: !!c, tIn: nowT(), ts: nowT() };
+      gate.lane.in = x; gateRecord('in', x); gateLog('in', `Thử nhanh: ${x.plate} vào`);
+    } else {
+      const p = parked[0]; if (!p) { toast('Chưa có xe nào vào qua máy giữ xe. Bấm "Thử nhanh: một xe vào" trước.'); return; }
+      const fee = feeFor(p.tIn, nowT(), p.monthly), x = { state: 'open', code: 'out', uid: p.uid, plate: p.plate, plateIn: p.plate, monthly: p.monthly, tIn: p.tIn, fee, ts: nowT() };
+      gate.lane.out = x; gateRecord('out', x); gateLog('out', `Thử nhanh: ${x.plate} ra, ${p.monthly ? 'thẻ tháng' : money(fee)}`);
+    }
+    renderGate();
+  }
+  function gateCfg() {
+    if (!needAdmin()) return;
+    openForm({ title: 'Cài đặt kết nối phần cứng', okText: 'Lưu', wide: true, fields: [
+      { name: 'url', label: 'Địa chỉ broker MQTT qua WebSocket', value: settings.gateUrl, full: true, required: true, hint: 'HiveMQ công cộng: wss://broker.hivemq.com:8884/mqtt. Mosquitto trên máy bãi: ws://IP-máy:9001 (chỉ dùng khi mở trang bằng http trên mạng nội bộ)' },
+      { name: 'root', label: 'Topic gốc', value: settings.gateRoot, required: true, hint: 'Phải trùng TOPIC_ROOT trong sketch.ino và server_mock.py' },
+      { name: 'auto', label: 'Tự kết nối khi mở mục Máy giữ xe', type: 'checkbox', value: settings.gateAuto },
+      { type: 'html', full: true, html: '<p class="note warn" style="margin:0">Broker công cộng: ai biết topic cũng gửi được lệnh mở barie. Chỉ dùng để trình diễn; khi dùng thật hãy chạy Mosquitto có mật khẩu và TLS.</p>' }],
+      onSubmit: (v) => {
+        if (!needAdmin()) return null;
+        if (!/^wss?:\/\/[^\s]+$/.test(v.url)) return 'Địa chỉ phải bắt đầu bằng ws:// hoặc wss://';
+        if (!/^[A-Za-z0-9_\-./]+$/.test(v.root) || /[#+]/.test(v.root)) return 'Topic gốc chỉ gồm chữ, số, gạch ngang, gạch dưới, dấu chấm, dấu /';
+        const before = `${settings.gateUrl}, ${settings.gateRoot}`; settings.gateUrl = v.url; settings.gateRoot = v.root.replace(/\/+$/, ''); settings.gateAuto = !!v.auto; saveSettings();
+        audit('Máy giữ xe', 'Đổi cài đặt kết nối phần cứng', before, `${settings.gateUrl}, ${settings.gateRoot}`);
+        if (gate.status === 'on') gateConnect(); renderGate(); return null;
+      } });
+  }
+  function renderGateView() { if (settings.gateAuto && gate.status === 'off') gateConnect(); renderGate(); }
+  // đồng hồ và ảnh camera chạy liên tục khi đang mở mục này
+  setInterval(() => { if (me && curView === 'may-giu-xe' && !$$('dialog[open]').length) { const c = $('#gateClock'); if (c) c.textContent = `${fmtTime(nowT())}:${pad(new Date().getSeconds())}`; } }, 1000);
+  setInterval(() => { if (me && curView === 'may-giu-xe' && !$$('dialog[open]').length) renderGate(); }, 5000);
+  document.addEventListener('keydown', (e) => {
+    if (!me || curView !== 'may-giu-xe' || $$('dialog[open]').length) return;
+    if (e.key === 'F1' || e.key === 'F2') { e.preventDefault(); openManual(e.key === 'F1' ? 'in' : 'out'); }
+  });
+  const GATE_ACTS = {
+    'gate-on': () => gateConnect(), 'gate-off': () => gateDisconnect(), 'gate-cfg': () => gateCfg(), 'gate-try': (el) => gateTry(el.dataset.lane),
+    'gate-kiosk': () => { document.body.classList.toggle('kiosk'); renderGate(); },
+  };
+
+  // =====================================================================
   //  ĐIỀU HƯỚNG, PHÂN QUYỀN THEO TRANG, LÀM MỚI, KHỞI ĐỘNG
   // =====================================================================
   const ADMIN_VIEWS = ['thong-ke', 'nhan-dang', 'nhan-vien', 'tai-chinh', 'nhat-ky', 'cai-dat'], STAFF_VIEWS = ['cua-toi'];
@@ -4289,7 +4568,7 @@
     schedTick();
     renderBanners();
     ({ 'tong-quan': renderOverview, 'trong-bai': renderParked, 'lich-su': renderHist, 'the-thang': renderCards, 'canh-bao': renderAlerts, 'thiet-bi': renderDevices,
-      'thong-ke': renderStats, 'nhan-dang': renderOcr, 'nhan-vien': renderHR, 'tai-chinh': renderFinance, 'nhat-ky': renderAudit, 'cai-dat': () => { fillSettings(); schedFillSettings(); },
+      'thong-ke': renderStats, 'nhan-dang': renderOcr, 'nhan-vien': renderHR, 'tai-chinh': renderFinance, 'nhat-ky': renderAudit, 'cai-dat': () => { fillSettings(); schedFillSettings(); }, 'may-giu-xe': renderGateView,
       'cua-toi': () => { if (typeof renderMy === 'function') renderMy(); } }[v] || renderOverview)();
   }
   function renderAll() { if (!me) return; if (!sessionValid()) { logout('Phiên đăng nhập đã hết, vui lòng đăng nhập lại'); return; } renderView(curView); }
@@ -4319,6 +4598,7 @@
     ...FIN_ACTS,
     ...SCHED_ACTS,
     ...UX_ACTS,
+    ...GATE_ACTS,
     drawer: () => document.body.classList.toggle('drawer'),
     'clear-sim': async () => { if (!needAdmin()) return; const r = await askConfirm({ title: 'Xóa dữ liệu mô phỏng', text: 'Xóa các sự kiện trang mô phỏng đã ghi hôm nay? Dữ liệu mẫu và dữ liệu nhập tay vẫn giữ.', okText: 'Xóa', danger: true }); if (!r.ok) return; try { localStorage.removeItem('bgx_events'); localStorage.removeItem('bgx_parked'); } catch (e) { /* bỏ qua */ } audit('Mô phỏng', 'Xóa dữ liệu mô phỏng', `${simEventCount} sự kiện`, 'Đã xóa'); rebuildSessions(); renderAll(); },
     manual: (el) => openManual(el.dataset.lane),
