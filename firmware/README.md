@@ -19,7 +19,7 @@
 | IR xe tới làn vào / ra | OUT | GPIO34 / 36 | 3,3 V | LOW = có xe |
 | IR an toàn làn vào / ra | OUT | GPIO35 / 39 | 3,3 V | LOW = có vật dưới cần |
 | DFPlayer Mini | TX → / RX ← | GPIO16 / GPIO17 (qua 1 kΩ) | 5 V | Loa 3 W ở SPK1, SPK2 |
-| Còi 5 V | qua transistor NPN | GPIO14 | 5 V | Có diode nếu dùng còi có cuộn dây |
+| Module còi chủ động (3 chân) | I/O | GPIO14 | **3,3 V** | Module có sẵn transistor, kêu khi I/O = LOW (`BUZZER_ACTIVE_LOW 1`). Cấp 3,3 V chứ không cấp 5 V: ở 5 V, mức HIGH 3,3 V của ESP32 không tắt được còi |
 | 2 LED WS2812 | DIN | GPIO13 | 5 V | Làn vào là LED thứ nhất |
 
 **Tất cả GND nối chung.** GPIO34–39 chỉ đọc vào và không có điện trở kéo lên trong; module IR loại FC-51 đã có sẵn trên board nên nối thẳng được.
@@ -48,7 +48,7 @@ DFPlayer: OK
 | `i` | In trạng thái: RC522, IR xe tới, IR an toàn, góc servo, Wi-Fi, MQTT |
 | `mv` / `mr` | Mở barie làn vào / ra (servo + IR an toàn: che IR rồi bỏ ra, cần phải hạ sau 0,8 s) |
 | `s1` … `s5` | Phát thử 5 câu loa |
-| `b` | Còi kêu 3 tiếng |
+| `b` | Còi kêu 3 tiếng (nếu kêu liên tục từ lúc bật nguồn, đổi `BUZZER_ACTIVE_LOW` thành 0) |
 | `v` / `r` | Giả quẹt thẻ ở làn vào / ra (không cần thẻ thật) |
 
 Quẹt thẻ thật lên RC522: Serial in `Quet the 6D:41:3E:C8` và LED chuyển xanh dương.

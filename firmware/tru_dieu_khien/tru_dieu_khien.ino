@@ -8,7 +8,7 @@
     - 2 IR phát hiện xe tới              (GPIO34 / 36)
     - 2 IR an toàn dưới cần barie        (GPIO35 / 39)
     - DFPlayer Mini + loa 3 W            (UART2: GPIO16 = RX2 nối TX DFPlayer, GPIO17 = TX2 qua 1 kΩ nối RX DFPlayer)
-    - Còi 5 V qua transistor NPN         (GPIO14)
+    - Module còi chủ động 3 chân VCC/I-O/GND (GPIO14, cấp 3,3 V)
     - 2 LED WS2812 trạng thái            (GPIO13)
 
   Firmware KHÔNG tự quyết định mở barie: gửi UID lên server qua MQTT rồi chờ lệnh.
@@ -33,6 +33,7 @@
 // ===================== CẤU HÌNH (sửa cho đúng mạng của nhóm) =====================
 #define OFFLINE_DEMO 0                 // 1 = ESP32 tự quyết định tại chỗ, không cần server (để thử mạch)
 #define REQUIRE_CAR_FOR_CARD 0         // 1 = chỉ nhận thẻ khi IR "xe tới" đang thấy xe
+#define BUZZER_ACTIVE_LOW 1            // module còi 3 chân (transistor PNP sẵn trên bo) kêu khi I/O = LOW; còi tự nối qua NPN thì đặt 0
 const char* WIFI_SSID = "TEN_WIFI";
 const char* WIFI_PASS = "MAT_KHAU_WIFI";
 const char* MQTT_HOST = "192.168.1.10";       // IP laptop chạy Mosquitto (xem bằng ipconfig)
@@ -125,14 +126,16 @@ void setState(Lane& L, LaneState s) {
 
 String topic(Lane& L, const char* leaf) { return String(TOPIC_ROOT) + "/lane/" + L.key + "/" + leaf; }
 
+void buzzerWrite(bool on) { digitalWrite(PIN_BUZZER, (on != (bool)BUZZER_ACTIVE_LOW) ? HIGH : LOW); }
+
 void beep(int times) { beepLeft = times * 2; beepOn = false; tBeep = 0; }
 
 void updateBuzzer() {
   if (beepLeft <= 0) return;
   if (millis() - tBeep < 150) return;
   tBeep = millis(); beepOn = !beepOn; beepLeft--;
-  digitalWrite(PIN_BUZZER, beepOn ? HIGH : LOW);
-  if (beepLeft == 0) digitalWrite(PIN_BUZZER, LOW);
+  buzzerWrite(beepOn);
+  if (beepLeft == 0) buzzerWrite(false);
 }
 
 void speak(Lane& L, const char* sound) {
@@ -380,7 +383,7 @@ void initLane(Lane& L, const char* key, const char* name, MFRC522* rfid, int pin
 void setup() {
   Serial.begin(115200);
   Serial.setTimeout(20);
-  pinMode(PIN_BUZZER, OUTPUT); digitalWrite(PIN_BUZZER, LOW);
+  pinMode(PIN_BUZZER, OUTPUT); buzzerWrite(false);
   pixels.begin();
   SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI);
   ESP32PWM::allocateTimer(0);
