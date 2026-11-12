@@ -68,7 +68,7 @@ def bv01():
     B(*q(495, 365), tx + 112, ty - 96, '7')
     B(*q(330, 43), tx + 85, ty + 4, '9')
     # hình minh hoạ
-    img(sh, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img_persp.png'), 172, 100, 98, 72)
+    img(sh, '/home/claude/draw/img_persp.png', 172, 100, 98, 72)
     sh.rect(172, 100, 98, 72, sw=W_THIN)
     sh.text(221, 177, 'Hình minh hoạ (không theo tỉ lệ)', size=2.6, anchor='middle', italic=True)
     # bảng kê
@@ -455,13 +455,13 @@ def bv05():
             ['P3, P4', 'Vách bên', '94 × 92', '2', 'Mica xám 3'], ['K1', 'Kính trước, sau', '82 × 94', '2', 'Mica trong 2'],
             ['K2', 'Kính bên', '28 × 94', '4', 'Mica trong 2'], ['Q', 'Quầy', '16 × 44', '2', 'Mica xám 3'],
             ['Đ', 'Đế chốt', '98 × 108', '1', 'Formex 6 (2 × 3)'], ['M', 'Mái', '106 × 116', '1', 'Mica xám 3 + Formex 3'],
-            ['B', 'Viền biển tên', '108 × 16 / 112 × 16', '2 + 2', 'Mica xám 3, decal vàng'],
+            ['B', 'Viền biển tên', '118 × 16 / 102 × 16', '2 + 2', 'Mica xám 3, decal vàng'],
             ['T', 'Trụ góc', '4 × 4 × 98', '4', 'Nhôm hộp vuông 4 × 4']]
     sh.text(26, 254, 'BẢNG CẮT VẬT LIỆU – CHỐT', size=3.0, weight='bold')
     sh.table(26, 256, cols, rows[:5], rh=4.6, size=2.3)
     sh.table(140, 256, cols, rows[5:], rh=4.6, size=2.3, head=True)
     sh.text(26, 289, 'Bản vẽ in khổ A3, tỉ lệ 100 % để dùng làm dưỡng cắt cho các tấm vẽ 1:1. Kiểm tra bằng cạnh P1 = 90 mm trước khi cắt.', size=2.2)
-    notes(sh, 335, 150, 'GHI CHÚ', ['Viền biển tên B: 2 tấm 108 × 16 và 2 tấm 112 × 16 dán thành khung quanh mái.',
+    notes(sh, 335, 150, 'GHI CHÚ', ['Viền biển tên B: 2 tấm 118 × 16 (cạnh dài) và 2 tấm 102 × 16 (cạnh ngắn) dán thành khung 108 × 118 quanh mái.',
                                     'Trụ góc T dài 98 (từ quầy tới mái), kính kẹp trong rãnh keo.'], size=2.3, width=75)
     return sh
 
