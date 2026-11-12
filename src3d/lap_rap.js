@@ -339,10 +339,10 @@ function cabinet(cx, cz, dir, word, facing) {
   sign.position.set(0, 80, facing * 30.2); if (facing < 0) sign.rotation.y = Math.PI; g.add(sign);
   // servo: tai bắt vít áp mặt trong vách phía làn, đầu trục thò qua lỗ khoét 41 × 20
   const sv = mg996r(g); part('mg996r', sv.g);
-  sv.g.position.set(dir * 33, 70, -8 * dir); if (dir < 0) sv.g.rotation.y = Math.PI;
-  cyl(9, 9, 4, M.silver, dir * 31.5, 70, -8 * dir, g).rotation.z = Math.PI / 2;     // nắp che trục
+  sv.g.position.set(dir * 33, 70, -10.3 * dir); if (dir < 0) sv.g.rotation.y = Math.PI;
+  cyl(9, 9, 4, M.silver, dir * 31.5, 70, -10.3 * dir, g).rotation.z = Math.PI / 2;     // nắp che trục
   // cần barie gắn vào cánh tay servo
-  const pivot = new THREE.Group(); pivot.position.set(cx + dir * 38, ISL + 70, cz - 8 * dir); above.add(pivot);
+  const pivot = new THREE.Group(); pivot.position.set(cx + dir * 38, ISL + 70, cz - 10.3 * dir); above.add(pivot);
   box(150, 8, 4, armMat, dir * 75, 0, 0, pivot);
   box(8, 10, 6, M.rubberRed, dir * 152, 0, 0, pivot);
   arms.push({ pivot, dir, t: 0 });
@@ -350,7 +350,7 @@ function cabinet(cx, cz, dir, word, facing) {
   const ir = part('fc51', fc51(g)); ir.position.set(dir * 27, 12, 0); if (dir < 0) ir.rotation.y = Math.PI;
   // cột đỡ đầu cần
   const px = cx + dir * 186;
-  cyl(2.5, 2.5, 62, M.silver, px, 8 + 31, cz, above); box(4, 10, 10, M.rubber, px, 8 + 64, cz, above);
+  cyl(2.5, 2.5, 62, M.silver, px, 8 + 31, cz - 10.3 * dir, above); box(4, 10, 10, M.rubber, px, 8 + 64, cz - 10.3 * dir, above);
   return g;
 }
 cabinet(19, -130, 1, 'VÀO', 1);
