@@ -3,36 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quản lý bãi giữ xe máy thông minh</title>
+<title>Moto-Chan · Quản lý bãi giữ xe</title>
+<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0B3C49">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --asphalt:#2b2f35; --asphalt-2:#353a41; --curb:#4d545d; --paint:#f0b000; --paint-ink:#2b2200;
-    --go:#1a8f56; --stop:#c93434; --caution:#b86e00;
-    --bg:#eceff1; --card:#ffffff; --line:#dde2e6; --ink:#1b1f24; --muted:#5e6873; --muted-2:#69737d;
-    --s1:#2a78d6; --s2:#eb6834;
-    --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:"Be Vietnam Pro","Segoe UI",Arial,sans-serif;
+    /* Moto-Chan: Chan Teal #0F7C8C, Deep Navy #0B3C49, Safety Orange #FF9F1C (chỉ điểm nhấn, không làm chữ trên nền sáng), Mist #E8F4F5 */
+    --teal:#0F7C8C; --teal-dk:#0B6573; --mist:#E8F4F5;
+    --asphalt:#0B3C49; --asphalt-2:#11495A; --curb:#2C6472; --paint:#FF9F1C; --paint-ink:#0B3C49;
+    --go:#1E7B45; --stop:#C0392B; --caution:#A35A00;
+    --bg:#EEF6F7; --card:#ffffff; --line:#D3E5E8; --ink:#0B3C49; --muted:#4D6970; --muted-2:#5A757C;
+    --s1:#0F7C8C; --s2:#FF9F1C;
+    --cond:"Nunito","Be Vietnam Pro","Segoe UI",Arial,sans-serif; --body:"Be Vietnam Pro","Segoe UI",Arial,sans-serif;
   }
   * { box-sizing:border-box; }
   html,body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:14px; }
   button, input, select { font:inherit; color:inherit; }
-  :focus-visible { outline:2px solid var(--paint); outline-offset:2px; }
+  :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
   .app { display:grid; grid-template-columns:232px minmax(0,1fr); min-height:100vh; }
 
   /* sidebar */
   nav { background:var(--asphalt); color:#e9edf1; padding:0 0 16px; position:sticky; top:0; height:100vh; display:flex; flex-direction:column; }
-  nav::before { content:""; display:block; height:6px; background:repeating-linear-gradient(-45deg, var(--paint) 0 12px, #16181b 12px 24px); }
+  nav::before { content:""; display:block; height:6px; background:repeating-linear-gradient(-45deg, var(--paint) 0 12px, #fff 12px 24px); }
   .brand { display:flex; gap:10px; align-items:center; padding:16px 16px 18px; }
-  .mark { width:36px; height:36px; border-radius:8px; background:var(--paint); color:var(--paint-ink); display:grid; place-items:center; font:800 25px/1 var(--cond); }
-  .brand b { display:block; font:700 18px/1.05 var(--cond); }
+  .mark { width:40px; height:40px; flex:none; display:block; }
+  .mark svg { width:100%; height:100%; display:block; }
+  .brand b { display:block; font:900 21px/1.05 var(--cond); letter-spacing:-.2px; } .brand b em { font-style:normal; color:var(--paint); }
   .brand span { font-size:11.5px; color:#a3acb6; }
   nav a.tab { display:flex; align-items:center; gap:10px; padding:10px 16px; color:#cfd6dd; text-decoration:none; font-size:13.5px; border-left:3px solid transparent; }
   nav a.tab svg { width:18px; height:18px; flex:none; opacity:.85; }
   nav a.tab:hover { background:rgba(255,255,255,.05); color:#fff; }
-  nav a.tab.on { background:rgba(240,176,0,.12); color:#fff; border-left-color:var(--paint); font-weight:600; }
+  nav a.tab.on { background:rgba(15,124,140,.38); color:#fff; border-left-color:var(--paint); font-weight:600; }
   nav .sp { flex:1; }
   nav .ext { padding:4px 16px; }
   nav .ext a { display:block; color:#a3acb6; font-size:12.5px; text-decoration:none; padding:5px 0; }
@@ -79,9 +84,9 @@
   .seg button { border:0; background:none; padding:7px 12px; cursor:pointer; font-size:13px; color:var(--muted); }
   .seg button.on { background:var(--asphalt); color:#fff; font-weight:600; }
   .btn { border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:13px; font-weight:500; }
-  .btn:hover { background:#f4f6f7; }
-  .btn.primary { background:var(--asphalt); color:#fff; border-color:var(--asphalt); }
-  .btn.primary:hover { background:#3a4048; }
+  .btn:hover { background:var(--mist); }
+  .btn.primary { background:var(--teal); color:#fff; border-color:var(--teal); }
+  .btn.primary:hover { background:var(--teal-dk); }
   .btn.accent { background:var(--paint); color:var(--paint-ink); border-color:var(--paint); font-weight:600; }
   .btn.small { padding:5px 9px; font-size:12px; }
   .btn.danger { color:var(--stop); }
@@ -94,7 +99,7 @@
   tbody tr:hover td { background:#fafbfb; }
   .plate { display:inline-flex; flex-direction:column; align-items:center; font:700 13.5px/1.02 var(--cond); border:1.5px solid var(--ink); border-radius:4px; padding:1px 6px; background:#fafaf6; letter-spacing:.02em; }
   .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11.5px; font-weight:600; }
-  .pill.m { background:#e6f0fb; color:#1b5aa6; } .pill.g { background:#f1f2f3; color:#4a535c; }
+  .pill.m { background:#E3F2F4; color:#0B6573; } .pill.g { background:#f1f2f3; color:#4a535c; }
   .pill.ok { background:#e3f4ea; color:#156b41; } .pill.bad { background:#fbe7e7; color:#a12828; } .pill.warn { background:#fff3d6; color:#8a5a00; }
   .muted { color:var(--muted); }
   .pager { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:10px; color:var(--muted); font-size:12.5px; }
@@ -122,16 +127,16 @@
   /* đăng nhập */
   .login { position:fixed; inset:0; display:none; place-items:center; padding:20px; z-index:30;
     background:var(--asphalt) linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%); }
-  .login::before { content:""; position:absolute; left:0; right:0; top:0; height:8px; background:repeating-linear-gradient(-45deg, var(--paint) 0 14px, #16181b 14px 28px); }
+  .login::before { content:""; position:absolute; left:0; right:0; top:0; height:8px; background:repeating-linear-gradient(-45deg, var(--paint) 0 14px, #fff 14px 28px); }
   body.locked .login { display:grid; }
   .loginbox { width:min(400px, 100%); background:#fff; border-radius:14px; padding:24px; display:grid; gap:14px; box-shadow:0 24px 70px rgba(0,0,0,.35); }
   .loginbox .brand { padding:0; }
-  .loginbox .brand b { color:var(--ink); font-size:22px; } .loginbox .brand span { color:var(--muted); font-size:12.5px; }
+  .loginbox .brand b { color:var(--ink); font-size:26px; } .loginbox .brand b em { color:var(--teal); } .loginbox .mark { width:52px; height:52px; } .loginbox .brand span { color:var(--muted); font-size:12.5px; }
   .loginbox h2 { margin:4px 0 0; font:700 26px/1 var(--cond); }
   .loginbox label { display:grid; gap:6px; font-size:12.5px; color:var(--muted); }
   .loginbox input { border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:14px; }
   .loginbox .seg { display:grid; grid-template-columns:1fr 1fr; } .loginbox .seg button { padding:9px; font-size:13.5px; }
-  .loginbox .btn.accent { padding:11px; font-size:14.5px; }
+  .loginbox .btn.primary { padding:11px; font-size:14.5px; font-weight:600; }
   .loginbox .linkbtn { justify-self:center; background:none; border:0; padding:2px 4px; color:var(--ink); font:inherit; font-size:13px; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .loginbox .linkbtn:focus-visible { outline:2px solid var(--ink); outline-offset:2px; border-radius:4px; }
   .loginbox .err { margin:0; color:var(--stop); font-size:12.5px; min-height:1em; }
@@ -224,7 +229,7 @@
   .att td:first-child, .att th:first-child { text-align:left; padding-left:10px; position:sticky; left:0; background:#fff; z-index:1; }
   .att th:first-child { background:#f6f7f8; z-index:2; }
   .c-ok { background:#e3f4ea; color:#156b41; } .c-late { background:#fff3d6; color:#8a5a00; } .c-absent { background:#fbe7e7; color:#a12828; }
-  .c-leave { background:#e6f0fb; color:#1b5aa6; } .c-sub { background:#efe7fb; color:#5b2d9a; } .c-adj { outline:2px dashed #8a939c; outline-offset:-3px; }
+  .c-leave { background:#E3F2F4; color:#0B6573; } .c-sub { background:#efe7fb; color:#5b2d9a; } .c-adj { outline:2px dashed #8a939c; outline-offset:-3px; }
   .cell-btn { border:0; background:none; font:inherit; color:inherit; cursor:pointer; padding:2px 3px; border-radius:4px; min-width:24px; }
   .legend-att span { display:inline-flex; gap:6px; align-items:center; margin-right:14px; font-size:12px; }
   .legend-att i { width:14px; height:14px; border-radius:3px; display:inline-block; }
@@ -298,7 +303,7 @@
   table.sched td.reg-zero { background:#fbe7e7; }
   table.sched td.reg-warn { box-shadow:inset 0 0 0 2px var(--caution); }
   select.pref-want, .preftag.pref-want { background:#e3f4ea; color:#156b41; border-color:#9fd3b5; }
-  select.pref-can, .preftag.pref-can { background:#e6f0fb; color:#1b5aa6; border-color:#a9c7ec; }
+  select.pref-can, .preftag.pref-can { background:#E3F2F4; color:#0B6573; border-color:#a9c7ec; }
   select.pref-busy, .preftag.pref-busy { background:#f1f2f3; color:#69737d; }
   .preftag { display:inline-block; padding:3px 8px; border-radius:6px; font-weight:600; }
   .linkish { background:none; border:0; padding:0; color:var(--ink); text-decoration:underline; cursor:pointer; font-size:11.5px; }
@@ -374,12 +379,12 @@
 <body class="locked">
 <div class="login" id="login">
   <form class="loginbox" id="loginForm" autocomplete="on">
-    <div class="brand"><div class="mark">P</div><div><b>Bãi giữ xe</b><span>Trang quản lý bãi giữ xe máy</span></div></div>
+    <div class="brand"><div class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#0F7C8C"/><path d="M22 66A28 28 0 0 1 78 66V72Q78 76 74 76H26Q22 76 22 72Z" fill="#fff"/><rect x="28" y="52" width="44" height="14" rx="7" fill="#FF9F1C"/><circle cx="40" cy="59" r="2.8" fill="#0B3C49"/><circle cx="60" cy="59" r="2.8" fill="#0B3C49"/><path d="M43 70Q50 75 57 70" stroke="#0B3C49" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg></div><div><b>Moto<em>-Chan</em></b><span>Chan lo trọn gói, bạn yên tâm đi</span></div></div>
     <h2>Đăng nhập</h2>
     <label>Tài khoản<input name="user" autocomplete="username" required autocapitalize="none"></label>
     <label>Mật khẩu<input name="pw" type="password" autocomplete="current-password" required></label>
     <p class="err" id="loginErr" role="alert"></p>
-    <button class="btn accent" type="submit">Đăng nhập</button>
+    <button class="btn primary" type="submit">Đăng nhập</button>
     <button class="linkbtn" type="button" id="forgotBtn">Quên mật khẩu?</button>
     <p class="demo">Tài khoản mẫu: quản lý <b>nguyentanhuy</b>, mật khẩu admin123. Nhân viên trực, ví dụ <b>phanquochuy</b>, mật khẩu 123456. Vai trò lấy theo tài khoản.</p>
   </form>
@@ -387,7 +392,7 @@
 
 <div class="app">
   <nav id="nav" aria-label="Điều hướng">
-    <div class="brand"><div class="mark">P</div><div><b>Bãi giữ xe</b><span>Trang quản lý</span></div></div>
+    <div class="brand"><div class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#fff"/><path d="M22 66A28 28 0 0 1 78 66V72Q78 76 74 76H26Q22 76 22 72Z" fill="#0F7C8C"/><rect x="28" y="52" width="44" height="14" rx="7" fill="#FF9F1C"/><circle cx="40" cy="59" r="2.8" fill="#0B3C49"/><circle cx="60" cy="59" r="2.8" fill="#0B3C49"/><path d="M43 70Q50 75 57 70" stroke="#0B3C49" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg></div><div><b>Moto<em>-Chan</em></b><span>Quản lý bãi giữ xe</span></div></div>
     <a class="tab" href="#tong-quan" data-tab="tong-quan"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg>Tổng quan</a>
     <a class="tab" href="#may-giu-xe" data-tab="may-giu-xe"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="3.5" width="15" height="10" rx="1.5"/><path d="M7 17h6M10 13.5V17"/><path d="M6 9.5l2.5-2.5L11 9l3-3"/></svg>Máy giữ xe</a>
     <a class="tab" href="#trong-bai" data-tab="trong-bai"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="14" r="2.5"/><circle cx="15" cy="14" r="2.5"/><path d="M7.5 14h5M10 7l2 7M6 7h5l3 4"/></svg>Xe trong bãi</a>
@@ -1659,7 +1664,7 @@
       renderShiftTable();
       const days = Array.from({ length: 30 }, (_, i) => b0 - (29 - i) * DAY);
       const md = days.map((d) => moneyBetween(d, d + DAY));
-      barChart($('#ch-rev30'), { labels: days.map(fmtDate), stacked: true, fmt: kFmt, every: 3, height: 220, series: [{ name: 'Tiền mặt', color: '#2a78d6', values: md.map((x) => x.cash) }, { name: 'QR', color: '#eb6834', values: md.map((x) => x.qr) }] });
+      barChart($('#ch-rev30'), { labels: days.map(fmtDate), stacked: true, fmt: kFmt, every: 3, height: 220, series: [{ name: 'Tiền mặt', color: '#0F7C8C', values: md.map((x) => x.cash) }, { name: 'QR', color: '#FF9F1C', values: md.map((x) => x.qr) }] });
     } else if (open && open.user === me.user) {
       const tt = shiftTotals(open.openedAt, t + 1);
       $('#shiftNow').innerHTML = `Ca của bạn: <b style="color:var(--ink)">${esc(shiftLabel(open.day0, open.k))}</b>, tính từ lúc nhận ca ${fmtTime(open.openedAt)}`;
@@ -1671,7 +1676,7 @@
     const hin = Array(24).fill(0), hout = Array(24).fill(0);
     realSessions().forEach((s) => { if (s.tIn >= b0 && s.tIn < b0 + DAY) hin[Math.floor((s.tIn - b0) / H)]++; if (s.tOut && s.tOut >= b0 && s.tOut < b0 + DAY) hout[Math.floor((s.tOut - b0) / H)]++; });
     const last = Math.max(12, Math.min(23, Math.floor((t - b0) / H)));
-    barChart($('#ch-hour'), { labels: Array.from({ length: last + 1 }, (_, i) => `${(6 + i) % 24}h`), series: [{ name: 'Lượt vào', color: '#2a78d6', values: hin.slice(0, last + 1) }, { name: 'Lượt ra', color: '#eb6834', values: hout.slice(0, last + 1) }], every: 2 });
+    barChart($('#ch-hour'), { labels: Array.from({ length: last + 1 }, (_, i) => `${(6 + i) % 24}h`), series: [{ name: 'Lượt vào', color: '#0F7C8C', values: hin.slice(0, last + 1) }, { name: 'Lượt ra', color: '#FF9F1C', values: hout.slice(0, last + 1) }], every: 2 });
     const al = alertsList().slice(0, 5);
     $('#recentAlerts').innerHTML = al.length ? al.map((s) => `<li><span class="t">${fmtDT(s.tOut || s.tIn)}</span><br>Thẻ <b>${esc(s.uid)}</b> của ${esc(s.plate)}, xe ra là <b>${esc(s.alert.plateRead)}</b> ${alertPill(s.alert.status)}</li>`).join('') : '<li class="muted">Chưa có cảnh báo nào.</li>';
     const todo = overviewTodo();
@@ -2128,8 +2133,8 @@
     $('#st-sub1').textContent = desc; $('#st-sub2').textContent = desc + ', trục tính bằng nghìn đồng';
     const lb = (r) => (period === 'shift' ? r.label.replace(/^Ca (sáng|chiều|đêm) /, (m0, a) => ({ sáng: 'S ', chiều: 'C ', đêm: 'Đ ' }[a])) : r.label.replace('Tuần ', ''));
     const every = n > 14 ? 3 : n > 10 ? 2 : 1;
-    barChart($('#ch-flow'), { labels: rows.map(lb), series: [{ name: 'Lượt vào', color: '#2a78d6', values: rows.map((r) => r.in) }, { name: 'Lượt ra', color: '#eb6834', values: rows.map((r) => r.out) }], every });
-    barChart($('#ch-money'), { labels: rows.map(lb), stacked: true, fmt: kFmt, every, series: [{ name: 'Tiền mặt', color: '#2a78d6', values: rows.map((r) => r.cash) }, { name: 'QR', color: '#eb6834', values: rows.map((r) => r.qr) }] });
+    barChart($('#ch-flow'), { labels: rows.map(lb), series: [{ name: 'Lượt vào', color: '#0F7C8C', values: rows.map((r) => r.in) }, { name: 'Lượt ra', color: '#FF9F1C', values: rows.map((r) => r.out) }], every });
+    barChart($('#ch-money'), { labels: rows.map(lb), stacked: true, fmt: kFmt, every, series: [{ name: 'Tiền mặt', color: '#0F7C8C', values: rows.map((r) => r.cash) }, { name: 'QR', color: '#FF9F1C', values: rows.map((r) => r.qr) }] });
     $('#t-stat').innerHTML = rows.slice().reverse().map((r) => `<tr><td>${esc(r.label)}${r.staff ? ` <span class="muted">· ${esc(r.staff)}</span>` : ''}</td><td class="num">${num(r.in)}</td><td class="num">${num(r.out)}</td><td class="num">${money(r.parking)}</td><td class="num">${money(r.lost)}</td><td class="num">${money(r.monthly)}</td><td class="num">${money(r.cash)}</td><td class="num">${money(r.qr)}</td><td class="num"><b>${money(r.total)}</b></td><td class="num">${r.alerts}</td></tr>`).join('');
   }
   $$('#f-period button').forEach((b) => b.onclick = () => { period = b.dataset.v; $$('#f-period button').forEach((x) => x.classList.toggle('on', x === b)); renderStats(); });
@@ -2162,9 +2167,9 @@
     $('#o-man').textContent = all.bad; $('#o-man-d').textContent = `${pct(all.bad, all.n)} số lần chụp phải nhập tay`;
     $('#o-ms').textContent = `${avg} ms`; $('#o-ms-d').textContent = `95% số lượt dưới ${p95} ms. ${over} lượt vượt mục tiêu 1,5 giây`;
     $('#o-al').textContent = all.alerts; $('#o-al-d').textContent = `${pct(all.alerts, all.n)} số lần chụp`;
-    barChart($('#ch-ocrbad'), { labels: rows.map((r) => fmtDate(r.d0)), every: ocrDays > 10 ? 3 : 1, series: [{ name: 'Phải nhập tay', color: '#2a78d6', values: rows.map((r) => r.bad) }, { name: 'Cảnh báo không khớp', color: '#eb6834', values: rows.map((r) => r.alerts) }] });
+    barChart($('#ch-ocrbad'), { labels: rows.map((r) => fmtDate(r.d0)), every: ocrDays > 10 ? 3 : 1, series: [{ name: 'Phải nhập tay', color: '#0F7C8C', values: rows.map((r) => r.bad) }, { name: 'Cảnh báo không khớp', color: '#FF9F1C', values: rows.map((r) => r.alerts) }] });
     const bins = [[0, 700, 'dưới 0,7 s'], [700, 900, '0,7–0,9 s'], [900, 1100, '0,9–1,1 s'], [1100, 1500, '1,1–1,5 s'], [1500, 1e9, 'trên 1,5 s']];
-    barChart($('#ch-ocrms'), { labels: bins.map((b) => b[2]), series: [{ name: 'Số lần chụp', color: '#2a78d6', values: bins.map(([a, b]) => all.ms.filter((m) => m >= a && m < b).length) }] });
+    barChart($('#ch-ocrms'), { labels: bins.map((b) => b[2]), series: [{ name: 'Số lần chụp', color: '#0F7C8C', values: bins.map(([a, b]) => all.ms.filter((m) => m >= a && m < b).length) }] });
     $('#t-ocr').innerHTML = rows.slice().reverse().map((r) => `<tr><td>${fmtDate(r.d0)}</td><td class="num">${r.n}</td><td class="num">${r.ok}</td><td class="num">${r.bad}</td><td class="num">${pct(r.ok, r.n)}</td><td class="num">${r.avg} ms</td><td class="num">${r.p95} ms</td><td class="num">${r.alerts}</td></tr>`).join('');
   }
 
@@ -3439,7 +3444,7 @@
     const pts = [];
     d.labels.forEach((lb, i) => {
       const cx = L + bw * (i + 0.5);
-      svg += barPath(cx - inner - 1, y(d.rev[i]), inner, y(0) - y(d.rev[i]), 3, '#2a78d6') + barPath(cx + 1, y(d.cost[i]), inner, y(0) - y(d.cost[i]), 3, '#eb6834');
+      svg += barPath(cx - inner - 1, y(d.rev[i]), inner, y(0) - y(d.rev[i]), 3, '#0F7C8C') + barPath(cx + 1, y(d.cost[i]), inner, y(0) - y(d.cost[i]), 3, '#FF9F1C');
       svg += `<text x="${cx}" y="${Hh - 8}" text-anchor="middle" font-size="11" fill="#69737d">${esc(lb)}</text>`;
       pts.push([cx, y(d.net[i])]);
     });
@@ -3447,11 +3452,11 @@
     pts.forEach(([x, yy], i) => { svg += `<circle cx="${x}" cy="${yy}" r="4.5" fill="${d.net[i] < 0 ? '#c93434' : '#1a8f56'}" stroke="#fff" stroke-width="2"/>`; });
     d.labels.forEach((lb, i) => { svg += `<rect class="hit" tabindex="0" focusable="true" aria-label="${esc(lb)}" data-i="${i}" x="${L + bw * i}" y="${T}" width="${bw}" height="${Hh - T - B}" fill="transparent"/>`; });
     svg += '</svg>';
-    el.innerHTML = `<div class="legend"><span><i style="background:#2a78d6"></i>Doanh thu</span><span><i style="background:#eb6834"></i>Tổng chi phí</span><span><i style="background:#1b1f24;height:3px;border-radius:2px"></i>Lợi nhuận ròng</span></div>${svg}<div class="tip" role="status"></div>`;
+    el.innerHTML = `<div class="legend"><span><i style="background:#0F7C8C"></i>Doanh thu</span><span><i style="background:#FF9F1C"></i>Tổng chi phí</span><span><i style="background:#1b1f24;height:3px;border-radius:2px"></i>Lợi nhuận ròng</span></div>${svg}<div class="tip" role="status"></div>`;
     const tip = $('.tip', el), svgEl = $('svg', el);
     $$('.hit', el).forEach((r) => {
       const show = () => { const i = +r.dataset.i, box = svgEl.getBoundingClientRect(), sc = box.width / W; $$('.hit', el).forEach((x) => x.setAttribute('fill', 'transparent')); r.setAttribute('fill', 'rgba(43,47,53,.06)');
-        tip.innerHTML = `<b>${esc(d.labels[i])}</b><div><i style="background:#2a78d6"></i>Doanh thu: ${esc(money(d.rev[i]))}</div><div><i style="background:#eb6834"></i>Chi phí: ${esc(money(d.cost[i]))}</div><div><i style="background:#1b1f24"></i>${d.net[i] < 0 ? `Lỗ: ${esc(money(-d.net[i]))}` : `Lợi nhuận: ${esc(money(d.net[i]))}`}</div>`;
+        tip.innerHTML = `<b>${esc(d.labels[i])}</b><div><i style="background:#0F7C8C"></i>Doanh thu: ${esc(money(d.rev[i]))}</div><div><i style="background:#FF9F1C"></i>Chi phí: ${esc(money(d.cost[i]))}</div><div><i style="background:#1b1f24"></i>${d.net[i] < 0 ? `Lỗ: ${esc(money(-d.net[i]))}` : `Lợi nhuận: ${esc(money(d.net[i]))}`}</div>`;
         tip.style.left = Math.min(Math.max((L + bw * (i + 0.5)) * sc, 80), box.width - 80) + 'px'; tip.style.top = svgEl.offsetTop + y(Math.max(d.rev[i], d.cost[i])) * sc - 8 + 'px'; tip.style.opacity = 1; };
       const hide = () => { r.setAttribute('fill', 'transparent'); tip.style.opacity = 0; };
       r.addEventListener('mouseenter', show); r.addEventListener('mouseleave', hide); r.addEventListener('focus', show); r.addEventListener('blur', hide);
@@ -4519,7 +4524,7 @@
         <div class="gstat"><span>${isAdmin() ? 'Doanh thu hôm nay' : 'Doanh thu ca của bạn'}</span><b>${money(rev)}</b></div>
         <div class="gstat"><span>Lượt vào / ra</span><b>${f.in} / ${f.out}</b></div>
         <div class="gstat"><span>Xe trong bãi</span><b>${n}/${settings.cap}</b></div>
-        <div class="gstat"><span>Người trực</span><b style="font-size:17px">${open ? esc(open.name) : '<span style="color:var(--stop)">Chưa nhận ca</span>'}</b></div>
+        <div class="gstat"><span>Người trực</span><b style="font-size:17px">${open ? esc(open.name) : '<span style="color:var(--paint)">Chưa nhận ca</span>'}</b></div>
         <div class="gstat clock"><span id="gateDate">${esc(dayName(t))} ${fmtDateY(t)}</span><b id="gateClock">${fmtTime(t)}</b></div></div>
       <div class="gate-src ${sc}"><i></i><span class="grow">${esc(stxt)}${p ? `. Chốt ESP32: Wi-Fi ${esc(p.rssi)} dBm, chạy ${esc(p.uptime)} giây, làn vào ${esc(p.in)}, làn ra ${esc(p.out)}${pAge > 15 ? ` <b style="color:var(--stop)">(mất tín hiệu ${pAge} giây)</b>` : ''}` : ''}</span>
         ${gate.status === 'on' || gate.status === 'connecting' ? '<button class="btn small" data-act="gate-off">Ngắt kết nối</button>' : '<button class="btn small primary" data-act="gate-on">Kết nối phần cứng</button>'}${isAdmin() ? '<button class="btn small" data-act="gate-cfg">Cài đặt kết nối</button>' : ''}<button class="btn small" data-act="gate-kiosk">${document.body.classList.contains('kiosk') ? 'Thoát toàn màn hình' : 'Toàn màn hình'}</button></div>

@@ -1,10 +1,20 @@
-# Bãi giữ xe máy thông minh – mô phỏng
+<p align="center"><img src="assets/brand/logo-horizontal.svg" alt="Moto-Chan" width="360"></p>
+
+# Moto-Chan · Bãi giữ xe máy thông minh
 
 Đồ án 2 · HCMUTE – Khoa Điện – Điện tử
 Sinh viên: Nguyễn Tấn Huy (23161021) · Võ Trương Thùy Dương (23161013)
 GVHD: ThS. Nguyễn Văn Phúc
 
 Hệ thống bãi giữ xe máy xác thực kép **thẻ RFID + biển số**, một trụ điều khiển ESP32 cho hai làn vào/ra, nhận dạng biển số trên server.
+
+## Nhận diện thương hiệu
+
+Toàn bộ trang web dùng bộ nhận diện **Moto-Chan** (logo, favicon và hướng dẫn ở `assets/brand/`):
+
+- **Màu:** Chan Teal `#0F7C8C` cho nút chính và nhấn; Deep Navy `#0B3C49` cho nền tối và chữ; Safety Orange `#FF9F1C` chỉ làm điểm nhấn, không dùng làm chữ trên nền sáng; Mist `#E8F4F5` cho nền nhạt.
+- **Font:** tiêu đề Nunito Black/ExtraBold, nội dung Be Vietnam Pro.
+- **Mô hình 3D:** biển tên chốt nền teal chữ trắng, cần barie sọc cam–trắng.
 
 ## Trang web
 

@@ -290,7 +290,7 @@ const gy0 = 6 + WALL + 4, gh = GLASS_TOP - gy0;
 [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => box(4, GLASS_TOP - 6, 4, M.silver, sx * (BW / 2 - 2), 6 + (GLASS_TOP - 6) / 2, sz * (BD / 2 - 2), booth));
 [1, -1].forEach((s) => box(16, 4, 44, M.silver, s * (BW / 2 + 5), 6 + WALL + 2, 0, booth, 1));
 box(BW + 16, 6, BD + 16, M.anth, 0, GLASS_TOP + 3, 0, booth, 2);
-const signTexB = tex(640, 80, (g, w, h) => { g.fillStyle = '#353a40'; g.fillRect(0, 0, w, h); g.fillStyle = '#f0b000'; g.font = `800 46px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('BÃI GIỮ XE · PARKING', w / 2, h / 2 + 2); });
+const signTexB = tex(640, 80, (g, w, h) => { g.fillStyle = '#0F7C8C'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffffff'; g.font = `800 46px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('MOTO-CHAN · BÃI GIỮ XE', w / 2, h / 2 + 2); });
 box(BW + 18, 16, BD + 18, M.anth, 0, GLASS_TOP + 14, 0, booth, 2);
 const signMat = shell(std(0xffffff, 0.5, 0.1, { map: signTexB }));
 [1, -1].forEach((s) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(BW + 10, 12), signMat); p.position.set(0, GLASS_TOP + 14, s * (BD / 2 + 9.2)); if (s < 0) p.rotation.y = Math.PI; booth.add(p); });
@@ -324,7 +324,7 @@ const bz = part('buzzer', buzzer(booth)); bz.position.set(-31, 78, 36.5); bz.rot
 cyl(8, 8, 0.4, std(0x0d0f11, 0.8), 0, 6.3, 0, booth, 24);
 
 // ---------- 2. TỦ BARIE + SERVO + IR AN TOÀN ----------
-const armTex = tex(600, 32, (g, w, h) => { for (let i = 0; i < 15; i++) { g.fillStyle = i % 2 ? '#d32f2f' : '#ffffff'; g.fillRect(i * 40, 0, 40, h); } });
+const armTex = tex(600, 32, (g, w, h) => { for (let i = 0; i < 15; i++) { g.fillStyle = i % 2 ? '#FF9F1C' : '#ffffff'; g.fillRect(i * 40, 0, 40, h); } });
 const armMat = std(0xffffff, 0.35, 0.05, { map: armTex });
 const signTex = (t) => tex(200, 100, (g, w, h) => { g.fillStyle = '#16191c'; rr(g, 0, 0, w, h, 14); g.fill(); g.fillStyle = '#ffffff'; g.font = `800 56px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, w / 2, h / 2 + 3); });
 const arms = [];
