@@ -558,7 +558,7 @@ function setView(key) {
   else { cam = ocam; const d = new THREE.Vector3(...v.dir).normalize(); ocam.up.set(...v.up); ocam.zoom = key === 'iso' ? 0.85 : 1; ocam.position.set(...v.tgt).addScaledVector(d, 1500); controls.object = ocam; controls.target.set(...v.tgt); controls.enableRotate = key === 'iso'; }
   MMPP = size(); cam.lookAt(controls.target); controls.update();
   setXray(v.xray); setWires(v.wires);
-  bikes.visible = key === 'persp' || key === 'camera' || key === 'front';
+  bikes.visible = key === 'persp' || key === 'camera';
   const showAbove = !v.bay;
   above.visible = !v.bay;
   groundMat.opacity = v.bay ? 0.12 : groundMat.opacity;
