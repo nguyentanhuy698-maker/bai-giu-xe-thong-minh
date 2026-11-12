@@ -360,8 +360,14 @@ void handleSerial() {
 }
 
 // ===================== SETUP / LOOP =====================
+// 2 RC522 chung chân RST: PCD_Init() của thư viện để chân RST ở INPUT (thả nổi). Chân trôi về LOW là cả 2 đầu đọc
+// cùng vào chế độ ngủ, đọc thẻ lúc được lúc không. Vì vậy luôn kéo RST lên HIGH trước và sau mỗi lần khởi tạo.
+void holdRfidRst() { pinMode(PIN_RFID_RST, OUTPUT); digitalWrite(PIN_RFID_RST, HIGH); }
+
 bool initRfid(MFRC522& r, const char* name) {
+  holdRfidRst();
   r.PCD_Init();
+  holdRfidRst();
   byte v = r.PCD_ReadRegister(MFRC522::VersionReg);
   bool ok = (v == 0x91 || v == 0x92 || v == 0x88 || v == 0x12);   // 0x00 hoặc 0xFF = chưa nối dây / sai chân SS
   Serial.printf("RC522 %s: version 0x%02X -> %s\n", name, v, ok ? "OK" : "KHONG THAY (kiem tra day, nguon 3,3 V, chan SS)");
@@ -386,6 +392,10 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT); buzzerWrite(false);
   pixels.begin();
   SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI);
+  pinMode(PIN_RFID_SS_IN, OUTPUT); digitalWrite(PIN_RFID_SS_IN, HIGH);    // nhả cả 2 đầu đọc khỏi bus trước khi khởi tạo
+  pinMode(PIN_RFID_SS_OUT, OUTPUT); digitalWrite(PIN_RFID_SS_OUT, HIGH);
+  pinMode(PIN_RFID_RST, OUTPUT); digitalWrite(PIN_RFID_RST, LOW); delay(5);  // reset cứng cả 2 RC522 một lần
+  digitalWrite(PIN_RFID_RST, HIGH); delay(50);
   ESP32PWM::allocateTimer(0);
   ESP32PWM::allocateTimer(1);
   Serial.println("\n=== Tru dieu khien 2 lan (phan cung that) ===");

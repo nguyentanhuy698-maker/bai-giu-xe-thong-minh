@@ -5,6 +5,8 @@
 | Thư mục | Nội dung |
 | --- | --- |
 | `tru_dieu_khien/` | Firmware ESP32 DevKit V1 ở trụ giữa 2 làn |
+| `camera_bien_so/` | Firmware 2 ESP32-CAM chụp biển số (`/capture`, xem trực tiếp `:81/stream`) |
+| `kiem_tra/chup_thu_camera.py` | Thử chụp ảnh từ 2 camera trên laptop |
 | `am_thanh/tao_am_thanh.py` | Tạo 5 file mp3 tiếng Việt cho DFPlayer |
 | `mosquitto/mosquitto.conf` | Broker MQTT chạy trên laptop ở chốt bảo vệ (cổng 1883 cho ESP32, 9001 cho trang quản lý) |
 
@@ -21,6 +23,8 @@
 | DFPlayer Mini | TX → / RX ← | GPIO16 / GPIO17 (qua 1 kΩ) | 5 V | Loa 3 W ở SPK1, SPK2 |
 | Module còi chủ động (3 chân) | I/O | GPIO14 | **3,3 V** | Module có sẵn transistor, kêu khi I/O = LOW (`BUZZER_ACTIVE_LOW 1`). Cấp 3,3 V chứ không cấp 5 V: ở 5 V, mức HIGH 3,3 V của ESP32 không tắt được còi |
 | 2 LED WS2812 | DIN | GPIO13 | 5 V | Làn vào là LED thứ nhất |
+
+**LED WS2812 cấp 5 V nhưng tín hiệu DIN của ESP32 chỉ 3,3 V** (WS2812 cần ≥ 0,7 × VDD = 3,5 V): đa số con vẫn chạy, nhưng nếu LED nháy sai màu hoặc không sáng thì cấp chân 5V của WS2812 qua 1 diode 1N4007 (còn ≈ 4,3 V), mức 3,3 V lúc đó đủ nhận. Có thể hàn sẵn diode từ đầu cho chắc.
 
 **Tất cả GND nối chung.** GPIO34–39 chỉ đọc vào và không có điện trở kéo lên trong; module IR loại FC-51 đã có sẵn trên board nên nối thẳng được.
 
@@ -105,3 +109,28 @@ Cả hai bản đặt `mqtt.setBufferSize(512)`: lệnh của server kèm biển
 | `Ket noi MQTT ... loi -2` | Sai IP laptop, Mosquitto chưa chạy, tường lửa chặn cổng 1883 |
 | Quẹt thẻ, chờ 5 s rồi "He thong dang ban" | `server_mock.py` chưa chạy hoặc khác `TOPIC_ROOT` |
 | Nạp code báo `Failed to connect to ESP32` | Giữ nút BOOT trên ESP32 lúc IDE bắt đầu nạp |
+
+## Camera biển số (2 ESP32-CAM)
+
+1. Board **AI Thinker ESP32-CAM**. Nạp bằng đế **ESP32-CAM-MB** (cắm micro USB là nạp được).
+2. Mở `camera_bien_so/camera_bien_so.ino`, sửa `WIFI_SSID`, `WIFI_PASS`. Con làn vào để `CAM_NAME = "cam-vao"`, nạp; đổi thành `"cam-ra"`, nạp con thứ hai.
+3. Serial Monitor 115200 in ra IP. Mở `http://<IP>:81/stream` trên trình duyệt để căn góc camera theo thước 35,8° / 15° (rập tờ 7).
+4. Trên laptop: `python firmware/kiem_tra/chup_thu_camera.py <IP cam vào> <IP cam ra>` rồi mở thư mục `anh_thu` xem biển số có rõ không.
+
+Báo lỗi `Brownout detector was triggered` là nguồn 5 V yếu hoặc dây dài: cấp từ mạch hạ áp, dây ≥ 22 AWG, thêm tụ 470 µF ở chân 5V của camera.
+
+## Quy trình test sau khi lắp ráp
+
+Làm theo thứ tự, khối trước đạt mới sang khối sau. Mỗi bước ghi lại kết quả (ảnh chụp Serial Monitor, video) để đưa vào báo cáo.
+
+| Bước | Làm gì | Đạt khi |
+| --- | --- | --- |
+| 1. Nguồn | Chưa cắm ESP32, DFPlayer, servo. Cấp 12 V, chỉnh XY-3606 | J1 = 5,0–5,3 V; đo 3,3 V sau khi cắm ESP32 |
+| 2. ESP32 + RC522 | Cắm ESP32, nạp firmware với `OFFLINE_DEMO 1`, mở Serial | In `RC522 LAN VAO ... OK`, `RC522 LAN RA ... OK`; quẹt thẻ thật in ra UID ở đúng làn |
+| 3. IR | Gõ `i`, lần lượt che 4 cảm biến bằng tay hoặc xe mô hình | Đúng cảm biến báo `CO XE` / `CO VAT`; chỉnh biến trở trên FC-51 cho khoảng 2–4 cm |
+| 4. Servo | Gõ `mv`, `mr` | Cần nâng 90°, tự hạ sau 15 s; che IR an toàn lúc đang hạ thì cần nâng lại. Chỉnh `ANGLE_CLOSED/OPEN` nếu cần lệch |
+| 5. Loa, còi, LED | `s1`…`s5`, `b`; quan sát LED | Nghe rõ 5 câu; còi 3 tiếng (kêu liên tục từ lúc bật nguồn thì đổi `BUZZER_ACTIVE_LOW`); LED xanh lam khi chờ |
+| 6. Chạy OFFLINE | Quẹt thẻ ở cả 2 làn, cho xe mô hình đi qua | Vào 3 xe thì xe thứ 4 nghe "Bãi đã đầy"; ra khi bãi trống bị từ chối |
+| 7. Camera | Theo mục Camera ở trên | 2 camera trả ảnh dưới 1 s, biển số rõ |
+| 8. Toàn hệ thống | Đặt `OFFLINE_DEMO 0`, chạy Mosquitto + server + trang quản lý (mục ở trên) | Trang quản lý hiện trụ "trực tuyến"; quẹt thẻ thấy lượt xe hiện ngay; tắt Wi-Fi laptop thì barie giữ đóng và loa báo "Hệ thống đang bận" sau 5 s |
+| 9. Đo đạc cho báo cáo | Quẹt thẻ 20 lần mỗi làn, ghi thời gian từ quẹt thẻ đến lúc cần bắt đầu nâng | Thời gian phản hồi trung bình, số lần đọc hỏng; đưa vào chương kết quả |
