@@ -1,0 +1,4 @@
+anh/
+du_lieu/
+__pycache__/
+models/*.pt

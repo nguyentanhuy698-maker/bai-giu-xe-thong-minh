@@ -74,7 +74,7 @@ esp_err_t captureHandler(httpd_req_t* req) {
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   esp_err_t r = httpd_resp_send(req, (const char*)fb->buf, fb->len);
-  Serial.printf("/capture #%lu: %u byte\n", (unsigned long)++shots, fb->len);
+  Serial.printf("/capture #%lu: %u byte\n", (unsigned long)++shots, (unsigned)fb->len);
   esp_camera_fb_return(fb);
   return r;
 }
@@ -99,7 +99,7 @@ esp_err_t streamHandler(httpd_req_t* req) {
   while (true) {
     camera_fb_t* fb = esp_camera_fb_get();
     if (!fb) return ESP_FAIL;
-    size_t hl = snprintf(part, sizeof(part), "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n", fb->len);
+    size_t hl = snprintf(part, sizeof(part), "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n", (unsigned)fb->len);
     esp_err_t r = httpd_resp_send_chunk(req, "\r\n--" BOUNDARY "\r\n", strlen("\r\n--" BOUNDARY "\r\n"));
     if (r == ESP_OK) r = httpd_resp_send_chunk(req, part, hl);
     if (r == ESP_OK) r = httpd_resp_send_chunk(req, (const char*)fb->buf, fb->len);

@@ -1,0 +1,6 @@
+paho-mqtt>=1.6
+opencv-python>=4.8
+numpy
+easyocr>=1.7       # kéo theo PyTorch (~200 MB); lần chạy đầu tự tải mô hình đọc chữ
+# pytesseract       # chỉ cần nếu chạy OCR=tesseract (phải cài thêm Tesseract-OCR cho Windows)
+# ultralytics       # chỉ cần nếu có mô hình YOLO tự huấn luyện ở server/models/bien_so.pt

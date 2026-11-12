@@ -79,7 +79,7 @@ Chép thư mục `am_thanh/sd/mp3` vào thẻ microSD (FAT32) thành `/mp3/0001.
 ## Chạy cùng server và trang quản lý
 
 1. Cài [Mosquitto](https://mosquitto.org/download/) trên laptop, chạy `mosquitto -c firmware/mosquitto/mosquitto.conf -v`. Cho phép cổng 1883 và 9001 qua Windows Firewall.
-2. `MQTT_BROKER=127.0.0.1 python wokwi/server_mock.py` (Windows PowerShell: `$env:MQTT_BROKER="127.0.0.1"; python wokwi/server_mock.py`).
+2. Chạy máy chủ nhận dạng thật `python server/may_chu.py` (cách cài, địa chỉ camera: [`server/README.md`](../server/README.md)). Chưa lắp camera thì đặt `$env:GIA_LAP_CAMERA="1"` trước khi chạy: biển số lấy ngẫu nhiên, mọi thứ khác chạy thật.
 3. Mở trang quản lý **bằng http trên laptop**, không mở bản GitHub Pages (trang https không được nối broker ws://):
    `python -m http.server 8000` trong thư mục repo, rồi vào `http://localhost:8000/quan-ly.html`.
 4. Máy giữ xe → Cài đặt kết nối → địa chỉ `ws://localhost:9001`, gốc topic `hcmute-da2-baigiuxe` → Kết nối phần cứng.
@@ -107,7 +107,8 @@ Cả hai bản đặt `mqtt.setBufferSize(512)`: lệnh của server kèm biển
 | Chỉ 1 trong 2 RC522 đọc được | Hai module cùng chân SS, hoặc dây SPI quá dài (giữ dưới 20 cm) |
 | `DFPlayer: KHONG THAY` | Thẻ nhớ không phải FAT32, đảo dây TX/RX, thiếu điện trở 1 kΩ |
 | `Ket noi MQTT ... loi -2` | Sai IP laptop, Mosquitto chưa chạy, tường lửa chặn cổng 1883 |
-| Quẹt thẻ, chờ 5 s rồi "He thong dang ban" | `server_mock.py` chưa chạy hoặc khác `TOPIC_ROOT` |
+| Quẹt thẻ, chờ 5 s rồi "He thong dang ban" | `server/may_chu.py` chưa chạy hoặc khác `TOPIC_ROOT` |
+| Máy chủ báo "KHÔNG ĐỌC ĐƯỢC" biển số | Xem ảnh trong `server/anh/`; chỉnh đèn, lấy nét camera; mẹo ở `server/README.md` |
 | Nạp code báo `Failed to connect to ESP32` | Giữ nút BOOT trên ESP32 lúc IDE bắt đầu nạp |
 
 ## Camera biển số (2 ESP32-CAM)
@@ -131,6 +132,6 @@ Làm theo thứ tự, khối trước đạt mới sang khối sau. Mỗi bướ
 | 4. Servo | Gõ `mv`, `mr` | Cần nâng 90°, tự hạ sau 15 s; che IR an toàn lúc đang hạ thì cần nâng lại. Chỉnh `ANGLE_CLOSED/OPEN` nếu cần lệch |
 | 5. Loa, còi, LED | `s1`…`s5`, `b`; quan sát LED | Nghe rõ 5 câu; còi 3 tiếng (kêu liên tục từ lúc bật nguồn thì đổi `BUZZER_ACTIVE_LOW`); LED xanh lam khi chờ |
 | 6. Chạy OFFLINE | Quẹt thẻ ở cả 2 làn, cho xe mô hình đi qua | Vào 3 xe thì xe thứ 4 nghe "Bãi đã đầy"; ra khi bãi trống bị từ chối |
-| 7. Camera | Theo mục Camera ở trên | 2 camera trả ảnh dưới 1 s, biển số rõ |
-| 8. Toàn hệ thống | Đặt `OFFLINE_DEMO 0`, chạy Mosquitto + server + trang quản lý (mục ở trên) | Trang quản lý hiện trụ "trực tuyến"; quẹt thẻ thấy lượt xe hiện ngay; tắt Wi-Fi laptop thì barie giữ đóng và loa báo "Hệ thống đang bận" sau 5 s |
-| 9. Đo đạc cho báo cáo | Quẹt thẻ 20 lần mỗi làn, ghi thời gian từ quẹt thẻ đến lúc cần bắt đầu nâng | Thời gian phản hồi trung bình, số lần đọc hỏng; đưa vào chương kết quả |
+| 7. Camera | Theo mục Camera ở trên, rồi `python server/nhan_dang.py http://<IP camera>/capture` với xe mô hình đặt đúng chỗ dừng | 2 camera trả ảnh dưới 1 s; đọc đúng biển 10 lần liên tiếp mỗi làn |
+| 8. Toàn hệ thống | Đặt `OFFLINE_DEMO 0`, chạy Mosquitto + `server/may_chu.py` + trang quản lý (mục ở trên) | Quẹt thẻ thấy ảnh thật và biển số trên trang; đổi xe khác lúc ra thì còi kêu, trang báo "không khớp"; tắt máy chủ thì barie giữ đóng và loa báo "Hệ thống đang bận" sau 5 s |
+| 9. Đo đạc cho báo cáo | Quẹt thẻ 20 lần mỗi làn với các xe khác nhau. Cửa sổ máy chủ in biển đọc được, độ tin cậy, thời gian xử lý; trang quản lý mục **Nhận dạng** thống kê lại | Tỉ lệ đọc đúng, thời gian phản hồi trung bình và p95, số lần phải nhập tay; đưa vào chương kết quả |

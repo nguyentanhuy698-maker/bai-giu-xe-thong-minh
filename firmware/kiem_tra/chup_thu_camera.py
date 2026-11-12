@@ -8,12 +8,13 @@
 import sys, time, urllib.request, pathlib
 
 hosts = sys.argv[1:] or ["cam-vao.local", "cam-ra.local"]
+LAN = urllib.request.build_opener(urllib.request.ProxyHandler({}))   # không đi qua proxy hệ thống
 out = pathlib.Path("anh_thu"); out.mkdir(exist_ok=True)
 for h in hosts:
     for i in range(3):
         t = time.time()
         try:
-            data = urllib.request.urlopen(f"http://{h}/capture", timeout=5).read()
+            data = LAN.open(f"http://{h}/capture", timeout=5).read()
         except Exception as e:
             print(f"{h}: LỖI {e}  -> kiểm tra Wi-Fi, IP trong Serial Monitor của ESP32-CAM, nguồn 5 V"); break
         ms = (time.time() - t) * 1000

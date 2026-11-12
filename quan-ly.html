@@ -353,7 +353,9 @@
   @keyframes recblink { 50% { opacity:.25; } }
   @media (prefers-reduced-motion: reduce) { .cam .rec { animation:none; } }
   .snaps .cam canvas { aspect-ratio:16/10; }
-  .lane.out .snaps { grid-template-columns:1fr 1fr; }
+  .lane.out .cams { grid-template-columns:1fr 1fr 1fr; }
+  .cam img { display:block; width:100%; aspect-ratio:16/10; object-fit:cover; }
+  .camerr { aspect-ratio:16/10; display:grid; place-items:center; padding:10px; text-align:center; color:#d4d9de; font-size:12px; }
   .lane .info { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:start; }
   .lane dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:13.5px; } .lane dt { color:var(--muted); } .lane dd { margin:0; font-weight:600; }
   .price { background:var(--asphalt); color:#fff; border-radius:10px; padding:10px 14px; text-align:right; min-width:150px; display:grid; gap:2px; }
@@ -640,8 +642,7 @@
 <dialog id="photoDlg" class="wide"><form method="dialog">
   <h3>Ảnh chụp lượt gửi</h3>
   <div id="phInfo" style="font-size:13px"></div>
-  <div class="photos"><div><p class="cap">Lúc vào: biển số</p><canvas id="phInPlate" width="200" height="160"></canvas></div><div><p class="cap">Lúc vào: người lái</p><canvas id="phInFace" width="200" height="160"></canvas></div></div>
-  <div class="photos" id="phOut"><div><p class="cap">Lúc ra: biển số</p><canvas id="phOutPlate" width="200" height="160"></canvas></div><div><p class="cap">Lúc ra: người lái</p><canvas id="phOutFace" width="200" height="160"></canvas></div></div>
+  <div class="photos"><div><p class="cap">Lúc vào: biển số</p><canvas id="phInPlate" width="200" height="160"></canvas></div><div id="phOut"><p class="cap">Lúc ra: biển số</p><canvas id="phOutPlate" width="200" height="160"></canvas></div></div>
   <div class="note" id="phOcr"></div>
   <div class="row"><button class="btn" type="button" data-act="fix-plate">Sửa biển số</button><button class="btn primary" value="close">Đóng</button></div>
 </form></dialog>
@@ -821,10 +822,10 @@
     useSim = simEvents.length > 0; simEventCount = simEvents.length;
     if (useSim) {
       const open = new Map();
-      (store.get('bgx_parked', null) || []).forEach((p) => open.set(p.uid, { uid: p.uid, plate: p.plate, monthly: p.monthly, tIn: p.tIn, tOut: null, fee: 0, pay: null, src: 'sim' }));
+      (store.get('bgx_parked', null) || []).forEach((p) => open.set(p.uid, { uid: p.uid, plate: p.plate, monthly: p.monthly, tIn: p.tIn, tOut: null, fee: 0, pay: null, src: 'sim', img: p.img, ocrReal: p.conf != null ? { ok: true, conf: p.conf, ms: p.ms } : null }));
       simEvents.forEach((e) => {
-        if (e.type === 'out') { ss.push({ uid: e.uid, plate: e.plate, monthly: e.monthly, tIn: e.tIn, tOut: e.ts, fee: e.fee, pay: e.pay, src: 'sim' }); open.delete(e.uid); }
-        else if (e.type === 'alert') ss.push({ uid: e.uid, plate: e.plateCard, monthly: false, tIn: e.ts, tOut: e.ts, fee: 0, pay: null, src: 'sim', alertOnly: true, alert: { plateRead: e.plateRead, result: e.result } });
+        if (e.type === 'out') { const o = open.get(e.uid); ss.push({ uid: e.uid, plate: e.plate, monthly: e.monthly, tIn: e.tIn, tOut: e.ts, fee: e.fee, pay: e.pay, src: 'sim', img: e.imgIn || (o && o.img), imgOut: e.img, ocrReal: o && o.ocrReal }); open.delete(e.uid); }
+        else if (e.type === 'alert') ss.push({ uid: e.uid, plate: e.plateCard, monthly: false, tIn: e.ts, tOut: e.ts, fee: 0, pay: null, src: 'sim', alertOnly: true, alert: { plateRead: e.plateRead, result: e.result }, img: e.imgIn, imgOut: e.img });
       });
       open.forEach((s) => ss.push(s));
     } else ss.push(...genDay(today0, t, t));
@@ -834,7 +835,7 @@
       if (s.alertOnly) return;
       const op = sessOps[keyOf(s)];
       if (op && !s.tOut) { s.tOut = op.tOut; s.fee = op.fee; s.pay = op.pay; s.closedHow = op.how; s.txStored = true; }
-      s.ocr = makeOcr(s, 1); if (s.tOut) s.ocrOut = makeOcr(s, 2);
+      s.ocr = s.ocrReal || makeOcr(s, 1); if (s.tOut) s.ocrOut = makeOcr(s, 2);
       if (!s.ocr.ok && s.src === 'seed') { s.plateRead = garble(s.plate, prand(keyOf(s), 5)); s.fix = { by: 'Nhân viên trực', ts: s.tIn + 20000, seed: true, reason: 'Camera đọc sai' }; }
       const f = plateFix[keyOf(s)];
       if (f) { s.plateRead = s.plateRead || f.from; s.plate = f.to; s.fix = { by: f.by, ts: f.ts, reason: f.reason }; }
@@ -1550,10 +1551,10 @@
     ['broker', 'MQTT broker (Mosquitto)', 'Máy chủ', () => '3 thiết bị đang kết nối'],
     ['esp32', 'ESP32 điều khiển chốt', 'Chốt giữa', () => `Wi-Fi ${-52 - Math.round(Math.random() * 8)} dBm`],
     ['rfid-in', 'Đầu đọc thẻ RC522 làn vào', 'Làn vào', () => 'SPI, SS GPIO5'], ['cam-in', 'Camera biển số làn vào', 'Làn vào', () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây`],
-    ['face-in', 'Camera người lái làn vào', 'Làn vào', () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây`], ['gate-in', 'Barie làn vào', 'Làn vào', () => 'Servo GPIO25'],
+    ['gate-in', 'Barie làn vào', 'Làn vào', () => 'Servo GPIO25'],
     ['ir-in', 'Cảm biến IR làn vào (2)', 'Làn vào', () => 'GPIO34, GPIO35'],
     ['rfid-out', 'Đầu đọc thẻ RC522 làn ra', 'Làn ra', () => 'SPI, SS GPIO4'], ['cam-out', 'Camera biển số làn ra', 'Làn ra', () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây`],
-    ['face-out', 'Camera người lái làn ra', 'Làn ra', () => `ESP32-CAM, ${7 + Math.round(Math.random() * 2)} khung/giây`], ['gate-out', 'Barie làn ra', 'Làn ra', () => 'Servo GPIO26'],
+    ['gate-out', 'Barie làn ra', 'Làn ra', () => 'Servo GPIO26'],
     ['ir-out', 'Cảm biến IR làn ra (2)', 'Làn ra', () => 'GPIO36, GPIO39'], ['audio', 'Loa DFPlayer và còi báo', 'Chốt giữa', () => 'UART2, còi GPIO14'],
   ].map(([id, name, group, spec]) => ({ id, name, group, spec }));
   const devDown = store.get('bgx_devdown', {});
@@ -1704,6 +1705,21 @@
   $$('#f-park button').forEach((b) => b.onclick = () => { parkFilter = b.dataset.v; $$('#f-park button').forEach((x) => x.classList.toggle('on', x === b)); renderParked(); });
   const sessByKey = (k) => sessions.find((s) => !s.alertOnly && keyOf(s) === k);
 
+  // ảnh thật từ ESP32-CAM do máy chủ lưu (server/anh/...); không tải được (mở trang từ GitHub Pages…) thì vẽ ảnh minh họa
+  function drawPhoto(cv, url, fallback) {
+    if (!cv) return;
+    if (!url || !/^(server\/anh\/|https?:\/\/)[\w\-./:%]+\.jpe?g$/i.test(url)) { fallback(); return; }
+    cv.dataset.src = url;
+    const im = new Image();
+    im.onload = () => {
+      if (cv.dataset.src !== url) return;
+      const g = cv.getContext('2d'), sc = Math.max(cv.width / im.width, cv.height / im.height), w = im.width * sc, h = im.height * sc;
+      g.fillStyle = '#16181b'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(im, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+      cv.title = 'Ảnh thật từ camera'; cv.onclick = () => window.open(url, '_blank'); cv.style.cursor = 'zoom-in';
+    };
+    im.onerror = () => { if (cv.dataset.src === url) fallback(); };
+    im.src = url;
+  }
   function drawEntryPhoto(cv, s, kind, o = {}) {
     const g = cv.getContext('2d'), w = cv.width, h = cv.height; const r = o.seed != null ? o.seed : [...s.uid].reduce((a, c) => a + c.charCodeAt(0), 0);
     const col = ['#a8202a', '#2b5c8f', '#e0e0dc', '#2f3338', '#1f6f4a', '#c9a227'][r % 6];
@@ -1728,14 +1744,14 @@
     openForm({ title: 'Khách báo mất thẻ', okText: 'Thu phí, đóng lượt gửi', wide: true,
       fields: [
         { type: 'html', full: true, html: `<div style="font-size:13px">${plateHTML(s.plate)} &nbsp; Thẻ <b>${esc(s.uid)}</b>, vào lúc ${fmtDT(s.tIn)}, ${isMonthly ? 'thẻ tháng' : 'vãng lai'}.</div>
-          <div class="photos" style="margin-top:8px"><canvas id="lostPlate" width="200" height="160"></canvas><canvas id="lostFace" width="200" height="160"></canvas></div>
-          <p class="muted" style="margin:6px 0 0;font-size:12.5px">Ảnh chụp lúc vào. Đối chiếu người lái và giấy đăng ký xe trước khi cho lấy xe.</p>
+          <div class="photos" style="margin-top:8px"><canvas id="lostPlate" width="200" height="160"></canvas></div>
+          <p class="muted" style="margin:6px 0 0;font-size:12.5px">Ảnh biển số chụp lúc vào. Đối chiếu với xe, giấy đăng ký xe và CCCD của khách trước khi cho lấy xe.</p>
           <div class="sumgrid" style="margin-top:8px"><div><span>Phí gửi xe</span><b>${money(parkFee)}</b></div><div><span>Phí mất thẻ</span><b>${money(lostFee)}</b></div><div class="full"><span>Tổng thu</span><b>${money(parkFee + lostFee)}</b></div></div>` },
         { name: 'checked', label: 'Đã kiểm tra giấy đăng ký xe và CCCD của khách', type: 'checkbox', required: true },
         { name: 'pay', label: 'Khách trả bằng', type: 'select', options: [['cash', 'Tiền mặt'], ['qr', 'Quét QR']], value: 'cash', required: true },
         ...(isMonthly ? [{ name: 'reissue', label: 'Cấp thẻ tháng mới cho khách (giữ nguyên hạn cũ)', type: 'checkbox', full: true }, { name: 'newUid', label: 'UID thẻ mới', placeholder: 'VD: 6D:41:3E:C8', hint: 'Dạng XX:XX:XX:XX, chữ hoa' }] : []),
       ],
-      onRender: () => { drawEntryPhoto($('#lostPlate'), s, 'plate'); drawEntryPhoto($('#lostFace'), s, 'face'); },
+      onRender: () => { drawPhoto($('#lostPlate'), s.img, () => drawEntryPhoto($('#lostPlate'), s, 'plate')); },
       onSubmit: (v) => {
         if (!needLogin()) return null;
         let newUid = '';
@@ -1800,9 +1816,9 @@
     if (!needLogin() || !s) return;
     photoTarget = s;
     const seedN = [...s.uid].reduce((a, c) => a + c.charCodeAt(0), 0), exitSeed = s.alert ? seedN + 3 : seedN;
-    drawEntryPhoto($('#phInPlate'), s, 'plate', { ts: s.tIn, plate: s.plateRead || s.plate }); drawEntryPhoto($('#phInFace'), s, 'face', { ts: s.tIn });
+    drawPhoto($('#phInPlate'), s.img, () => drawEntryPhoto($('#phInPlate'), s, 'plate', { ts: s.tIn, plate: s.plateRead || s.plate }));
     $('#phOut').classList.toggle('hidden', !s.tOut);
-    if (s.tOut) { drawEntryPhoto($('#phOutPlate'), s, 'plate', { ts: s.tOut, plate: s.alert ? s.alert.plateRead : s.plate, seed: exitSeed }); drawEntryPhoto($('#phOutFace'), s, 'face', { ts: s.tOut, seed: exitSeed }); }
+    if (s.tOut) drawPhoto($('#phOutPlate'), s.imgOut, () => drawEntryPhoto($('#phOutPlate'), s, 'plate', { ts: s.tOut, plate: s.alert ? s.alert.plateRead : s.plate, seed: exitSeed }));
     const o = s.ocr || {}, req = store.get('bgx_platefix_req', []).find((r) => r.key === keyOf(s) && r.status === 'pending');
     $('#phInfo').innerHTML = `${plateHTML(s.plate)} &nbsp; Thẻ <b>${esc(s.uid)}</b>, ${s.monthly ? 'thẻ tháng' : s.nocard ? 'không thẻ' : 'vãng lai'}. Vào ${fmtDT(s.tIn)}${s.tOut ? `, ra ${fmtDT(s.tOut)}` : ', đang trong bãi'}.`;
     $('#phOcr').innerHTML = `Lúc vào camera đọc được <b>${esc(s.plateRead || s.plate)}</b>, độ tin cậy ${Math.round((o.conf || 0.95) * 100)}%, xử lý ${o.ms || '–'} ms.` +
@@ -3247,7 +3263,7 @@
     }
     store.set('bgx_transactions', txStored); txCache = null; handCache = null;
     // 4) tài sản lấy từ danh sách thiết bị
-    const PRICE = { server: 7200000, esp32: 150000, 'rfid-in': 45000, 'rfid-out': 45000, 'cam-in': 190000, 'cam-out': 190000, 'face-in': 190000, 'face-out': 190000, 'gate-in': 250000, 'gate-out': 250000, 'ir-in': 50000, 'ir-out': 50000, audio: 120000 };
+    const PRICE = { server: 7200000, esp32: 150000, 'rfid-in': 45000, 'rfid-out': 45000, 'cam-in': 190000, 'cam-out': 190000, 'gate-in': 250000, 'gate-out': 250000, 'ir-in': 50000, 'ir-out': 50000, audio: 120000 };
     const buy = isoDate(from - 20 * DAY);
     if (!store.get('bgx_fin_assets', null)) finAssets = DEVICES.filter((d) => PRICE[d.id]).map((d) => ({ id: 'as' + uid8(), name: d.id === 'server' ? 'Máy tính mini chạy nhận dạng (Intel N100, 16 GB)' : d.name, place: d.group, date: buy, price: PRICE[d.id], months: settings.finDep, device: d.id }));
     saveFinCats(); saveFinEntries(); saveFinAssets(); saveSettings();
@@ -4412,7 +4428,7 @@
     else if (leaf === 'cmd') {
       if (d.manual) { gateLog(lane, `Lệnh mở tay từ ${d.by || 'trang quản lý'}`); return; }
       const ok = d.action === 'open', code = d.code || (ok ? lane : 'deny');
-      gate.lane[lane] = { state: ok ? 'open' : 'deny', uid: d.uid || L.uid, ts: nowT(), plate: d.plate || '', plateIn: d.plate_in || '', monthly: !!d.monthly, tIn: d.t_in || null, fee: d.fee, code, msg: d.msg || '' };
+      gate.lane[lane] = { state: ok ? 'open' : 'deny', uid: d.uid || L.uid, ts: nowT(), plate: d.plate || '', plateIn: d.plate_in || '', monthly: !!d.monthly, tIn: d.t_in || null, fee: d.fee, code, msg: d.msg || '', img: d.img || '', imgIn: d.img_in || '', conf: d.conf, ms: d.ms };
       gateLog(lane, `${ok ? 'MỞ' : 'TỪ CHỐI'}: ${d.msg || code}`);
       if (gateOwner()) gateRecord(lane, gate.lane[lane]);
     }
@@ -4423,12 +4439,13 @@
   function gateRecord(lane, x) {
     const ev = store.get('bgx_events', []), parked = store.get('bgx_parked', null) || [], ts = nowT();
     const monthly = x.monthly || cards.some((c) => c.uid === x.uid && cardValidAt(c, ts));
-    if (x.code === 'in') { ev.push({ type: 'in', uid: x.uid, plate: x.plate, monthly, ts, src: 'gate' }); if (!parked.some((p) => p.uid === x.uid)) parked.push({ uid: x.uid, plate: x.plate, monthly, tIn: x.tIn || ts }); }
+    const cam = x.conf != null ? { conf: x.conf, ms: x.ms } : {};
+    if (x.code === 'in') { ev.push({ type: 'in', uid: x.uid, plate: x.plate, monthly, ts, src: 'gate', img: x.img, ...cam }); if (!parked.some((p) => p.uid === x.uid)) parked.push({ uid: x.uid, plate: x.plate, monthly, tIn: x.tIn || ts, img: x.img, ...cam }); }
     else if (x.code === 'out') {
       const p = parked.find((q) => q.uid === x.uid), tIn = x.tIn || (p && p.tIn) || ts, fee = x.fee != null ? x.fee : feeFor(tIn, ts, monthly);
-      ev.push({ type: 'out', uid: x.uid, plate: x.plate || (p && p.plate), monthly, tIn, ts, fee, pay: monthly ? 'monthly' : 'cash', src: 'gate' });
+      ev.push({ type: 'out', uid: x.uid, plate: x.plate || (p && p.plate), monthly, tIn, ts, fee, pay: monthly ? 'monthly' : 'cash', src: 'gate', img: x.img, imgIn: x.imgIn || (p && p.img), ...cam });
       const i = parked.findIndex((q) => q.uid === x.uid); if (i >= 0) parked.splice(i, 1);
-    } else if (x.code === 'mismatch') { ev.push({ type: 'alert', uid: x.uid, plateCard: x.plateIn, plateRead: x.plate, result: 'hold', ts, src: 'gate' }); x.key = `${x.uid}|${ts}`; }
+    } else if (x.code === 'mismatch') { ev.push({ type: 'alert', uid: x.uid, plateCard: x.plateIn, plateRead: x.plate, result: 'hold', ts, src: 'gate', img: x.img, imgIn: x.imgIn }); x.key = `${x.uid}|${ts}`; }
     else if (x.code === 'full') ev.push({ type: 'deny_full', ts, src: 'gate' });
     else if (x.code === 'ocr_fail') ev.push({ type: 'ocr_fail', uid: x.uid, ts, src: 'gate' });
     else ev.push({ type: 'deny', lane, uid: x.uid, code: x.code, msg: x.msg, ts, src: 'gate' });
@@ -4456,7 +4473,7 @@
     if (e.type === 'ocr_fail') return { state: 'deny', code: 'ocr_fail', uid: e.uid, plate: e.plate, ts: e.ts };
     return { state: 'deny', code: e.code || 'deny', uid: e.uid, ts: e.ts, msg: e.msg };
   }
-  const CODE_TXT = { in: 'Mời xe vào', out: 'Mời xe ra', full: 'Bãi đầy, từ chối', ocr_fail: 'Không đọc được biển số', mismatch: 'Biển số không khớp thẻ, giữ xe', dup: 'Thẻ đang có xe trong bãi', no_entry: 'Thẻ không có lượt vào', deny: 'Từ chối' };
+  const CODE_TXT = { in: 'Mời xe vào', out: 'Mời xe ra', full: 'Bãi đầy, từ chối', ocr_fail: 'Không đọc được biển số', mismatch: 'Biển số không khớp thẻ, giữ xe', dup: 'Thẻ đang có xe trong bãi', dup_plate: 'Biển số đã có trong bãi', no_entry: 'Thẻ không có lượt vào', deny: 'Từ chối' };
 
   // ---------- giao diện ----------
   function gateSource() {
@@ -4465,6 +4482,11 @@
     if (gate.status === 'error') return ['bad', `Lỗi kết nối: ${gate.err}`];
     if (simAlive()) return ['sim', 'Trang mô phỏng đang chạy'];
     return ['off', 'Chưa nối phần cứng. Bấm "Kết nối phần cứng", mở trang mô phỏng, hoặc dùng nút thử nhanh'];
+  }
+  // camera trực tiếp: có địa chỉ stream ESP32-CAM trong cài đặt thì hiện hình thật, không thì vẽ minh họa
+  function liveCamHTML(lane) {
+    const url = lane === 'in' ? settings.camIn : settings.camOut, label = `Camera biển số ${LANE_TXT[lane].toLowerCase()}`;
+    return url ? `<figure class="cam"><img src="${esc(url)}" alt="${esc(label)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'camerr',textContent:'Không xem được camera: kiểm tra ESP32-CAM và địa chỉ stream'}))"><figcaption><i class="rec"></i>${esc(label)}</figcaption></figure>` : camHTML(`cam-${lane}-p`, label, true);
   }
   function camHTML(id, label, live) { return `<figure class="cam"><canvas id="${id}" width="320" height="200"></canvas><figcaption>${live ? '<i class="rec"></i>' : ''}${esc(label)}</figcaption></figure>`; }
   function lanePanel(lane) {
@@ -4477,8 +4499,7 @@
       ...(lane === 'out' ? [['Biển số lúc vào', x && x.plateIn ? `${plateHTML(x.plateIn)} ${match === false ? '<span class="pill bad">Không khớp</span>' : match ? '<span class="pill ok">Khớp</span>' : ''}` : '–']] : []),
       ['Giờ vào', x && x.tIn ? fmtDT(x.tIn) : '–'], ...(lane === 'out' ? [['Giờ ra', x && x.code === 'out' ? fmtDT(x.ts) : '–'], ['Thời gian gửi', x && x.code === 'out' && x.tIn ? dur(x.ts - x.tIn) : '–']] : [])];
     return `<section class="lane ${lane}"><header><h2>${LANE_TXT[lane]}</h2><span class="lst ${st[0]}">${esc(st[1])}</span><span class="grow"></span><span class="muted" style="font-size:12px">${x ? `${x.live ? 'Phần cứng' : ''} ${fmtTime(x.ts)}` : ''}</span></header>
-      <div class="cams">${camHTML(`cam-${lane}-p`, `Camera biển số ${LANE_TXT[lane].toLowerCase()}`, true)}${camHTML(`cam-${lane}-f`, 'Camera người lái', true)}</div>
-      <div class="snaps">${lane === 'in' ? camHTML('snap-in-p', 'Ảnh biển số lúc quẹt thẻ') + camHTML('snap-in-f', 'Ảnh người lái lúc quẹt thẻ') : camHTML('snap-out-pi', 'Biển số lúc vào') + camHTML('snap-out-po', 'Biển số lúc ra') + camHTML('snap-out-fi', 'Người lái lúc vào') + camHTML('snap-out-fo', 'Người lái lúc ra')}</div>
+      <div class="cams">${liveCamHTML(lane)}${lane === 'in' ? camHTML('snap-in-p', 'Biển số lúc quẹt thẻ') : camHTML('snap-out-pi', 'Biển số lúc vào') + camHTML('snap-out-po', 'Biển số lúc ra')}</div>
       <div class="info"><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><div class="price"><span>${lane === 'out' ? 'Giá vé' : 'Loại'}</span><b>${fee}</b>${x && x.msg ? `<small>${esc(x.msg)}</small>` : ''}</div></div>
       ${lane === 'out' ? gatePendingAlerts() : ''}
       <div class="lane-acts"><button class="btn primary" data-act="manual" data-lane="${lane}">Mở barie ${lane === 'in' ? 'vào (F1)' : 'ra (F2)'}</button>${lane === 'out' && x && x.code === 'mismatch' && x.key ? `<button class="btn danger" data-act="alert-do" data-key="${esc(x.key)}">Xử lý cảnh báo</button>` : ''}
@@ -4505,7 +4526,7 @@
       <div class="lanes">${lanePanel('in')}${lanePanel('out')}</div>
       <div class="grid g2" style="margin-top:12px;align-items:start"><div class="card"><h2>Lượt xe gần đây</h2><div class="tablewrap" style="margin-top:6px"><table><thead><tr><th>Giờ</th><th>Làn</th><th>Biển số</th><th>Thẻ</th><th class="num">Phí</th><th>Kết quả</th></tr></thead><tbody>${gateRecent()}</tbody></table></div></div>
         <div class="card"><h2>Nhật ký phần cứng</h2><p class="sub">Tin nhận từ ESP32 và máy chủ trong phiên này</p><ul class="todo">${gate.log.slice(0, 10).map((l) => `<li><span class="muted" style="width:62px">${fmtTime(l.ts)}</span><span class="grow"><b>${LANE_TXT[l.lane]}</b>: ${esc(l.txt)}</span></li>`).join('') || '<li class="muted">Chưa có tin nào. Khi nối phần cứng, mỗi lần quẹt thẻ sẽ hiện ở đây.</li>'}</ul></div></div>
-      <p class="muted" style="font-size:12px">Ảnh camera và ảnh chụp là ảnh minh họa vẽ từ dữ liệu lượt xe; khi máy chủ gửi kèm đường dẫn ảnh từ ESP32-CAM, ảnh thật sẽ hiện ở các ô này. Phím tắt: F1 mở barie làn vào, F2 mở barie làn ra.</p>`;
+      <p class="muted" style="font-size:12px">Ảnh chụp lúc quẹt thẻ là ảnh thật từ ESP32-CAM khi chạy máy chủ server/may_chu.py và mở trang này bằng http từ thư mục repo; khi chưa có thì là ảnh minh họa. Bấm vào ảnh thật để xem cỡ lớn. Phím tắt: F1 mở barie làn vào, F2 mở barie làn ra.</p>`;
     gateDrawAll();
   }
   function gateRecent() {
@@ -4516,16 +4537,16 @@
   }
   // ảnh camera minh họa: làn trống thì vẽ mặt đường, có lượt xe thì vẽ xe của lượt đó
   function gateDrawAll() {
-    const draw = (id, x, kind, plate, ts) => {
+    const draw = (id, x, kind, plate, ts, url) => {
       const cv = $('#' + id); if (!cv) return; const g = cv.getContext('2d');
       if (!x) { g.fillStyle = '#23272d'; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = '#34383d'; g.fillRect(0, cv.height * 0.7, cv.width, cv.height); g.strokeStyle = '#c9a227'; g.setLineDash([14, 10]); g.beginPath(); g.moveTo(0, cv.height * 0.85); g.lineTo(cv.width, cv.height * 0.85); g.stroke(); g.setLineDash([]); g.fillStyle = '#9aa3ab'; g.font = '600 13px Arial'; g.fillText('Làn trống', 10, 22); return; }
-      drawEntryPhoto(cv, { uid: x.uid || 'XX', plate: plate || x.plate || '' , tIn: ts }, kind, { plate: plate || x.plate || '—', ts });
+      drawPhoto(cv, url, () => drawEntryPhoto(cv, { uid: x.uid || 'XX', plate: plate || x.plate || '' , tIn: ts }, kind, { plate: plate || x.plate || '—', ts }));
     };
     ['in', 'out'].forEach((lane) => {
       const x = lastOfLane(lane), recent = x && nowT() - x.ts < 60000 && x.uid;
-      draw(`cam-${lane}-p`, recent ? x : null, 'plate', x && x.plate, nowT()); draw(`cam-${lane}-f`, recent ? x : null, 'face', '', nowT());
-      if (lane === 'in') { draw('snap-in-p', x && x.uid ? x : null, 'plate', x && x.plate, x && x.ts); draw('snap-in-f', x && x.uid ? x : null, 'face', '', x && x.ts); }
-      else { draw('snap-out-pi', x && x.uid ? x : null, 'plate', x && x.plateIn, x && x.tIn); draw('snap-out-po', x && x.uid ? x : null, 'plate', x && x.plate, x && x.ts); draw('snap-out-fi', x && x.uid ? x : null, 'face', '', x && x.tIn); draw('snap-out-fo', x && x.uid ? { ...x, uid: x.code === 'mismatch' ? x.uid + 'x' : x.uid } : null, 'face', '', x && x.ts); }
+      draw(`cam-${lane}-p`, recent ? x : null, 'plate', x && x.plate, nowT());
+      if (lane === 'in') draw('snap-in-p', x && x.uid ? x : null, 'plate', x && x.plate, x && x.ts, x && x.img);
+      else { draw('snap-out-pi', x && x.uid ? x : null, 'plate', x && x.plateIn, x && x.tIn, x && x.imgIn); draw('snap-out-po', x && x.uid ? x : null, 'plate', x && x.plate, x && x.ts, x && x.img); }
     });
   }
   // thử nhanh khi chưa có phần cứng và trang mô phỏng: tạo một lượt vào hoặc ra theo cùng đường ghi dữ liệu
@@ -4548,13 +4569,17 @@
     if (!needAdmin()) return;
     openForm({ title: 'Cài đặt kết nối phần cứng', okText: 'Lưu', wide: true, fields: [
       { name: 'url', label: 'Địa chỉ broker MQTT qua WebSocket', value: settings.gateUrl, full: true, required: true, hint: 'HiveMQ công cộng: wss://broker.hivemq.com:8884/mqtt. Mosquitto trên máy bãi: ws://IP-máy:9001 (chỉ dùng khi mở trang bằng http trên mạng nội bộ)' },
-      { name: 'root', label: 'Topic gốc', value: settings.gateRoot, required: true, hint: 'Phải trùng TOPIC_ROOT trong sketch.ino và server_mock.py' },
+      { name: 'root', label: 'Topic gốc', value: settings.gateRoot, required: true, hint: 'Phải trùng TOPIC_ROOT trong firmware và máy chủ (server/may_chu.py)' },
+      { name: 'camIn', label: 'Xem trực tiếp camera làn vào', value: settings.camIn || '', placeholder: 'http://192.168.1.21:81/stream', hint: 'Để trống thì hiện ảnh minh họa' },
+      { name: 'camOut', label: 'Xem trực tiếp camera làn ra', value: settings.camOut || '', placeholder: 'http://192.168.1.22:81/stream' },
       { name: 'auto', label: 'Tự kết nối khi mở mục Máy giữ xe', type: 'checkbox', value: settings.gateAuto },
       { type: 'html', full: true, html: '<p class="note warn" style="margin:0">Broker công cộng: ai biết topic cũng gửi được lệnh mở barie. Chỉ dùng để trình diễn; khi dùng thật hãy chạy Mosquitto có mật khẩu và TLS.</p>' }],
       onSubmit: (v) => {
         if (!needAdmin()) return null;
         if (!/^wss?:\/\/[^\s]+$/.test(v.url)) return 'Địa chỉ phải bắt đầu bằng ws:// hoặc wss://';
         if (!/^[A-Za-z0-9_\-./]+$/.test(v.root) || /[#+]/.test(v.root)) return 'Topic gốc chỉ gồm chữ, số, gạch ngang, gạch dưới, dấu chấm, dấu /';
+        for (const k of ['camIn', 'camOut']) if (v[k] && !/^https?:\/\/[^\s"'<>]+$/.test(v[k])) return 'Địa chỉ camera phải bắt đầu bằng http:// (ví dụ http://192.168.1.21:81/stream)';
+        settings.camIn = (v.camIn || '').trim(); settings.camOut = (v.camOut || '').trim();
         const before = `${settings.gateUrl}, ${settings.gateRoot}`; settings.gateUrl = v.url; settings.gateRoot = v.root.replace(/\/+$/, ''); settings.gateAuto = !!v.auto; saveSettings();
         audit('Máy giữ xe', 'Đổi cài đặt kết nối phần cứng', before, `${settings.gateUrl}, ${settings.gateRoot}`);
         if (gate.status === 'on') gateConnect(); renderGate(); return null;

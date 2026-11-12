@@ -16,7 +16,8 @@ Hệ thống bãi giữ xe máy xác thực kép **thẻ RFID + biển số**, m
 - **Phối cảnh lắp ráp** (`lap-rap-3d.html`, mã nguồn ở `src3d/`): mô hình 1:10 dựng từ đúng linh kiện thật (kích thước mm thật), có góc nhìn xuyên vỏ cho chốt, tủ barie, cột camera, khoang điện dưới đế, đường dây và hình chiếu có kích thước.
 - **Bản vẽ kỹ thuật** (`docs/ban-ve-ky-thuat.pdf`, 11 tờ A3, mã sinh bản vẽ ở `tools/ban-ve/`): lắp chung, mặt bằng toạ độ, đế và khoang điện, chốt, khai triển mica 1:1, tủ barie, cột camera, bo mạch, sơ đồ nối dây, kích thước chuẩn linh kiện, vật tư và quy trình lắp ráp.
 - **Rập cắt 1:1** (`docs/rap-cat-1-1-A4.pdf`, 10 tờ A4, mã sinh `tools/ban-ve/rap.py`): in 100 %, dán lên mica/Formex rồi cắt theo nét, khoan theo dấu tâm; mỗi tờ có khung 50 mm để kiểm tra tỉ lệ in.
-- **Firmware phần cứng thật** (`firmware/`): bản chạy trên mạch thật (2 RC522, 2 servo, 4 IR, DFPlayer, còi), lệnh Serial để thử từng khối, file tạo âm thanh tiếng Việt và cấu hình Mosquitto. Xem `firmware/README.md`.
+- **Máy chủ nhận dạng biển số** (`server/`, xem `server/README.md`): chạy trên laptop. Nhận thẻ qua MQTT, chụp ảnh từ 2 ESP32-CAM, tìm và đọc biển số xe máy VN, so khớp thẻ – biển số, lưu ảnh từng lượt để trang quản lý hiện ảnh thật. Có chế độ giả lập camera để thử khi chưa lắp.
+- **Firmware phần cứng thật** (`firmware/`): bản chạy trên mạch thật (2 RC522, 2 servo, 4 IR, DFPlayer, còi), lệnh Serial để thử từng khối, firmware 2 ESP32-CAM, file tạo âm thanh tiếng Việt, cấu hình Mosquitto và quy trình test 9 bước sau khi lắp ráp. Xem `firmware/README.md`.
 
 Hai trang web là HTML độc lập, mở trực tiếp bằng trình duyệt, không cần cài đặt.
 
