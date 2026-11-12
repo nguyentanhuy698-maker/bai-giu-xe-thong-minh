@@ -68,7 +68,7 @@ def bv01():
     B(*q(495, 365), tx + 112, ty - 96, '7')
     B(*q(330, 43), tx + 85, ty + 4, '9')
     # hình minh hoạ
-    img(sh, 'os.path.join(os.path.dirname(__file__), "img_persp.png")', 172, 100, 98, 72)
+    img(sh, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img_persp.png'), 172, 100, 98, 72)
     sh.rect(172, 100, 98, 72, sw=W_THIN)
     sh.text(221, 177, 'Hình minh hoạ (không theo tỉ lệ)', size=2.6, anchor='middle', italic=True)
     # bảng kê
