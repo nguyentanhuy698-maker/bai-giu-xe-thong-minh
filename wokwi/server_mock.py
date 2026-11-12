@@ -119,6 +119,8 @@ def on_message(client, userdata, msg):
             threading.Thread(target=handle_card, args=(client, lane, data), daemon=True).start()
         elif leaf == "ir":
             log(lane, "IR: xe da qua" if data.get("passed") else "IR: mo barie nhung khong co xe qua")
+        elif leaf == "arrive":   # chỉ firmware phần cứng thật gửi: IR thấy xe tới trước barie (server thật chụp sẵn ảnh ở đây)
+            log(lane, "IR: co xe toi" if data.get("car") else "IR: xe da roi vi tri quet the")
     elif msg.topic.endswith("pillar/status"):
         pass  # nhịp tim của trụ, có thể in ra nếu cần
 
@@ -146,7 +148,13 @@ def main():
                 flags["ocr_fail_next"] = True; print("-> Luot VAO ke tiep se khong doc duoc bien")
             elif cmd == "q":
                 break
-    except (KeyboardInterrupt, EOFError):
+    except EOFError:   # chạy nền, không có bàn phím: vẫn tiếp tục phục vụ cho tới khi bấm Ctrl+C
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+    except KeyboardInterrupt:
         pass
     client.loop_stop()
     client.disconnect()

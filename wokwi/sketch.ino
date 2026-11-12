@@ -264,6 +264,7 @@ void setup() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);           // không chờ: 2 làn vẫn chạy trong lúc kết nối
   WiFi.setAutoReconnect(true);
   mqtt.setServer(MQTT_HOST, MQTT_PORT);
+  mqtt.setBufferSize(512);                    // lệnh từ server kèm biển số, giờ vào, phí: dài hơn 256 byte mặc định
   mqtt.setCallback(onMqtt);
   Serial.printf("Topic goc: %s\n", TOPIC_ROOT);
 #endif

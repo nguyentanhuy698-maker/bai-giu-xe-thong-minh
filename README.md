@@ -13,6 +13,7 @@ Hệ thống bãi giữ xe máy xác thực kép **thẻ RFID + biển số**, m
 - **Phối cảnh 3D** (`phoi-canh-3d.html`): xoay mô hình, các góc nhìn và hình chiếu kỹ thuật.
 
 - **Mô phỏng Wokwi** (`wokwi/`): firmware ESP32 cho trụ điều khiển 2 làn và server giả lập Python, chạy thử trên wokwi.com.
+- **Firmware phần cứng thật** (`firmware/`): bản chạy trên mạch thật (2 RC522, 2 servo, 4 IR, DFPlayer, còi), lệnh Serial để thử từng khối, file tạo âm thanh tiếng Việt và cấu hình Mosquitto. Xem `firmware/README.md`.
 
 Hai trang web là HTML độc lập, mở trực tiếp bằng trình duyệt, không cần cài đặt.
 
